@@ -19,7 +19,11 @@ session = create_session(
 ```
 
 When credentials are provided, the SDK logs in through `/api/v1/authenticate`.
-If a request returns `401` and a refresh token is available, it attempts one refresh
-through `/api/v1/token/refresh` and retries the original request once.
+PlexTrac JWT tokens expire quickly, so authenticated SDK requests refresh the current token through
+`/api/v1/token/refresh` before sending a request when the decoded JWT expires within five minutes.
+
+If the token is already expired, the SDK raises an authentication error and callers should create a
+new session. A `401` response is not treated as the normal refresh trigger when the JWT expiration
+is known, because PlexTrac requires refresh before expiration.
 
 For MFA or custom login flows, obtain a token outside the SDK and pass it as `token`.

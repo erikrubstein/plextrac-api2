@@ -1,9 +1,13 @@
+import base64
+import json
+import time
+
 import httpx
 import pytest
 
 from plextrac_api.functions import clients, reports
 from plextrac_api.functions.auth import session_from_token
-from plextrac_api.functions.common import PlexTracNotFoundError
+from plextrac_api.functions.common import PlexTracAuthError, PlexTracNotFoundError
 from plextrac_api.types import ReportStatus
 
 
@@ -122,7 +126,63 @@ def test_request_maps_http_errors(monkeypatch):
         clients.get_client(session, client_id="missing")
 
 
-def test_request_refreshes_once_after_401(monkeypatch):
+def test_request_refreshes_before_request_when_token_expires_within_five_minutes(monkeypatch):
+    calls = []
+    old_token = _jwt_expiring_in(299)
+
+    def fake_send(session, method, path, **kwargs):
+        calls.append((method, path, kwargs["headers"].get("Authorization")))
+        if path == "/api/v1/token/refresh":
+            return httpx.Response(200, json={"token": "new-token"})
+        return httpx.Response(200, json={"ok": True})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", old_token)
+
+    result = clients.delete_client(session, client_id="client-1")
+
+    assert result.ok
+    assert session.token == "new-token"
+    assert calls == [
+        ("PUT", "/api/v1/token/refresh", f"Bearer {old_token}"),
+        ("DELETE", "/api/v1/client/client-1", "Bearer new-token"),
+    ]
+
+
+def test_request_does_not_refresh_after_401_when_expiration_is_known(monkeypatch):
+    calls = []
+    token = _jwt_expiring_in(600)
+
+    def fake_send(session, method, path, **kwargs):
+        calls.append((method, path, kwargs["headers"].get("Authorization")))
+        return httpx.Response(401, json={"message": "unauthorized"})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", token)
+
+    with pytest.raises(PlexTracAuthError):
+        clients.delete_client(session, client_id="client-1")
+
+    assert calls == [("DELETE", "/api/v1/client/client-1", f"Bearer {token}")]
+
+
+def test_request_rejects_locally_expired_token(monkeypatch):
+    calls = []
+
+    def fake_send(session, method, path, **kwargs):
+        calls.append((method, path))
+        return httpx.Response(200, json={"ok": True})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", _jwt_expiring_in(-1))
+
+    with pytest.raises(PlexTracAuthError):
+        clients.delete_client(session, client_id="client-1")
+
+    assert calls == []
+
+
+def test_request_uses_401_refresh_fallback_only_when_expiration_is_unknown(monkeypatch):
     calls = []
 
     def fake_send(session, method, path, **kwargs):
@@ -130,22 +190,28 @@ def test_request_refreshes_once_after_401(monkeypatch):
         if path == "/api/v1/token/refresh":
             return httpx.Response(200, json={"token": "new-token"})
         if len(calls) == 1:
-            return httpx.Response(401, json={"message": "expired"})
+            return httpx.Response(401, json={"message": "unauthorized"})
         return httpx.Response(200, json={"ok": True})
 
     monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
-    session = session_from_token(
-        "https://example.plextrac.com",
-        "old-token",
-        refresh_token="refresh-token",
-    )
+    session = session_from_token("https://example.plextrac.com", "opaque-token")
 
     result = clients.delete_client(session, client_id="client-1")
 
     assert result.ok
-    assert session.token == "new-token"
     assert calls == [
-        ("DELETE", "/api/v1/client/client-1", "Bearer old-token"),
-        ("PUT", "/api/v1/token/refresh", "Bearer old-token"),
+        ("DELETE", "/api/v1/client/client-1", "Bearer opaque-token"),
+        ("PUT", "/api/v1/token/refresh", "Bearer opaque-token"),
         ("DELETE", "/api/v1/client/client-1", "Bearer new-token"),
     ]
+
+
+def _jwt_expiring_in(seconds: int) -> str:
+    header = _base64_json({"alg": "none", "typ": "JWT"})
+    payload = _base64_json({"exp": int(time.time()) + seconds})
+    return f"{header}.{payload}.signature"
+
+
+def _base64_json(data: dict[str, object]) -> str:
+    encoded = base64.urlsafe_b64encode(json.dumps(data).encode()).decode()
+    return encoded.rstrip("=")

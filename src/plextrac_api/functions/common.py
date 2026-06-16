@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import time
 from collections.abc import Mapping
 from typing import Any
 
@@ -36,6 +37,7 @@ class PlexTracRateLimitError(PlexTracError):
 
 
 PLACEHOLDER_RE = re.compile(r"(\{\{?)([A-Za-z0-9_]+)(\}?\})")
+REFRESH_WITHIN_SECONDS = 300
 
 
 def build_auth_headers(session: AuthSession | None = None) -> dict[str, str]:
@@ -61,6 +63,10 @@ def rest_request(
 ) -> Any:
     request_headers = dict(headers or {})
     if authenticated:
+        if _is_expired(session):
+            raise PlexTracAuthError("PlexTrac token has expired; create a new session.")
+        if session.is_expiring(within_seconds=REFRESH_WITHIN_SECONDS):
+            refresh_session(session)
         request_headers = {**build_auth_headers(session), **request_headers}
 
     response = _send(
@@ -74,7 +80,7 @@ def rest_request(
         headers=request_headers,
         content=content,
     )
-    if response.status_code == 401 and authenticated and _can_refresh(session):
+    if response.status_code == 401 and authenticated and _can_retry_refresh_after_401(session):
         refresh_session(session)
         request_headers = {**build_auth_headers(session), **dict(headers or {})}
         response = _send(
@@ -181,14 +187,11 @@ def execute_graphql(
 
 
 def refresh_session(session: AuthSession) -> AuthSession:
-    payload: JsonDict = {}
-    if session.refresh_token:
-        payload["refreshToken"] = session.refresh_token
     response = _send(
         session,
         "PUT",
         "/api/v1/token/refresh",
-        json=payload or None,
+        json=None,
         headers=build_auth_headers(session),
     )
     data = _parse_response(response)
@@ -271,8 +274,12 @@ def _interpolate(value: str, replacements: Mapping[str, Any], *, strict: bool = 
     return PLACEHOLDER_RE.sub(replace, value)
 
 
-def _can_refresh(session: AuthSession) -> bool:
-    return bool(session.refresh_token)
+def _is_expired(session: AuthSession) -> bool:
+    return session.expires_at is not None and time.time() >= session.expires_at
+
+
+def _can_retry_refresh_after_401(session: AuthSession) -> bool:
+    return session.expires_at is None
 
 
 def _first_string(data: JsonDict, keys: tuple[str, ...]) -> str | None:
