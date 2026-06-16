@@ -7,20 +7,22 @@ from plextrac_api.functions.common import rest_request
 from plextrac_api.types.auth import AuthSession
 from plextrac_api.types.common import (
     CustomField,
-    Filter,
     JsonDict,
     OperationResult,
     Pagination,
-    Sort,
 )
 from plextrac_api.types.reports import (
     Narrative,
     Report,
     ReportDraft,
     ReportExhibit,
+    ReportFilter,
     ReportPage,
     ReportPatch,
+    ReportReplaceResult,
     ReportSearchOccurrenceResult,
+    ReportSort,
+    ReportStatus,
     ReportSummary,
 )
 
@@ -33,10 +35,12 @@ def count_report_search_occurrences(session: AuthSession, report_id: int | str, 
     return ReportSearchOccurrenceResult.from_api(data)
 
 
-def replace_report_text(session: AuthSession, report_id: int | str, search: str, replace: str) -> OperationResult:
+def replace_report_text(session: AuthSession, report_id: int | str, search: str, replace: str) -> ReportReplaceResult:
     """Find and replace a text value within a report."""
     data = rest_request(session, "POST", "/api/v1/search-replace", json={"search": search, "replace": replace, "report_id": report_id})
-    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
+    if not isinstance(data, dict):
+        raise ValueError("PlexTrac report replace response was not a JSON object.")
+    return ReportReplaceResult.from_api(data)
 
 
 def list_client_reports(session: AuthSession, client_id: int | str) -> list[ReportSummary]:
@@ -45,7 +49,7 @@ def list_client_reports(session: AuthSession, client_id: int | str) -> list[Repo
     return [ReportSummary.from_api(item) for item in data if isinstance(item, dict)] if isinstance(data, list) else []
 
 
-def list_reports(session: AuthSession, *, pagination: Pagination | None = None, sort: list[Sort] | None = None, filters: list[Filter] | None = None) -> ReportPage:
+def list_reports(session: AuthSession, *, pagination: Pagination | None = None, sort: list[ReportSort] | None = None, filters: list[ReportFilter] | None = None) -> ReportPage:
     """List tenant reports with pagination, sorting, and filters."""
     payload: JsonDict = {
         "pagination": (pagination or Pagination()).to_api(),
@@ -64,7 +68,7 @@ def get_report(session: AuthSession, client_id: int | str, report_id: int | str)
     return Report.from_api(data)
 
 
-def create_report(session: AuthSession, client_id: int | str, report: ReportDraft | None = None, *, name: str | None = None, status: str | None = None, include_evidence: bool | None = None, tags: list[str] | None = None, custom_fields: list[CustomField] | None = None, template: str | None = None, start_date: str | None = None, end_date: str | None = None, fields_template: str | None = None, is_track_changes: bool | None = None) -> OperationResult:
+def create_report(session: AuthSession, client_id: int | str, report: ReportDraft | None = None, *, name: str | None = None, status: ReportStatus | None = None, include_evidence: bool | None = None, tags: list[str] | None = None, custom_fields: list[CustomField] | None = None, template: str | None = None, start_date: str | None = None, end_date: str | None = None, fields_template: str | None = None, is_track_changes: bool | None = None) -> OperationResult:
     """Create a report for a client from a ReportDraft or explicit keyword fields."""
     if report is None:
         if name is None:
@@ -85,7 +89,7 @@ def create_report(session: AuthSession, client_id: int | str, report: ReportDraf
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def update_report(session: AuthSession, client_id: int | str, report_id: int | str, report: ReportPatch | None = None, *, name: str | None = None, status: str | None = None, include_evidence: bool | None = None, tags: list[str] | None = None, custom_fields: list[CustomField] | None = None, narratives: list[Narrative] | None = None, template: str | None = None, start_date: str | None = None, end_date: str | None = None, fields_template: str | None = None, is_track_changes: bool | None = None) -> OperationResult:
+def update_report(session: AuthSession, client_id: int | str, report_id: int | str, report: ReportPatch | None = None, *, name: str | None = None, status: ReportStatus | None = None, include_evidence: bool | None = None, tags: list[str] | None = None, custom_fields: list[CustomField] | None = None, narratives: list[Narrative] | None = None, template: str | None = None, start_date: str | None = None, end_date: str | None = None, fields_template: str | None = None, is_track_changes: bool | None = None) -> OperationResult:
     """Update report metadata and narratives for a client report."""
     patch = report or ReportPatch(
         name=name,
@@ -136,9 +140,9 @@ def bulk_assign_reviewers_to_reports(session: AuthSession, client_id: int | str,
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def bulk_update_report_statuses(session: AuthSession, client_id: int | str, report_ids: list[int | str], status: str) -> OperationResult:
+def bulk_update_report_statuses(session: AuthSession, client_id: int | str, report_ids: list[int | str], status: ReportStatus) -> OperationResult:
     """Set the same status on multiple reports."""
-    data = rest_request(session, "POST", "/api/v2/reports/bulk/status", json={"clientId": client_id, "reportIDs": report_ids, "status": status})
+    data = rest_request(session, "POST", "/api/v2/reports/bulk/status", json={"clientId": client_id, "reportIDs": report_ids, "status": status.value})
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 

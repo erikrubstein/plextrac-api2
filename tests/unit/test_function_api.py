@@ -4,6 +4,7 @@ import pytest
 from plextrac_api.functions import clients, reports
 from plextrac_api.functions.auth import session_from_token
 from plextrac_api.functions.common import PlexTracNotFoundError
+from plextrac_api.types import ReportStatus
 
 
 def test_explicit_client_function_interpolates_path_params(monkeypatch):
@@ -80,12 +81,34 @@ def test_explicit_report_create_uses_named_parameters(monkeypatch):
     monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
     session = session_from_token("https://example.plextrac.com", "test-token")
 
-    result = reports.create_report(session, client_id="client-1", name="Example Report")
+    result = reports.create_report(
+        session,
+        client_id="client-1",
+        name="Example Report",
+        status=ReportStatus.DRAFT,
+    )
 
     assert result.id == 42
     assert seen["method"] == "POST"
     assert seen["path"] == "/api/v1/client/client-1/report/create"
-    assert seen["json"] == {"name": "Example Report"}
+    assert seen["json"] == {"name": "Example Report", "status": "Draft"}
+
+
+def test_explicit_report_replace_returns_replace_result(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"status": "success", "data": True})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = reports.replace_report_text(session, report_id=42, search="old", replace="new")
+
+    assert result.replaced is True
+    assert result.status == "success"
+    assert seen["json"] == {"search": "old", "replace": "new", "report_id": 42}
 
 
 def test_request_maps_http_errors(monkeypatch):

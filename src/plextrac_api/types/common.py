@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Literal
+from enum import Enum
+from typing import Any
 
 JsonDict = dict[str, Any]
-SortOrder = Literal["ASC", "DESC"]
+
+
+class SortOrder(str, Enum):
+    ASCENDING = "ASC"
+    DESCENDING = "DESC"
 
 
 def clean(data: JsonDict) -> JsonDict:
@@ -23,10 +28,10 @@ class Pagination:
 @dataclass(slots=True)
 class Sort:
     by: str
-    order: SortOrder = "ASC"
+    order: SortOrder = SortOrder.ASCENDING
 
     def to_api(self) -> JsonDict:
-        return {"by": self.by, "order": self.order}
+        return {"by": self.by, "order": self.order.value}
 
 
 @dataclass(slots=True)

@@ -1,5 +1,19 @@
 from plextrac_api.generated.endpoints import GROUPS
-from plextrac_api.types import AffectedAsset, Client, Filter, Finding, Pagination, Report, Sort
+from plextrac_api.types import (
+    AffectedAsset,
+    Client,
+    Filter,
+    Finding,
+    Pagination,
+    Report,
+    ReportFilter,
+    ReportFilterField,
+    ReportSort,
+    ReportSortField,
+    ReportStatus,
+    Sort,
+    SortOrder,
+)
 
 
 def test_generated_registry_covers_public_snapshot():
@@ -59,8 +73,22 @@ def test_client_type_parses_documented_fields():
 
 def test_common_request_shape_types_serialize_for_clients():
     assert Pagination(limit=50, offset=25).to_api() == {"offset": 25, "limit": 50}
-    assert Sort(by="name", order="DESC").to_api() == {"by": "name", "order": "DESC"}
+    assert Sort(by="name", order=SortOrder.DESCENDING).to_api() == {"by": "name", "order": "DESC"}
     assert Filter(by="tags", value=["external"]).to_api() == {"by": "tags", "value": ["external"]}
+
+
+def test_report_request_shape_types_serialize_with_verified_fields():
+    assert ReportSort(
+        by=ReportSortField.STATUS,
+        order=SortOrder.DESCENDING,
+    ).to_api() == {"by": "status", "order": "DESC"}
+    assert ReportFilter(
+        by=ReportFilterField.STATUS,
+        value=[ReportStatus.PUBLISHED.value],
+    ).to_api() == {
+        "by": "status",
+        "value": ["Published"],
+    }
 
 
 def test_report_type_parses_narratives():
@@ -77,6 +105,7 @@ def test_report_type_parses_narratives():
     )
 
     assert report.id == 10
+    assert report.status is ReportStatus.DRAFT
     assert report.narratives[0].label == "Executive Summary"
 
 

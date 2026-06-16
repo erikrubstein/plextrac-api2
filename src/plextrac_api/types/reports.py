@@ -1,8 +1,31 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 
-from plextrac_api.types.common import CustomField, JsonDict, clean
+from plextrac_api.types.common import CustomField, JsonDict, SortOrder, clean
+
+
+class ReportStatus(str, Enum):
+    DRAFT = "Draft"
+    READY_FOR_REVIEW = "Ready For Review"
+    IN_REVIEW = "In Review"
+    APPROVED = "Approved"
+    PUBLISHED = "Published"
+
+
+class ReportSortField(str, Enum):
+    NAME = "name"
+    STATUS = "status"
+
+
+class ReportFilterField(str, Enum):
+    NAME = "name"
+    REVIEWERS = "reviewers"
+    OPERATORS = "operators"
+    CLIENTS = "clients"
+    STATUS = "status"
+    CUIDS = "cuids"
 
 
 @dataclass(slots=True)
@@ -42,7 +65,7 @@ class Narrative:
 @dataclass(slots=True)
 class ReportDraft:
     name: str
-    status: str | None = None
+    status: ReportStatus | None = None
     include_evidence: bool | None = None
     tags: list[str] | None = None
     custom_fields: list[CustomField] | None = None
@@ -70,7 +93,7 @@ class ReportDraft:
 @dataclass(slots=True)
 class ReportPatch:
     name: str | None = None
-    status: str | None = None
+    status: ReportStatus | None = None
     include_evidence: bool | None = None
     tags: list[str] | None = None
     custom_fields: list[CustomField] | None = None
@@ -102,7 +125,7 @@ class Report:
     id: int | str | None = None
     client_id: int | str | None = None
     name: str | None = None
-    status: str | None = None
+    status: ReportStatus | None = None
     include_evidence: bool | None = None
     report_type: str | None = None
     tags: list[str] | None = None
@@ -128,7 +151,7 @@ class Report:
             id=data.get("report_id") or data.get("id") or data.get("cuid"),
             client_id=data.get("client_id"),
             name=data.get("name"),
-            status=data.get("status"),
+            status=_report_status(data.get("status")),
             include_evidence=data.get("includeEvidence"),
             report_type=data.get("reportType"),
             tags=data.get("tags") if isinstance(data.get("tags"), list) else None,
@@ -162,7 +185,7 @@ class ReportSummary:
     report_id: int | str | None = None
     client_id: int | str | None = None
     name: str | None = None
-    status: str | None = None
+    status: ReportStatus | None = None
     tags: list[str] | None = None
     raw: JsonDict | None = None
 
@@ -176,7 +199,7 @@ class ReportSummary:
             report_id=_list_value(values, 0) or data.get("report_id") or data.get("id"),
             client_id=_list_value(doc_ids, 0) or data.get("client_id"),
             name=_list_value(values, 1) or data.get("name"),
-            status=_list_value(values, 3) or data.get("status"),
+            status=_report_status(_list_value(values, 3) or data.get("status")),
             tags=tags if isinstance(tags, list) else data.get("tags"),
             raw=dict(data),
         )
@@ -205,6 +228,24 @@ class ReportPage:
 
 
 @dataclass(slots=True)
+class ReportSort:
+    by: ReportSortField
+    order: SortOrder = SortOrder.ASCENDING
+
+    def to_api(self) -> JsonDict:
+        return {"by": self.by.value, "order": self.order.value}
+
+
+@dataclass(slots=True)
+class ReportFilter:
+    by: ReportFilterField
+    value: str | list[str] | list[int]
+
+    def to_api(self) -> JsonDict:
+        return {"by": self.by.value, "value": self.value}
+
+
+@dataclass(slots=True)
 class ReportSearchOccurrenceResult:
     count: int | None = None
     status: str | None = None
@@ -214,6 +255,22 @@ class ReportSearchOccurrenceResult:
     def from_api(cls, data: JsonDict) -> ReportSearchOccurrenceResult:
         return cls(
             count=data.get("count") if isinstance(data.get("count"), int) else None,
+            status=data.get("status"),
+            raw=dict(data),
+        )
+
+
+@dataclass(slots=True)
+class ReportReplaceResult:
+    replaced: bool | None = None
+    status: str | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> ReportReplaceResult:
+        replaced = data.get("data")
+        return cls(
+            replaced=replaced if isinstance(replaced, bool) else None,
             status=data.get("status"),
             raw=dict(data),
         )
@@ -232,7 +289,7 @@ class ReportExhibit:
 def _report_payload(
     *,
     name: str | None = None,
-    status: str | None = None,
+    status: ReportStatus | None = None,
     include_evidence: bool | None = None,
     tags: list[str] | None = None,
     custom_fields: list[CustomField] | None = None,
@@ -246,7 +303,7 @@ def _report_payload(
     return clean(
         {
             "name": name,
-            "status": status,
+            "status": status.value if status is not None else None,
             "includeEvidence": include_evidence,
             "tags": tags,
             "custom_field": [
@@ -288,6 +345,17 @@ def _first_int(data: JsonDict, keys: tuple[str, ...]) -> int | None:
             nested = _first_int(value, keys)
             if nested is not None:
                 return nested
+    return None
+
+
+def _report_status(value: object) -> ReportStatus | None:
+    if isinstance(value, ReportStatus):
+        return value
+    if isinstance(value, str):
+        try:
+            return ReportStatus(value)
+        except ValueError:
+            return None
     return None
 
 
