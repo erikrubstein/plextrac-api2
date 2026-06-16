@@ -1,6 +1,12 @@
-# Endpoint Coverage
+# Endpoint Coverage Snapshot
 
-Generated from the public PlexTrac Postman collection snapshot.
+This file is an inventory of the currently known PlexTrac API groups and endpoint wrappers. It is
+useful for SDK development and gap tracking, but it is not intended to be the primary user guide.
+
+Most groups are still generated wrappers. The `clients` and `reports` groups are hand-polished and
+show the intended long-term SDK shape.
+
+The inventory is based on the public PlexTrac Postman collection snapshot.
 
 When multiple documented versions expose the same operation, this SDK keeps only the latest supported version.
 

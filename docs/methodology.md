@@ -94,12 +94,36 @@ Rules:
 - Define response dataclasses for documented response objects.
 - Use concrete return types such as `Client`, `ClientPage`, `list[ClientUser]`, or
   `OperationResult`.
+- Use `OperationResult` only for generic operation responses. If an endpoint returns unique
+  information, define a dedicated result type that preserves it.
 - Keep raw API payloads available on dataclasses when useful for forward compatibility.
+- Use `Enum` for documented finite value sets instead of `Literal` or plain `str`.
+- Give enum members readable, unabbreviated names even when the API value is abbreviated.
+- Serialize enums back to PlexTrac's documented wire values at the API boundary.
 - Use `JsonDict` internally for payload assembly when needed, but do not treat it as the desired
   public return type for polished wrappers.
 
+Examples:
+
+- `SortOrder.ASCENDING` serializes to `"ASC"`.
+- `ReportStatus.READY_FOR_REVIEW` serializes to `"Ready For Review"`.
+- `ReportReplaceResult` is preferred over `OperationResult` for report text replacement because the
+  response includes a meaningful `data` boolean.
+
 Generated endpoint functions are allowed to use `**kwargs` and `Any` temporarily. They exist to
 preserve broad coverage while individual groups are polished.
+
+## Docstring Policy
+
+Polished functions should include concise docstrings that describe the operation from the SDK
+user's point of view.
+
+Rules:
+
+- Put docstrings inside the function body, immediately after the function definition.
+- Keep docstrings short and practical.
+- Do not use docstrings to restate every parameter when type hints already make the signature clear.
+- Mention version or transport details only when they are important to the user's decision.
 
 ## Generated vs Polished Functions
 
@@ -116,8 +140,10 @@ The `clients` and `reports` groups are the current models for polished groups:
 - explicit function arguments
 - concrete return types
 - group-specific dataclasses
+- documented finite value sets represented as enums
 - canonical endpoint version only
 - naming fixes where needed
+- concise docstrings
 
 ## REST, GraphQL, And Webhooks
 
@@ -158,5 +184,9 @@ When polishing an API group:
 6. Define group-specific dataclasses in `types.<group>`.
 7. Replace ambiguous `**kwargs` wrappers with explicit function arguments.
 8. Replace `Any`/`JsonDict` public returns with concrete return types.
-9. Update endpoint coverage and docs.
-10. Add tests for request shape, response parsing, and naming regressions.
+9. Replace documented finite string sets with enums that use readable member names.
+10. Use dedicated result types instead of `OperationResult` when endpoint responses contain unique
+    information.
+11. Add concise docstrings to polished functions.
+12. Update endpoint coverage and docs.
+13. Add tests for request shape, response parsing, enum serialization, and naming regressions.

@@ -6,7 +6,6 @@ build-backend = "hatchling.build"
 name = "plextrac-api"
 version = "0.1.0"
 description = "Unofficial Python API for PlexTrac"
-readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [

@@ -1,48 +1,98 @@
-# Usage
+# Usage Notes
 
-## Create A Client
+This SDK is still being polished group by group. Treat `clients` and `reports` as the current
+examples of the intended public API shape.
+
+Generated function modules remain available for broad endpoint coverage, but they are scaffolding:
+their signatures and return values may be less explicit until that group is polished.
+
+## Authentication
 
 ```python
 from plextrac_api.functions.auth import create_session
-from plextrac_api.functions import clients, findings
 
 session = create_session(
     base_url="https://example.plextrac.com",
     username="user@example.com",
     password="secret",
 )
-
-client = clients.create_client(session, name="Example Client")
 ```
 
-## Grouped Function Modules
+For token-based workflows:
 
 ```python
-from plextrac_api.functions import clients, reports, findings
+from plextrac_api.functions.auth import session_from_token
 
-clients.get_client(session, client_id="client-cuid")
-reports.export_report_to_pdf(session, client_id="client-cuid", report_id="report-cuid")
-findings.list_report_findings(session, clientId="client-cuid", reportId="report-cuid")
+session = session_from_token("https://example.plextrac.com", "token")
 ```
 
-## Use Explicit Request Data
-
-Generated methods accept `json`, `params`, `data`, `files`, `headers`, and `content`
-for cases where the endpoint needs a precise request shape.
+## Clients
 
 ```python
-finding = findings.create_finding(
+from plextrac_api.functions import clients
+from plextrac_api.types import Pagination, Sort, SortOrder
+
+page = clients.list_clients(
     session,
-    clientId="client-cuid",
-    reportId="report-cuid",
-    json={"title": "Example finding"},
+    pagination=Pagination(limit=50, offset=0),
+    sort=[Sort(by="name", order=SortOrder.ASCENDING)],
+)
+
+client = clients.get_client(session, client_id="client-cuid")
+created = clients.create_client(session, name="Example Client")
+```
+
+## Reports
+
+```python
+from plextrac_api.functions import reports
+from plextrac_api.types import ReportSort, ReportSortField, ReportStatus, SortOrder
+
+report_page = reports.list_reports(
+    session,
+    sort=[ReportSort(by=ReportSortField.STATUS, order=SortOrder.DESCENDING)],
+)
+
+created = reports.create_report(
+    session,
+    client_id="client-cuid",
+    name="Example Report",
+    status=ReportStatus.DRAFT,
+)
+
+pdf_bytes = reports.export_report_to_pdf(
+    session,
+    client_id="client-cuid",
+    report_id="report-cuid",
 )
 ```
 
-## Raw Escape Hatch
+## Raw REST Escape Hatch
+
+Use `rest_request` for unsupported workflows or while a group is still generated-only.
 
 ```python
 from plextrac_api.functions.common import rest_request
 
-result = rest_request(session, "POST", "/api/v2/clients", json={"pagination": {"limit": 50}})
+result = rest_request(
+    session,
+    "POST",
+    "/api/v2/clients",
+    json={"pagination": {"limit": 50, "offset": 0}},
+)
+```
+
+## GraphQL
+
+GraphQL exists as a raw helper for documented GraphQL operations. It is not currently a polished
+first-class SDK surface.
+
+```python
+from plextrac_api.functions.common import execute_graphql
+
+result = execute_graphql(
+    session,
+    "query Example($tenantId: String!) { tenant(id: $tenantId) { id } }",
+    variables={"tenantId": "tenant-cuid"},
+)
 ```
