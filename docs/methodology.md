@@ -111,7 +111,7 @@ The SDK currently has two layers:
 Generated functions should be considered scaffolding. As a group is polished, replace ambiguous
 generated-style wrappers with explicit signatures and typed returns.
 
-The `clients` group is the current model for polished groups:
+The `clients` and `reports` groups are the current models for polished groups:
 
 - explicit function arguments
 - concrete return types

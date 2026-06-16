@@ -30,7 +30,6 @@ GENERATED_FUNCTION_GROUPS = {
     "integrations",
     "mailer",
     "parser_actions",
-    "reports",
     "runbooks",
     "scheduler",
     "substatus",
@@ -38,12 +37,20 @@ GENERATED_FUNCTION_GROUPS = {
     "tenant",
     "users",
 }
-HAND_WRITTEN_FUNCTION_GROUPS = {"clients"}
+HAND_WRITTEN_FUNCTION_GROUPS = {"clients", "reports"}
 VERSION_SUFFIX_RE = re.compile(r"^(?P<base>.+)_v(?P<version>\d+)$")
 METHOD_NAME_OVERRIDES = {
     ("Clients", "available_tenant_users"): "list_available_tenant_users",
     ("Clients", "assign_user_to_client"): "assign_users_to_client",
     ("Clients", "remove_user_from_client"): "remove_users_from_client",
+    ("Reports", "bulk_add_tags_to_report"): "bulk_add_tags_to_reports",
+    ("Reports", "bulk_adjust_status_of_report"): "bulk_update_report_statuses",
+    ("Reports", "bulk_assign_reviewers_to_report"): "bulk_assign_reviewers_to_reports",
+    ("Reports", "get_exhibit"): "get_report_exhibit",
+    ("Reports", "get_report_list"): "list_reports",
+    ("Reports", "import_ptrac_report"): "import_report_from_ptrac",
+    ("Reports", "search_replace_in_report_occurrences"): "count_report_search_occurrences",
+    ("Reports", "search_replace_in_report_replace"): "replace_report_text",
 }
 
 

@@ -22,7 +22,7 @@ Total supported endpoint functions in snapshot: **357**
 | Mailer | `plextrac_api.functions.mailer` | 3 |
 | Parser Actions | `plextrac_api.functions.parser_actions` | 8 |
 | QA Workflow | _not generated_ | 0 |
-| Reports | `plextrac_api.functions.reports` | 17 |
+| Reports | `plextrac_api.functions.reports` | 17 explicit functions |
 | Runbooks | `plextrac_api.functions.runbooks` | 63 |
 | Scheduler | `plextrac_api.functions.scheduler` | 10 |
 | Substatus | `plextrac_api.functions.substatus` | 4 |
@@ -349,23 +349,23 @@ Display name: Reports
 
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
-| `search_replace_in_report_occurrences` | POST | `/api/v1/search-replace/occurrences` |  |
-| `search_replace_in_report_replace` | POST | `/api/v1/search-replace` |  |
+| `count_report_search_occurrences` | POST | `/api/v1/search-replace/occurrences` |  |
+| `replace_report_text` | POST | `/api/v1/search-replace` |  |
 | `list_client_reports` | GET | `/api/v1/client/{clientId}/reports` |  |
-| `get_report_list` | POST | `/api/v2/reports` |  |
+| `list_reports` | POST | `/api/v2/reports` | `list` |
 | `get_report` | GET | `/api/v1/client/{clientId}/report/{reportId}` | `get` |
 | `create_report` | POST | `/api/v1/client/{clientId}/report/create` | `create` |
 | `update_report` | PUT | `/api/v1/client/{clientId}/report/{reportId}` | `update` |
 | `delete_report` | DELETE | `/api/v1/client/{clientId}/report/{reportId}` | `delete` |
 | `bulk_delete_reports` | POST | `/api/v2/reports/bulk/delete` |  |
-| `get_exhibit` | GET | `/api/v1/client/{clientId}/report/{reportId}/{exhibitId}` |  |
-| `bulk_add_tags_to_report` | POST | `/api/v2/reports/bulk/tags` |  |
-| `bulk_assign_reviewers_to_report` | POST | `/api/v2/reports/bulk/reviewers` |  |
-| `bulk_adjust_status_of_report` | POST | `/api/v2/reports/bulk/status` |  |
+| `get_report_exhibit` | GET | `/api/v1/client/{clientId}/report/{reportId}/{exhibitId}` |  |
+| `bulk_add_tags_to_reports` | POST | `/api/v2/reports/bulk/tags` |  |
+| `bulk_assign_reviewers_to_reports` | POST | `/api/v2/reports/bulk/reviewers` |  |
+| `bulk_update_report_statuses` | POST | `/api/v2/reports/bulk/status` |  |
 | `export_report_to_ptrac` | GET | `/api/v1/client/{clientId}/report/{reportId}/export/ptrac` |  |
 | `export_report_to_word` | GET | `/api/v1/client/{clientId}/report/{reportId}/export/doc` |  |
 | `export_report_to_pdf` | GET | `/api/v1/client/{clientId}/report/{reportId}/export/pdf` |  |
-| `import_ptrac_report` | POST | `/api/v1/client/{clientId}/report/import` |  |
+| `import_report_from_ptrac` | POST | `/api/v1/client/{clientId}/report/import` |  |
 
 ### `runbooks`
 

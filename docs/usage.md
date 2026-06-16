@@ -21,7 +21,7 @@ client = clients.create_client(session, name="Example Client")
 from plextrac_api.functions import clients, reports, findings
 
 clients.get_client(session, client_id="client-cuid")
-reports.export_report_to_pdf(session, clientId="client-cuid", reportId="report-cuid")
+reports.export_report_to_pdf(session, client_id="client-cuid", report_id="report-cuid")
 findings.list_report_findings(session, clientId="client-cuid", reportId="report-cuid")
 ```
 

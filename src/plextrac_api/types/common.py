@@ -147,7 +147,12 @@ class OperationResult:
             return cls(
                 status=data.get("status") or data.get("result"),
                 message=data.get("message") or data.get("detail"),
-                id=data.get("id") or data.get("client_id") or data.get("cuid"),
+                id=(
+                    data.get("id")
+                    or data.get("client_id")
+                    or data.get("report_id")
+                    or data.get("cuid")
+                ),
                 raw=dict(data),
             )
         return cls(raw={"data": data})

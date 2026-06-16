@@ -26,7 +26,16 @@ from plextrac_api.types.common import (
 )
 from plextrac_api.types.evidence import Evidence
 from plextrac_api.types.findings import CodeSample, Finding, Identifier
-from plextrac_api.types.reports import Narrative, Report
+from plextrac_api.types.reports import (
+    Narrative,
+    Report,
+    ReportDraft,
+    ReportExhibit,
+    ReportPage,
+    ReportPatch,
+    ReportSearchOccurrenceResult,
+    ReportSummary,
+)
 
 __all__ = [
     "AffectedAsset",
@@ -54,6 +63,12 @@ __all__ = [
     "Port",
     "Pagination",
     "Report",
+    "ReportDraft",
+    "ReportExhibit",
+    "ReportPage",
+    "ReportPatch",
+    "ReportSearchOccurrenceResult",
+    "ReportSummary",
     "Sort",
     "SortOrder",
     "UserRole",

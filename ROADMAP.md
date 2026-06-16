@@ -24,7 +24,7 @@ session = create_session(
 )
 
 client_page = clients.list_clients(session)
-report = reports.get(session, clientId="client-id", reportId="report-id")
+report = reports.get_report(session, client_id="client-id", report_id="report-id")
 finding = findings.get(session, clientId="client-id", reportId="report-id", findingId="finding-id")
 ```
 
@@ -71,10 +71,9 @@ The durable SDK design rules live in [docs/methodology.md](docs/methodology.md).
 1. Add live integration test configuration.
 2. Validate real PlexTrac auth and refresh response shapes.
 3. Polish the next high-value generated groups with explicit signatures and return types:
-   - `reports`
    - `findings`
    - `assets`
-4. Add upload/download helpers for files, findings imports, asset imports, and report exports.
+4. Add upload/download helpers for files, findings imports, and asset imports.
 5. Add pagination helpers after observing real endpoint response shapes.
 6. Add endpoint generator `--fetch` support so the Postman collection can be refreshed directly.
 

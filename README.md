@@ -15,7 +15,7 @@ session = create_session(
 )
 
 client_page = clients.list_clients(session)
-report = reports.get(session, clientId="client-id", reportId="report-id")
+report = reports.get_report(session, client_id="client-id", report_id="report-id")
 ```
 
 ## Current Scope
@@ -79,9 +79,9 @@ Endpoint placeholders can be passed directly as keyword arguments:
 ```python
 pdf = reports.export_report_to_pdf(
     session,
-    clientId="client-cuid",
-    reportId="report-cuid",
-    includeEvidence=False,
+    client_id="client-cuid",
+    report_id="report-cuid",
+    include_evidence=False,
 )
 ```
 

@@ -29,26 +29,26 @@ def test_explicit_client_function_interpolates_path_params(monkeypatch):
     assert seen["headers"]["Authorization"] == "Bearer test-token"
 
 
-def test_generated_function_sends_remaining_get_kwargs_as_query(monkeypatch):
+def test_explicit_report_export_uses_snake_case_query_options(monkeypatch):
     seen = {}
 
     def fake_send(session, method, path, **kwargs):
         seen["path"] = path
         seen["params"] = kwargs["params"]
-        return httpx.Response(200, json={"ok": True})
+        return httpx.Response(200, content=b"%PDF")
 
     monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
     session = session_from_token("https://example.plextrac.com", "test-token")
 
     reports.export_report_to_pdf(
         session,
-        clientId="client-1",
-        reportId="report-1",
-        includeEvidence="true",
+        client_id="client-1",
+        report_id="report-1",
+        include_evidence=True,
     )
 
     assert seen["path"] == "/api/v1/client/client-1/report/report-1/export/pdf"
-    assert seen["params"] == {"includeEvidence": "true"}
+    assert seen["params"] == {"includeEvidence": True}
 
 
 def test_explicit_client_create_uses_named_parameters(monkeypatch):
@@ -66,6 +66,26 @@ def test_explicit_client_create_uses_named_parameters(monkeypatch):
 
     assert seen["method"] == "POST"
     assert seen["json"] == {"name": "Example Client"}
+
+
+def test_explicit_report_create_uses_named_parameters(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"message": "success", "report_id": 42})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = reports.create_report(session, client_id="client-1", name="Example Report")
+
+    assert result.id == 42
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v1/client/client-1/report/create"
+    assert seen["json"] == {"name": "Example Report"}
 
 
 def test_request_maps_http_errors(monkeypatch):

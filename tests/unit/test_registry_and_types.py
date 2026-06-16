@@ -29,6 +29,12 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "assign_user_to_client" not in method_names
     assert "remove_users_from_client" in method_names
     assert "remove_user_from_client" not in method_names
+    assert "list_reports" in method_names
+    assert "get_report_list" not in method_names
+    assert "count_report_search_occurrences" in method_names
+    assert "search_replace_in_report_occurrences" not in method_names
+    assert "bulk_update_report_statuses" in method_names
+    assert "bulk_adjust_status_of_report" not in method_names
     assert all(not name.endswith(("_v1", "_v2", "_v3")) for name in method_names)
 
 
