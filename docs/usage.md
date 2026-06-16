@@ -1,7 +1,7 @@
 # Usage Notes
 
-This SDK is still being polished group by group. Treat `clients` and `reports` as the current
-examples of the intended public API shape.
+This SDK is still being polished group by group. Treat `clients`, `reports`, and `findings` as the
+current examples of the intended public API shape.
 
 Generated function modules remain available for broad endpoint coverage, but they are scaffolding:
 their signatures and return values may be less explicit until that group is polished.
@@ -30,23 +30,30 @@ session = session_from_token("https://example.plextrac.com", "token")
 
 ```python
 from plextrac_api.functions import clients
-from plextrac_api.types import Pagination, Sort, SortOrder
+from plextrac_api.types import (
+    ClientInput,
+    ClientPageLimit,
+    ClientPagination,
+    ClientSort,
+    ClientSortField,
+    SortOrder,
+)
 
 page = clients.list_clients(
     session,
-    pagination=Pagination(limit=50, offset=0),
-    sort=[Sort(by="name", order=SortOrder.ASCENDING)],
+    pagination=ClientPagination(limit=ClientPageLimit.FIFTY, offset=0),
+    sort=[ClientSort(by=ClientSortField.NAME, order=SortOrder.ASCENDING)],
 )
 
 client = clients.get_client(session, client_id="client-cuid")
-created = clients.create_client(session, name="Example Client")
+created = clients.create_client(session, ClientInput(name="Example Client"))
 ```
 
 ## Reports
 
 ```python
 from plextrac_api.functions import reports
-from plextrac_api.types import ReportSort, ReportSortField, ReportStatus, SortOrder
+from plextrac_api.types import ReportInput, ReportSort, ReportSortField, ReportStatus, SortOrder
 
 report_page = reports.list_reports(
     session,
@@ -56,14 +63,45 @@ report_page = reports.list_reports(
 created = reports.create_report(
     session,
     client_id="client-cuid",
-    name="Example Report",
-    status=ReportStatus.DRAFT,
+    report=ReportInput(name="Example Report", status=ReportStatus.DRAFT),
 )
 
 pdf_bytes = reports.export_report_to_pdf(
     session,
     client_id="client-cuid",
     report_id="report-cuid",
+)
+```
+
+## Findings
+
+```python
+from plextrac_api.functions import findings
+from plextrac_api.types import (
+    FindingInput,
+    FindingPageLimit,
+    FindingPagination,
+    FindingSeverity,
+    FindingStatus,
+)
+
+page = findings.list_report_findings(
+    session,
+    client_id="client-cuid",
+    report_id="report-cuid",
+    pagination=FindingPagination(limit=FindingPageLimit.TEN),
+)
+
+created = findings.create_finding(
+    session,
+    client_id="client-cuid",
+    report_id="report-cuid",
+    finding=FindingInput(
+        title="Example Finding",
+        severity=FindingSeverity.HIGH,
+        status=FindingStatus.OPEN,
+        description="Example description",
+    ),
 )
 ```
 

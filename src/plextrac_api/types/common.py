@@ -55,6 +55,9 @@ class CustomField:
             return None
         return cls(label=data.get("label"), value=data.get("value"), raw=dict(data))
 
+    def to_api(self) -> JsonDict:
+        return clean({"label": self.label, "value": self.value})
+
 
 @dataclass(slots=True)
 class UserRole:
@@ -93,6 +96,16 @@ class Port:
             raw=dict(data),
         )
 
+    def to_api(self) -> JsonDict:
+        return clean(
+            {
+                "number": self.number,
+                "service": self.service,
+                "protocol": self.protocol,
+                "version": self.version,
+            }
+        )
+
 
 @dataclass(slots=True)
 class VulnerableParameter:
@@ -105,6 +118,9 @@ class VulnerableParameter:
         if not data:
             return None
         return cls(id=data.get("id"), text=data.get("text"), raw=dict(data))
+
+    def to_api(self) -> JsonDict:
+        return clean({"id": self.id, "text": self.text})
 
 
 @dataclass(slots=True)
@@ -122,6 +138,9 @@ class ObjectReference:
             name=data.get("name") or data.get("asset") or data.get("title"),
             raw=dict(data),
         )
+
+    def to_api(self) -> JsonDict:
+        return clean({"id": self.id, "name": self.name})
 
 
 @dataclass(slots=True)

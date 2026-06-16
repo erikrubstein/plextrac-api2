@@ -7,6 +7,7 @@ from plextrac_api.types.common import (
     ObjectReference,
     Port,
     VulnerableParameter,
+    clean,
 )
 
 
@@ -69,6 +70,34 @@ class Asset:
             raw=dict(data),
         )
 
+    def to_api(self) -> JsonDict:
+        return clean(
+            {
+                "id": self.id,
+                "cuid": self.cuid,
+                "asset": self.name,
+                "client_id": self.client_id,
+                "type": self.type,
+                "assetCriticality": self.criticality,
+                "description": self.description,
+                "hostname": self.hostname,
+                "dns_name": self.dns_name,
+                "host_fqdn": self.host_fqdn,
+                "host_rdns": self.host_rdns,
+                "mac_address": self.mac_address,
+                "knownIps": self.known_ips,
+                "operating_system": self.operating_system,
+                "parent_asset": self.parent_asset.to_api()
+                if self.parent_asset is not None
+                else None,
+                "ports": {key: port.to_api() for key, port in self.ports.items()}
+                if self.ports is not None
+                else None,
+                "tags": self.tags,
+                "doc_type": self.doc_type,
+            }
+        )
+
 
 @dataclass(slots=True)
 class AffectedAsset(Asset):
@@ -125,3 +154,28 @@ class AffectedAsset(Asset):
             raw=dict(data),
         )
 
+    def to_api(self) -> JsonDict:
+        data = self._asset_api()
+        data.update(
+            clean(
+                {
+                    "status": self.status,
+                    "subStatus": self.substatus,
+                    "substatusCuid": self.substatus_cuid,
+                    "evidence": self.evidence,
+                    "locationUrl": self.location_url,
+                    "vulnerableParameters": [
+                        parameter.to_api() for parameter in self.vulnerable_parameters
+                    ]
+                    if self.vulnerable_parameters is not None
+                    else None,
+                    "notes": self.notes,
+                    "closedAt": self.closed_at,
+                    "reopenedAt": self.reopened_at,
+                }
+            )
+        )
+        return data
+
+    def _asset_api(self) -> JsonDict:
+        return super().to_api()

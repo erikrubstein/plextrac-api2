@@ -2,8 +2,26 @@ from plextrac_api.generated.endpoints import GROUPS
 from plextrac_api.types import (
     AffectedAsset,
     Client,
+    ClientFilter,
+    ClientFilterField,
+    ClientFindingFilter,
+    ClientFindingFilterField,
+    ClientPageLimit,
+    ClientPagination,
+    ClientSort,
+    ClientSortField,
     Filter,
     Finding,
+    FindingField,
+    FindingFilter,
+    FindingFilterField,
+    FindingPageLimit,
+    FindingPagination,
+    FindingSeverity,
+    FindingSort,
+    FindingSortField,
+    FindingStatus,
+    FindingVisibility,
     Pagination,
     Report,
     ReportFilter,
@@ -71,10 +89,29 @@ def test_client_type_parses_documented_fields():
     assert client.users["user@example.com"].role == "ADMIN"
 
 
-def test_common_request_shape_types_serialize_for_clients():
+def test_client_request_shape_types_serialize_with_verified_fields():
     assert Pagination(limit=50, offset=25).to_api() == {"offset": 25, "limit": 50}
     assert Sort(by="name", order=SortOrder.DESCENDING).to_api() == {"by": "name", "order": "DESC"}
     assert Filter(by="tags", value=["external"]).to_api() == {"by": "tags", "value": ["external"]}
+    assert ClientPagination(limit=ClientPageLimit.FIFTY, offset=25).to_api() == {
+        "offset": 25,
+        "limit": 50,
+    }
+    assert ClientSort(by=ClientSortField.NAME, order=SortOrder.DESCENDING).to_api() == {
+        "by": "name",
+        "order": "DESC",
+    }
+    assert ClientFilter(by=ClientFilterField.TAGS, value=["external"]).to_api() == {
+        "by": "tags",
+        "value": ["external"],
+    }
+    assert ClientFindingFilter(
+        by=ClientFindingFilterField.VISIBILITY,
+        value=FindingVisibility.PUBLISHED,
+    ).to_api() == {
+        "by": "visibility",
+        "value": "published",
+    }
 
 
 def test_report_request_shape_types_serialize_with_verified_fields():
@@ -88,6 +125,29 @@ def test_report_request_shape_types_serialize_with_verified_fields():
     ).to_api() == {
         "by": "status",
         "value": ["Published"],
+    }
+
+
+def test_finding_request_shape_types_serialize_with_verified_fields():
+    assert FindingPagination(limit=FindingPageLimit.FIFTY, offset=10).to_api() == {
+        "offset": 10,
+        "limit": 50,
+    }
+    assert FindingSort(
+        by=FindingSortField.SEVERITY,
+        order=SortOrder.DESCENDING,
+    ).to_api() == {"by": "severity", "order": "DESC"}
+    assert FindingFilter(
+        by=FindingFilterField.STATUS,
+        value=[FindingStatus.OPEN],
+    ).to_api() == {
+        "by": "status",
+        "value": ["Open"],
+    }
+    assert FindingField(key="synopsis", label="Synopsis", value="Example").to_api() == {
+        "key": "synopsis",
+        "label": "Synopsis",
+        "value": "Example",
     }
 
 
@@ -116,11 +176,13 @@ def test_finding_type_parses_affected_assets_and_identifiers():
             "title": "Example finding",
             "severity": "High",
             "status": "Open",
+            "visibility": "published",
             "common_identifiers": {
                 "CVE": [{"name": "CVE-2024-0001", "year": 2024, "id": 1}],
                 "CWE": [{"name": "CWE-79", "id": 79}],
                 "code_samples": [{"id": "cs1", "caption": "example", "code": "print(1)"}],
             },
+            "fields": [{"key": "synopsis", "label": "Synopsis", "value": "Example"}],
             "affected_assets": {
                 "asset-1": {
                     "id": "asset-1",
@@ -133,6 +195,10 @@ def test_finding_type_parses_affected_assets_and_identifiers():
     )
 
     assert finding.flaw_id == 99
+    assert finding.severity is FindingSeverity.HIGH
+    assert finding.status is FindingStatus.OPEN
+    assert finding.visibility is FindingVisibility.PUBLISHED
     assert finding.cves[0].name == "CVE-2024-0001"
+    assert finding.fields[0].key == "synopsis"
     assert isinstance(finding.affected_assets["asset-1"], AffectedAsset)
     assert finding.affected_assets["asset-1"].vulnerable_parameters[0].text == "q"

@@ -90,13 +90,31 @@ inputs or `Any`/`JsonDict` outputs.
 
 Rules:
 
+- Default to explicit structures, schemas, and expected values. Treat looseness as something that
+  must be justified by the PlexTrac docs or observed API behavior, not as a convenience.
 - Define request dataclasses for structured request bodies when the shape is documented and reused.
+- Name reusable request dataclasses with an `Input` suffix when they represent create/update-style
+  object payloads, such as `ClientInput`, `ReportInput`, and `FindingInput`.
 - Define response dataclasses for documented response objects.
+- Do not define request/input dataclasses that are used by only one public function. Use explicit
+  function parameters for single-use request bodies.
+- When a request/input dataclass is reused by multiple public functions, require that dataclass in
+  those functions and do not also offer explicit keyword arguments as an alternative.
 - Use concrete return types such as `Client`, `ClientPage`, `list[ClientUser]`, or
   `OperationResult`.
 - Use `OperationResult` only for generic operation responses. If an endpoint returns unique
   information, define a dedicated result type that preserves it.
-- Keep raw API payloads available on dataclasses when useful for forward compatibility.
+- Keep raw API payloads available on response dataclasses when useful for debugging or forward
+  compatibility, but never use `raw` to construct polished request payloads.
+- Do not add public `extra` escape-hatch fields to polished request types or functions. Use the raw
+  REST helper for unsupported payload keys instead.
+- Do not expose generic `Sort` or `Filter` on polished functions when the endpoint documents field
+  names. Define group-specific sort/filter field enums.
+- If an endpoint accepts an object or list whose item shape is documented, model that item shape
+  with a dataclass instead of `dict`.
+- If an endpoint field is truly open-ended, keep the narrowest accurate type and document why in
+  the type or function review notes. Examples include service-defined upload form fields or tenant
+  custom role codes.
 - Use `Enum` for documented finite value sets instead of `Literal` or plain `str`.
 - Give enum members readable, unabbreviated names even when the API value is abbreviated.
 - Serialize enums back to PlexTrac's documented wire values at the API boundary.
@@ -135,12 +153,14 @@ The SDK currently has two layers:
 Generated functions should be considered scaffolding. As a group is polished, replace ambiguous
 generated-style wrappers with explicit signatures and typed returns.
 
-The `clients` and `reports` groups are the current models for polished groups:
+The `clients`, `reports`, and `findings` groups are the current models for polished groups:
 
 - explicit function arguments
+- reusable input dataclasses only when shared across functions
 - concrete return types
 - group-specific dataclasses
 - documented finite value sets represented as enums
+- documented sort/filter fields represented as enums
 - canonical endpoint version only
 - naming fixes where needed
 - concise docstrings
@@ -182,11 +202,16 @@ When polishing an API group:
 4. Add any required generator naming overrides.
 5. Define shared dataclasses in `types.common` only when they are cross-cutting.
 6. Define group-specific dataclasses in `types.<group>`.
-7. Replace ambiguous `**kwargs` wrappers with explicit function arguments.
-8. Replace `Any`/`JsonDict` public returns with concrete return types.
-9. Replace documented finite string sets with enums that use readable member names.
-10. Use dedicated result types instead of `OperationResult` when endpoint responses contain unique
+7. Use explicit function parameters for single-use request bodies.
+8. Use request dataclasses only when the same input type is reused across multiple public functions.
+9. Do not provide both a request dataclass and explicit keyword alternatives for the same function.
+10. Replace ambiguous `**kwargs` wrappers with explicit function arguments.
+11. Replace `Any`/`JsonDict` public returns with concrete return types.
+12. Replace documented finite string sets with enums that use readable member names.
+13. Replace documented sort/filter field strings with group-specific enums.
+14. Replace documented nested dictionaries with dataclasses.
+15. Use dedicated result types instead of `OperationResult` when endpoint responses contain unique
     information.
-11. Add concise docstrings to polished functions.
-12. Update endpoint coverage and docs.
-13. Add tests for request shape, response parsing, enum serialization, and naming regressions.
+16. Add concise docstrings to polished functions.
+17. Update endpoint coverage and docs.
+18. Add tests for request shape, response parsing, enum serialization, and naming regressions.

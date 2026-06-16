@@ -5,9 +5,9 @@ parameters.
 
 ```python
 from plextrac_api.functions import clients
-from plextrac_api.types import Pagination
+from plextrac_api.types import ClientPageLimit, ClientPagination
 
-page = clients.list_clients(session, pagination=Pagination(limit=50, offset=0))
+page = clients.list_clients(session, pagination=ClientPagination(limit=ClientPageLimit.FIFTY, offset=0))
 ```
 
 Avoid relying on oversized limits. PlexTrac's API change policy has included pagination-related

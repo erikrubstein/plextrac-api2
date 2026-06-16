@@ -1,38 +1,135 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum, IntEnum
 
 from plextrac_api.types.assets import Asset
-from plextrac_api.types.common import CustomField, JsonDict, UserRole, clean
-from plextrac_api.types.findings import Finding
+from plextrac_api.types.common import CustomField, JsonDict, SortOrder, UserRole, clean
+from plextrac_api.types.findings import Finding, FindingSeverity, FindingStatus, FindingVisibility
+
+
+class ClientPageLimit(IntEnum):
+    FIVE = 5
+    TWENTY_FIVE = 25
+    FIFTY = 50
+    ONE_HUNDRED = 100
+
+
+class ClientSortField(str, Enum):
+    NAME = "name"
+    ASSET = "asset"
+
+
+class ClientFilterField(str, Enum):
+    NAME = "name"
+    ASSET = "asset"
+    TAGS = "tags"
+
+
+class ClientFindingSortField(str, Enum):
+    ASSIGNED_TO = "assignedTo"
+    DATE_FROM = "dateFrom"
+    DATE_TO = "dateTo"
+    REPORT_ID = "reportId"
+    SEVERITY = "severity"
+    STATUS = "status"
+    SUBSTATUS = "subStatus"
+    VISIBILITY = "visibility"
+
+
+class ClientFindingFilterField(str, Enum):
+    ASSIGNED_TO = "assignedTo"
+    COMMON_IDENTIFIERS = "commonIdentifiers"
+    DATE_FROM = "dateFrom"
+    DATE_TO = "dateTo"
+    REPORT_ID = "reportId"
+    SEARCH_TERM = "searchTerm"
+    SEVERITY = "severity"
+    STATUS = "status"
+    SUBSTATUS = "subStatus"
+    TAGS = "tags"
+    VISIBILITY = "visibility"
+
+
+ClientFindingFilterValue = (
+    str
+    | int
+    | FindingSeverity
+    | FindingStatus
+    | FindingVisibility
+    | list[str]
+    | list[FindingSeverity]
+    | list[FindingStatus]
+    | list[FindingVisibility]
+)
+
+
+@dataclass(slots=True)
+class ClientPagination:
+    offset: int = 0
+    limit: ClientPageLimit = ClientPageLimit.TWENTY_FIVE
+
+    def to_api(self) -> JsonDict:
+        return {"offset": self.offset, "limit": int(self.limit)}
+
+
+@dataclass(slots=True)
+class ClientSort:
+    by: ClientSortField
+    order: SortOrder = SortOrder.ASCENDING
+
+    def to_api(self) -> JsonDict:
+        return {"by": self.by.value, "order": self.order.value}
+
+
+@dataclass(slots=True)
+class ClientFilter:
+    by: ClientFilterField
+    value: str | list[str]
+
+    def to_api(self) -> JsonDict:
+        return {"by": self.by.value, "value": self.value}
+
+
+@dataclass(slots=True)
+class ClientFindingSort:
+    by: ClientFindingSortField
+    order: SortOrder = SortOrder.ASCENDING
+
+    def to_api(self) -> JsonDict:
+        return {"by": self.by.value, "order": self.order.value}
+
+
+@dataclass(slots=True)
+class ClientFindingFilter:
+    by: ClientFindingFilterField
+    value: ClientFindingFilterValue
+
+    def to_api(self) -> JsonDict:
+        return {"by": self.by.value, "value": _api_value(self.value)}
 
 
 @dataclass(slots=True)
 class ClientUserAssignment:
-    username: str
     role: str
+    username: str | None = None
+    email: str | None = None
     classification_id: str | None = None
-
-    def to_api(self) -> JsonDict:
-        return clean(
-            {
-                "username": self.username,
-                "role": self.role,
-                "classificationId": self.classification_id,
-            }
-        )
-
-
-@dataclass(slots=True)
-class BulkClientUserAssignment:
-    email: str
-    role: str
     first_name: str | None = None
     last_name: str | None = None
     default_group: bool | None = None
     tenant_classification_level: str | None = None
 
-    def to_api(self) -> JsonDict:
+    def to_assign_api(self) -> JsonDict:
+        return clean(
+            {
+                "username": self.username or self.email,
+                "role": self.role,
+                "classificationId": self.classification_id,
+            }
+        )
+
+    def to_bulk_api(self) -> JsonDict:
         return clean(
             {
                 "default_group": self.default_group,
@@ -69,34 +166,7 @@ class ClientUser:
 
 
 @dataclass(slots=True)
-class ClientDraft:
-    name: str
-    tags: list[str] | None = None
-    description: str | None = None
-    point_of_contact: str | None = None
-    point_of_contact_email: str | None = None
-    custom_fields: list[CustomField] | None = None
-
-    def to_api(self) -> JsonDict:
-        return clean(
-            {
-                "name": self.name,
-                "tags": self.tags,
-                "description": self.description,
-                "poc": self.point_of_contact,
-                "poc_email": self.point_of_contact_email,
-                "custom_field": [
-                    clean({"label": field.label, "value": field.value})
-                    for field in self.custom_fields or []
-                ]
-                if self.custom_fields is not None
-                else None,
-            }
-        )
-
-
-@dataclass(slots=True)
-class ClientPatch:
+class ClientInput:
     name: str | None = None
     tags: list[str] | None = None
     description: str | None = None
@@ -112,10 +182,7 @@ class ClientPatch:
                 "description": self.description,
                 "poc": self.point_of_contact,
                 "poc_email": self.point_of_contact_email,
-                "custom_field": [
-                    clean({"label": field.label, "value": field.value})
-                    for field in self.custom_fields or []
-                ]
+                "custom_field": [field.to_api() for field in self.custom_fields or []]
                 if self.custom_fields is not None
                 else None,
             }
@@ -219,6 +286,14 @@ def _first_int(data: JsonDict, keys: tuple[str, ...]) -> int | None:
             if nested is not None:
                 return nested
     return None
+
+
+def _api_value(value: object) -> object:
+    if isinstance(value, Enum):
+        return value.value
+    if isinstance(value, list):
+        return [_api_value(item) for item in value]
+    return value
 
 
 @dataclass(slots=True)

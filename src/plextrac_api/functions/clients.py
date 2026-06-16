@@ -7,23 +7,22 @@ from typing import BinaryIO
 from plextrac_api.functions.common import rest_request
 from plextrac_api.types.auth import AuthSession
 from plextrac_api.types.clients import (
-    BulkClientUserAssignment,
     Client,
     ClientAssetPage,
-    ClientDraft,
+    ClientFilter,
+    ClientFindingFilter,
     ClientFindingPage,
+    ClientFindingSort,
+    ClientInput,
     ClientPage,
-    ClientPatch,
+    ClientPagination,
+    ClientSort,
     ClientUser,
     ClientUserAssignment,
 )
 from plextrac_api.types.common import (
-    CustomField,
-    Filter,
     JsonDict,
     OperationResult,
-    Pagination,
-    Sort,
 )
 
 
@@ -41,13 +40,13 @@ def list_available_tenant_users(session: AuthSession, tenant_id: int | str, clie
 
 def assign_users_to_client(session: AuthSession, tenant_id: int | str, client_id: int | str, users: list[ClientUserAssignment]) -> OperationResult:
     """Assign existing tenant users to a client by username."""
-    data = rest_request(session, "POST", f"/api/v2/tenant/{tenant_id}/client/{client_id}/user/assign", json={"users": [user.to_api() for user in users]})
+    data = rest_request(session, "POST", f"/api/v2/tenant/{tenant_id}/client/{client_id}/user/assign", json={"users": [user.to_assign_api() for user in users]})
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def bulk_assign_users_to_client(session: AuthSession, tenant_id: int | str, client_id: int | str, users: list[BulkClientUserAssignment]) -> OperationResult:
+def bulk_assign_users_to_client(session: AuthSession, tenant_id: int | str, client_id: int | str, users: list[ClientUserAssignment]) -> OperationResult:
     """Bulk assign client users with email/name/classification payloads."""
-    data = rest_request(session, "POST", f"/api/v2/tenant/{tenant_id}/client/{client_id}/bulk/users/assign", json=[user.to_api() for user in users])
+    data = rest_request(session, "POST", f"/api/v2/tenant/{tenant_id}/client/{client_id}/bulk/users/assign", json=[user.to_bulk_api() for user in users])
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
@@ -65,10 +64,10 @@ def list_tenant_clients(session: AuthSession, tenant_id: int | str) -> list[Clie
     return ClientPage.from_api(data if isinstance(data, dict) else {"data": data}).clients
 
 
-def list_clients(session: AuthSession, *, pagination: Pagination | None = None, sort: list[Sort] | None = None, filters: list[Filter] | None = None) -> ClientPage:
+def list_clients(session: AuthSession, *, pagination: ClientPagination | None = None, sort: list[ClientSort] | None = None, filters: list[ClientFilter] | None = None) -> ClientPage:
     """List clients with the latest paginated, sortable, filterable endpoint."""
     payload: JsonDict = {
-        "pagination": (pagination or Pagination()).to_api(),
+        "pagination": (pagination or ClientPagination()).to_api(),
         "sort": [item.to_api() for item in sort] if sort is not None else None,
         "filters": [item.to_api() for item in filters] if filters is not None else None,
     }
@@ -85,35 +84,17 @@ def get_client(session: AuthSession, client_id: int | str) -> Client:
     return Client.from_api(data)
 
 
-def create_client(session: AuthSession, client: ClientDraft | None = None, *, name: str | None = None, tags: list[str] | None = None, description: str | None = None, point_of_contact: str | None = None, point_of_contact_email: str | None = None, custom_fields: list[CustomField] | None = None) -> OperationResult:
-    """Create a client from a ClientDraft or explicit keyword fields."""
-    if client is None:
-        if name is None:
-            raise TypeError("create_client requires either client or name.")
-        client = ClientDraft(
-            name=name,
-            tags=tags,
-            description=description,
-            point_of_contact=point_of_contact,
-            point_of_contact_email=point_of_contact_email,
-            custom_fields=custom_fields,
-        )
-    draft = client
-    data = rest_request(session, "POST", "/api/v1/client/create", json=draft.to_api())
+def create_client(session: AuthSession, client: ClientInput) -> OperationResult:
+    """Create a client from a reusable ClientInput payload."""
+    if client.name is None:
+        raise TypeError("create_client requires client.name.")
+    data = rest_request(session, "POST", "/api/v1/client/create", json=client.to_api())
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def update_client(session: AuthSession, client_id: int | str, client: ClientPatch | None = None, *, name: str | None = None, tags: list[str] | None = None, description: str | None = None, point_of_contact: str | None = None, point_of_contact_email: str | None = None, custom_fields: list[CustomField] | None = None) -> OperationResult:
-    """Update a client from a ClientPatch or explicit keyword fields."""
-    patch = client or ClientPatch(
-        name=name,
-        tags=tags,
-        description=description,
-        point_of_contact=point_of_contact,
-        point_of_contact_email=point_of_contact_email,
-        custom_fields=custom_fields,
-    )
-    data = rest_request(session, "PUT", f"/api/v1/client/{client_id}", json=patch.to_api())
+def update_client(session: AuthSession, client_id: int | str, client: ClientInput) -> OperationResult:
+    """Update a client from a reusable ClientInput payload."""
+    data = rest_request(session, "PUT", f"/api/v1/client/{client_id}", json=client.to_api())
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
@@ -150,10 +131,10 @@ def delete_client_logo(session: AuthSession, client_id: int | str) -> OperationR
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def list_client_findings(session: AuthSession, client_id: int | str, *, pagination: Pagination | None = None, sort: list[Sort] | None = None, filters: list[Filter] | None = None) -> ClientFindingPage:
+def list_client_findings(session: AuthSession, client_id: int | str, *, pagination: ClientPagination | None = None, sort: list[ClientFindingSort] | None = None, filters: list[ClientFindingFilter] | None = None) -> ClientFindingPage:
     """List findings for a client with pagination, sorting, and filters."""
     payload: JsonDict = {
-        "pagination": (pagination or Pagination()).to_api(),
+        "pagination": (pagination or ClientPagination()).to_api(),
         "sort": [item.to_api() for item in sort] if sort is not None else None,
         "filters": [item.to_api() for item in filters] if filters is not None else None,
     }
@@ -161,12 +142,10 @@ def list_client_findings(session: AuthSession, client_id: int | str, *, paginati
     return ClientFindingPage.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def list_client_assets(session: AuthSession, client_id: int | str, *, pagination: Pagination | None = None, sort: list[Sort] | None = None, filters: list[Filter] | None = None) -> ClientAssetPage:
-    """List assets for a client with pagination, sorting, and filters."""
+def list_client_assets(session: AuthSession, client_id: int | str, *, pagination: ClientPagination | None = None) -> ClientAssetPage:
+    """List assets for a client."""
     payload: JsonDict = {
-        "pagination": (pagination or Pagination()).to_api(),
-        "sort": [item.to_api() for item in sort] if sort is not None else None,
-        "filters": [item.to_api() for item in filters] if filters is not None else None,
+        "pagination": (pagination or ClientPagination()).to_api(),
     }
     data = rest_request(session, "POST", f"/api/v2/clients/{client_id}/assets", json={key: value for key, value in payload.items() if value is not None})
     return ClientAssetPage.from_api(data if isinstance(data, (dict, list)) else {"data": data})

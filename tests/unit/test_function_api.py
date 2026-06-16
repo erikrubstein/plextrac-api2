@@ -5,10 +5,19 @@ import time
 import httpx
 import pytest
 
-from plextrac_api.functions import clients, reports
+from plextrac_api.functions import clients, findings, reports
 from plextrac_api.functions.auth import session_from_token
 from plextrac_api.functions.common import PlexTracAuthError, PlexTracNotFoundError
-from plextrac_api.types import ReportStatus
+from plextrac_api.types import (
+    AffectedAsset,
+    ClientInput,
+    FindingField,
+    FindingInput,
+    FindingSeverity,
+    FindingStatus,
+    ReportInput,
+    ReportStatus,
+)
 
 
 def test_explicit_client_function_interpolates_path_params(monkeypatch):
@@ -56,7 +65,7 @@ def test_explicit_report_export_uses_snake_case_query_options(monkeypatch):
     assert seen["params"] == {"includeEvidence": True}
 
 
-def test_explicit_client_create_uses_named_parameters(monkeypatch):
+def test_explicit_client_create_uses_reusable_input(monkeypatch):
     seen = {}
 
     def fake_send(session, method, path, **kwargs):
@@ -67,13 +76,13 @@ def test_explicit_client_create_uses_named_parameters(monkeypatch):
     monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
     session = session_from_token("https://example.plextrac.com", "test-token")
 
-    clients.create_client(session, name="Example Client")
+    clients.create_client(session, ClientInput(name="Example Client"))
 
     assert seen["method"] == "POST"
     assert seen["json"] == {"name": "Example Client"}
 
 
-def test_explicit_report_create_uses_named_parameters(monkeypatch):
+def test_explicit_report_create_uses_reusable_input(monkeypatch):
     seen = {}
 
     def fake_send(session, method, path, **kwargs):
@@ -88,8 +97,7 @@ def test_explicit_report_create_uses_named_parameters(monkeypatch):
     result = reports.create_report(
         session,
         client_id="client-1",
-        name="Example Report",
-        status=ReportStatus.DRAFT,
+        report=ReportInput(name="Example Report", status=ReportStatus.DRAFT),
     )
 
     assert result.id == 42
@@ -113,6 +121,71 @@ def test_explicit_report_replace_returns_replace_result(monkeypatch):
     assert result.replaced is True
     assert result.status == "success"
     assert seen["json"] == {"search": "old", "replace": "new", "report_id": 42}
+
+
+def test_explicit_finding_create_uses_reusable_input_and_enums(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"status": "success", "flaw_id": 99})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = findings.create_finding(
+        session,
+        client_id="client-1",
+        report_id="report-1",
+        finding=FindingInput(
+            title="Example Finding",
+            severity=FindingSeverity.HIGH,
+            status=FindingStatus.OPEN,
+            description="Example description",
+            affected_assets={
+                "asset-1": AffectedAsset(id="asset-1", name="host1", status="Open")
+            },
+            fields=[FindingField(key="synopsis", label="Synopsis", value="Example")],
+        ),
+    )
+
+    assert result.status == "success"
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v1/client/client-1/report/report-1/flaw/create"
+    assert seen["json"] == {
+        "title": "Example Finding",
+        "severity": "High",
+        "status": "Open",
+        "description": "Example description",
+        "affected_assets": {"asset-1": {"id": "asset-1", "asset": "host1", "status": "Open"}},
+        "fields": [{"key": "synopsis", "label": "Synopsis", "value": "Example"}],
+    }
+
+
+def test_explicit_finding_list_uses_latest_paginated_endpoint(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={"data": [{"flaw_id": 99, "title": "Example", "severity": "Low"}], "total": 1},
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    page = findings.list_report_findings(session, client_id="client-1", report_id="report-1")
+
+    assert page.total_count == 1
+    assert page.findings[0].severity is FindingSeverity.LOW
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v2/clients/client-1/reports/report-1/findings"
+    assert seen["json"] == {"pagination": {"offset": 0, "limit": 10}}
 
 
 def test_request_maps_http_errors(monkeypatch):

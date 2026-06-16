@@ -6,19 +6,16 @@ from typing import BinaryIO
 from plextrac_api.functions.common import rest_request
 from plextrac_api.types.auth import AuthSession
 from plextrac_api.types.common import (
-    CustomField,
     JsonDict,
     OperationResult,
     Pagination,
 )
 from plextrac_api.types.reports import (
-    Narrative,
     Report,
-    ReportDraft,
     ReportExhibit,
     ReportFilter,
+    ReportInput,
     ReportPage,
-    ReportPatch,
     ReportReplaceResult,
     ReportSearchOccurrenceResult,
     ReportSort,
@@ -68,43 +65,17 @@ def get_report(session: AuthSession, client_id: int | str, report_id: int | str)
     return Report.from_api(data)
 
 
-def create_report(session: AuthSession, client_id: int | str, report: ReportDraft | None = None, *, name: str | None = None, status: ReportStatus | None = None, include_evidence: bool | None = None, tags: list[str] | None = None, custom_fields: list[CustomField] | None = None, template: str | None = None, start_date: str | None = None, end_date: str | None = None, fields_template: str | None = None, is_track_changes: bool | None = None) -> OperationResult:
-    """Create a report for a client from a ReportDraft or explicit keyword fields."""
-    if report is None:
-        if name is None:
-            raise TypeError("create_report requires either report or name.")
-        report = ReportDraft(
-            name=name,
-            status=status,
-            include_evidence=include_evidence,
-            tags=tags,
-            custom_fields=custom_fields,
-            template=template,
-            start_date=start_date,
-            end_date=end_date,
-            fields_template=fields_template,
-            is_track_changes=is_track_changes,
-        )
+def create_report(session: AuthSession, client_id: int | str, report: ReportInput) -> OperationResult:
+    """Create a report for a client from a reusable ReportInput payload."""
+    if report.name is None:
+        raise TypeError("create_report requires report.name.")
     data = rest_request(session, "POST", f"/api/v1/client/{client_id}/report/create", json=report.to_api())
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def update_report(session: AuthSession, client_id: int | str, report_id: int | str, report: ReportPatch | None = None, *, name: str | None = None, status: ReportStatus | None = None, include_evidence: bool | None = None, tags: list[str] | None = None, custom_fields: list[CustomField] | None = None, narratives: list[Narrative] | None = None, template: str | None = None, start_date: str | None = None, end_date: str | None = None, fields_template: str | None = None, is_track_changes: bool | None = None) -> OperationResult:
+def update_report(session: AuthSession, client_id: int | str, report_id: int | str, report: ReportInput) -> OperationResult:
     """Update report metadata and narratives for a client report."""
-    patch = report or ReportPatch(
-        name=name,
-        status=status,
-        include_evidence=include_evidence,
-        tags=tags,
-        custom_fields=custom_fields,
-        narratives=narratives,
-        template=template,
-        start_date=start_date,
-        end_date=end_date,
-        fields_template=fields_template,
-        is_track_changes=is_track_changes,
-    )
-    data = rest_request(session, "PUT", f"/api/v1/client/{client_id}/report/{report_id}", json=patch.to_api())
+    data = rest_request(session, "PUT", f"/api/v1/client/{client_id}/report/{report_id}", json=report.to_api())
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 

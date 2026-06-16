@@ -63,35 +63,7 @@ class Narrative:
 
 
 @dataclass(slots=True)
-class ReportDraft:
-    name: str
-    status: ReportStatus | None = None
-    include_evidence: bool | None = None
-    tags: list[str] | None = None
-    custom_fields: list[CustomField] | None = None
-    template: str | None = None
-    start_date: str | None = None
-    end_date: str | None = None
-    fields_template: str | None = None
-    is_track_changes: bool | None = None
-
-    def to_api(self) -> JsonDict:
-        return _report_payload(
-            name=self.name,
-            status=self.status,
-            include_evidence=self.include_evidence,
-            tags=self.tags,
-            custom_fields=self.custom_fields,
-            template=self.template,
-            start_date=self.start_date,
-            end_date=self.end_date,
-            fields_template=self.fields_template,
-            is_track_changes=self.is_track_changes,
-        )
-
-
-@dataclass(slots=True)
-class ReportPatch:
+class ReportInput:
     name: str | None = None
     status: ReportStatus | None = None
     include_evidence: bool | None = None
@@ -306,10 +278,7 @@ def _report_payload(
             "status": status.value if status is not None else None,
             "includeEvidence": include_evidence,
             "tags": tags,
-            "custom_field": [
-                clean({"label": field.label, "value": field.value})
-                for field in custom_fields or []
-            ]
+            "custom_field": [field.to_api() for field in custom_fields or []]
             if custom_fields is not None
             else None,
             "exec_summary": {"custom_fields": [item.to_api() for item in narratives]}

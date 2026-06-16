@@ -23,7 +23,7 @@ Total supported endpoint functions in snapshot: **357**
 | Content Library | `plextrac_api.functions.content_library` | 41 |
 | Clients | `plextrac_api.functions.clients` | 15 explicit functions |
 | Files | `plextrac_api.functions.files` | 6 |
-| Findings | `plextrac_api.functions.findings` | 19 |
+| Findings | `plextrac_api.functions.findings` | 16 explicit functions |
 | Integrations | `plextrac_api.functions.integrations` | 23 |
 | Mailer | `plextrac_api.functions.mailer` | 3 |
 | Parser Actions | `plextrac_api.functions.parser_actions` | 8 |
@@ -267,25 +267,22 @@ Display name: Findings
 
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
-| `add_findings_from_file_imports` | POST | `/api/v2/client/{clientId}/report/{reportId}/importAsync/{source}` |  |
-| `request_presigned_url` | POST | `/api/v2/presigned-url ` |  |
-| `add_findings_async_from_preuploaded_file_imports` | POST | `/api/v2/client/{clientId}/report/{reportId}/preuploaded-import/{source}` |  |
-| `get_import_status` | GET | `/api/v2/my-imports` |  |
+| `request_presigned_upload_url` | POST | `/api/v2/presigned-url` |  |
+| `import_preuploaded_findings` | POST | `/api/v2/client/{clientId}/report/{reportId}/preuploaded-import/{source}` |  |
+| `list_import_statuses` | GET | `/api/v2/my-imports` |  |
 | `get_scanner_output` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/asset/{assetId}/scanoutput` |  |
-| `bulk_get_evidence` | POST | `/api/v2/tenant/{tenantId}/client/{clientId}/report/{reportId}/finding/{findingId}/asset/evidence` |  |
-| `update_evidence` | PUT | `/api/v2/client/{clientId}/report/{reportId}/finding/{findingId}/asset/{assetId}/evidence/{evidenceId}` |  |
-| `bulk_upsert_evidence` | PUT | `/api/v2/tenant/{tenantId}/client/{clientId}/report/{reportId}/finding/{findingId}/asset/evidence` |  |
-| `list_report_findings` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaws` |  |
-| `get_findings_by_report` | POST | `/api/v2/clients/{clientId}/reports/{reportId}/findings` |  |
-| `get_finding` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}` | `get` |
-| `create_finding` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaw/create` | `create` |
-| `update_finding` | PUT | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}` | `update` |
-| `bulk_update_findings` | PUT | `/api/v2/clients/{clientId}/reports/{reportId}/findings` |  |
-| `bulk_update_findings_assign_update_status` | PUT | `/api/v2/client/{clientId}/findings` |  |
-| `delete_finding` | DELETE | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}` | `delete` |
+| `update_finding_evidence` | PUT | `/api/v2/client/{clientId}/report/{reportId}/finding/{findingId}/asset/{assetId}/evidence/{evidenceId}` |  |
+| `bulk_upsert_finding_evidence` | PUT | `/api/v2/tenant/{tenantId}/client/{clientId}/report/{reportId}/finding/{findingId}/asset/evidence` |  |
+| `list_report_findings` | POST | `/api/v2/clients/{clientId}/reports/{reportId}/findings` |  |
+| `get_finding` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}` |  |
+| `create_finding` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaw/create` |  |
+| `update_finding` | PUT | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}` |  |
+| `bulk_update_findings_metadata` | PUT | `/api/v2/clients/{clientId}/reports/{reportId}/findings` |  |
+| `bulk_update_finding_statuses` | PUT | `/api/v2/client/{clientId}/findings` |  |
+| `delete_finding` | DELETE | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}` |  |
 | `bulk_delete_findings` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaws/delete` |  |
-| `get_finding_status_list` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/status` |  |
-| `create_status_update` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/status/update` |  |
+| `list_finding_status_updates` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/status` |  |
+| `create_finding_status_update` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/status/update` |  |
 
 ### `integrations`
 
