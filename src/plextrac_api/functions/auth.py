@@ -1,0 +1,73 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import httpx
+
+from plextrac_api.functions.common import PlexTracAuthError, _parse_response, build_auth_headers
+from plextrac_api.types.auth import AuthSession
+from plextrac_api.types.common import JsonDict
+
+
+def create_session(
+    base_url: str,
+    username: str,
+    password: str,
+    *,
+    mfa_code: str | None = None,
+    session_path: str | Path | None = None,
+) -> AuthSession:
+    payload: JsonDict = {"username": username, "password": password}
+    if mfa_code:
+        payload["code"] = mfa_code
+
+    with httpx.Client(base_url=base_url.rstrip("/"), timeout=30.0) as client:
+        response = client.post(
+            "/api/v1/authenticate",
+            json=payload,
+            headers=build_auth_headers(),
+        )
+    data = _parse_response(response)
+    if not isinstance(data, dict):
+        raise PlexTracAuthError("PlexTrac auth response was not a JSON object.")
+    session = AuthSession.from_auth_response(
+        data,
+        base_url=base_url,
+        username=username,
+        password=password,
+    )
+    if session_path is not None:
+        save_session(session, session_path)
+    return session
+
+
+def session_from_token(
+    base_url: str,
+    token: str,
+    *,
+    refresh_token: str | None = None,
+) -> AuthSession:
+    return AuthSession.from_token(base_url=base_url, token=token, refresh_token=refresh_token)
+
+
+def save_session(
+    session: AuthSession,
+    path: str | Path,
+    *,
+    include_password: bool = False,
+) -> None:
+    session_path = Path(path)
+    session_path.parent.mkdir(parents=True, exist_ok=True)
+    session_path.write_text(
+        json.dumps(session.to_dict(include_password=include_password), indent=2),
+        encoding="utf-8",
+    )
+
+
+def load_session(path: str | Path) -> AuthSession:
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("Saved session file must contain a JSON object.")
+    return AuthSession.from_dict(data)
+

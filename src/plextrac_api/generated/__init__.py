@@ -1,0 +1,1 @@
+"""Generated PlexTrac endpoint metadata."""
