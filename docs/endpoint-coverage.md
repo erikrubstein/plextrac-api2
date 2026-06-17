@@ -3,8 +3,8 @@
 This file is an inventory of the currently known PlexTrac API groups and endpoint wrappers. It is
 useful for SDK development and gap tracking, but it is not intended to be the primary user guide.
 
-Most groups are still generated wrappers. The `clients`, `reports`, `findings`, and `assets`
-groups are hand-polished and show the intended long-term SDK shape.
+Most groups are still generated wrappers. The `clients`, `reports`, `findings`, `assets`, and
+`affected_assets` groups are hand-polished and show the intended long-term SDK shape.
 
 The inventory is based on the public PlexTrac Postman collection snapshot.
 
@@ -16,7 +16,7 @@ Total supported endpoint functions in snapshot: **357**
 |---|---|---:|
 | Authentication | `plextrac_api.functions.auth` | manual auth helpers |
 | Admin | `plextrac_api.functions.admin` | 29 |
-| Affected Assets | `plextrac_api.functions.affected_assets` | 6 |
+| Affected Assets | `plextrac_api.functions.affected_assets` | 6 explicit functions |
 | Analytics | `plextrac_api.functions.analytics` | 11 |
 | Assessments | `plextrac_api.functions.assessments` | 33 |
 | Assets | `plextrac_api.functions.assets` | 9 explicit functions |
@@ -96,11 +96,11 @@ Display name: Affected Assets
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
 | `import_finding_affected_assets` | POST | `/api/v2/clients/{clientId}/reports/{reportId}/flaws/{findingId}/affected-assets/import/{source}` |  |
-| `remove_affected_asset_from_flaw` | DELETE | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/asset/{assetId}` |  |
-| `bulk_get_affected_assets_status` | POST | `/api/v2/client/{clientId}/report/{reportId}/flaw/{findingId}/assets/status` |  |
-| `get_affected_asset_status_list` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/asset/{assetId}/status` |  |
-| `create_affected_asset_status` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/asset/{assetId}/status/update` |  |
-| `bulk_create_affected_asset_status` | POST | `/api/v2/client/{clientId}/report/{reportId}/finding/{findingId}/asset/status` |  |
+| `remove_affected_asset` | DELETE | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/asset/{assetId}` |  |
+| `bulk_get_affected_asset_statuses` | POST | `/api/v2/client/{clientId}/report/{reportId}/flaw/{findingId}/assets/status` |  |
+| `list_affected_asset_status_updates` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/asset/{assetId}/status` |  |
+| `create_affected_asset_status_update` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/asset/{assetId}/status/update` |  |
+| `bulk_create_affected_asset_status_updates` | POST | `/api/v2/client/{clientId}/report/{reportId}/finding/{findingId}/asset/status` |  |
 
 ### `analytics`
 

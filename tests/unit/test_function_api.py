@@ -5,11 +5,13 @@ import time
 import httpx
 import pytest
 
-from plextrac_api.functions import assets, clients, findings, reports
+from plextrac_api.functions import affected_assets, assets, clients, findings, reports
 from plextrac_api.functions.auth import session_from_token
 from plextrac_api.functions.common import PlexTracAuthError, PlexTracNotFoundError
 from plextrac_api.types import (
     AffectedAsset,
+    AffectedAssetStatus,
+    AffectedAssetStatusUpdate,
     AssetInput,
     ClientAssetPageLimit,
     ClientAssetSort,
@@ -206,7 +208,11 @@ def test_explicit_finding_create_uses_reusable_input_and_enums(monkeypatch):
             status=FindingStatus.OPEN,
             description="Example description",
             affected_assets={
-                "asset-1": AffectedAsset(id="asset-1", name="host1", status="Open")
+                "asset-1": AffectedAsset(
+                    id="asset-1",
+                    name="host1",
+                    status=AffectedAssetStatus.OPEN,
+                )
             },
             fields=[FindingField(key="synopsis", label="Synopsis", value="Example")],
         ),
@@ -223,6 +229,76 @@ def test_explicit_finding_create_uses_reusable_input_and_enums(monkeypatch):
         "affected_assets": {"asset-1": {"id": "asset-1", "asset": "host1", "status": "Open"}},
         "fields": [{"key": "synopsis", "label": "Synopsis", "value": "Example"}],
     }
+
+
+def test_explicit_affected_asset_bulk_statuses_return_typed_map(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={"asset-1": {"status": "Closed", "comment": "fixed"}},
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    statuses = affected_assets.bulk_get_affected_asset_statuses(
+        session,
+        client_id="client-1",
+        report_id="report-1",
+        finding_id="finding-1",
+        asset_ids=["asset-1"],
+    )
+
+    assert statuses["asset-1"].status is AffectedAssetStatus.CLOSED
+    assert statuses["asset-1"].comment == "fixed"
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v2/client/client-1/report/report-1/flaw/finding-1/assets/status"
+    assert seen["json"] == {"assetIds": ["asset-1"]}
+
+
+def test_explicit_affected_asset_bulk_create_statuses_uses_reusable_update(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"status": "success"})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = affected_assets.bulk_create_affected_asset_status_updates(
+        session,
+        client_id="client-1",
+        report_id="report-1",
+        finding_id="finding-1",
+        updates=[
+            AffectedAssetStatusUpdate(
+                asset_id="asset-1",
+                status=AffectedAssetStatus.IN_PROCESS,
+                assigned_to="analyst@example.com",
+                comment="triaging",
+            )
+        ],
+    )
+
+    assert result.ok
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v2/client/client-1/report/report-1/finding/finding-1/asset/status"
+    assert seen["json"] == [
+        {
+            "assetId": "asset-1",
+            "status": "In Process",
+            "assignedTo": "analyst@example.com",
+            "comment": "triaging",
+        }
+    ]
 
 
 def test_explicit_finding_list_uses_latest_paginated_endpoint(monkeypatch):

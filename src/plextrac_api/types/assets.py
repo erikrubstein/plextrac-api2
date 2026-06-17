@@ -69,6 +69,17 @@ class AssetImportSource(str, Enum):
     LEGACY_CSV = "csv"
 
 
+class AffectedAssetImportSource(str, Enum):
+    CSV = "csv"
+    XML = "xml"
+
+
+class AffectedAssetStatus(str, Enum):
+    OPEN = "Open"
+    IN_PROCESS = "In Process"
+    CLOSED = "Closed"
+
+
 @dataclass(slots=True)
 class TenantAssetSort:
     by: TenantAssetSortField
@@ -254,7 +265,7 @@ class AssetPage:
 
 @dataclass(slots=True)
 class AffectedAsset(Asset):
-    status: str | None = None
+    status: AffectedAssetStatus | None = None
     substatus: str | None = None
     substatus_cuid: str | None = None
     evidence: list[str] | None = None
@@ -287,7 +298,7 @@ class AffectedAsset(Asset):
             ports=asset.ports,
             tags=asset.tags,
             doc_type=asset.doc_type,
-            status=data.get("status"),
+            status=_affected_asset_status(data.get("status")),
             substatus=data.get("subStatus"),
             substatus_cuid=data.get("substatusCuid"),
             evidence=data.get("evidence") if isinstance(data.get("evidence"), list) else None,
@@ -312,7 +323,7 @@ class AffectedAsset(Asset):
         data.update(
             clean(
                 {
-                    "status": self.status,
+                    "status": self.status.value if self.status is not None else None,
                     "subStatus": self.substatus,
                     "substatusCuid": self.substatus_cuid,
                     "evidence": self.evidence,
@@ -332,6 +343,40 @@ class AffectedAsset(Asset):
 
     def _asset_api(self) -> JsonDict:
         return super().to_api()
+
+
+@dataclass(slots=True)
+class AffectedAssetStatusUpdate:
+    asset_id: int | str | None = None
+    status: AffectedAssetStatus | None = None
+    substatus: str | None = None
+    assigned_to: str | None = None
+    comment: str | None = None
+    created_at: int | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> AffectedAssetStatusUpdate:
+        return cls(
+            asset_id=data.get("assetId") or data.get("asset_id") or data.get("id"),
+            status=_affected_asset_status(data.get("status")),
+            substatus=data.get("subStatus"),
+            assigned_to=data.get("assignedTo"),
+            comment=data.get("comment") or data.get("comments"),
+            created_at=data.get("createdAt"),
+            raw=dict(data),
+        )
+
+    def to_api(self, *, include_asset_id: bool = False) -> JsonDict:
+        return clean(
+            {
+                "assetId": self.asset_id if include_asset_id else None,
+                "status": self.status.value if self.status is not None else None,
+                "subStatus": self.substatus,
+                "assignedTo": self.assigned_to,
+                "comment": self.comment,
+            }
+        )
 
 
 def _asset_payload(
@@ -394,4 +439,15 @@ def _first_int(data: JsonDict, keys: tuple[str, ...]) -> int | None:
             nested = _first_int(value, keys)
             if nested is not None:
                 return nested
+    return None
+
+
+def _affected_asset_status(value: object) -> AffectedAssetStatus | None:
+    if isinstance(value, AffectedAssetStatus):
+        return value
+    if isinstance(value, str):
+        try:
+            return AffectedAssetStatus(value)
+        except ValueError:
+            return None
     return None

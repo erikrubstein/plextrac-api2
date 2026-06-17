@@ -18,13 +18,10 @@ FUNCTIONS_DIR = PACKAGE_DIR / "functions"
 DOCS_DIR = ROOT / "docs"
 GENERATED_FUNCTION_GROUPS = {
     "admin",
-    "affected_assets",
     "analytics",
     "assessments",
-    "assets",
     "content_library",
     "files",
-    "findings",
     "graph_ql_mutations",
     "graph_ql_queries",
     "integrations",
@@ -37,9 +34,17 @@ GENERATED_FUNCTION_GROUPS = {
     "tenant",
     "users",
 }
-HAND_WRITTEN_FUNCTION_GROUPS = {"clients", "reports"}
+HAND_WRITTEN_FUNCTION_GROUPS = {"affected_assets", "assets", "clients", "findings", "reports"}
 VERSION_SUFFIX_RE = re.compile(r"^(?P<base>.+)_v(?P<version>\d+)$")
 METHOD_NAME_OVERRIDES = {
+    (
+        "Affected Assets",
+        "bulk_create_affected_asset_status",
+    ): "bulk_create_affected_asset_status_updates",
+    ("Affected Assets", "bulk_get_affected_assets_status"): "bulk_get_affected_asset_statuses",
+    ("Affected Assets", "create_affected_asset_status"): "create_affected_asset_status_update",
+    ("Affected Assets", "get_affected_asset_status_list"): "list_affected_asset_status_updates",
+    ("Affected Assets", "remove_affected_asset_from_flaw"): "remove_affected_asset",
     ("Clients", "available_tenant_users"): "list_available_tenant_users",
     ("Clients", "assign_user_to_client"): "assign_users_to_client",
     ("Clients", "remove_user_from_client"): "remove_users_from_client",

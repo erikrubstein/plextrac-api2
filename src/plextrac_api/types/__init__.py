@@ -1,5 +1,8 @@
 from plextrac_api.types.assets import (
     AffectedAsset,
+    AffectedAssetImportSource,
+    AffectedAssetStatus,
+    AffectedAssetStatusUpdate,
     Asset,
     AssetImportSource,
     AssetInput,
@@ -90,6 +93,9 @@ from plextrac_api.types.reports import (
 
 __all__ = [
     "AffectedAsset",
+    "AffectedAssetImportSource",
+    "AffectedAssetStatus",
+    "AffectedAssetStatusUpdate",
     "Asset",
     "AssetImportSource",
     "AssetInput",

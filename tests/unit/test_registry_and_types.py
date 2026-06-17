@@ -1,6 +1,8 @@
 from plextrac_api.generated.endpoints import GROUPS
 from plextrac_api.types import (
     AffectedAsset,
+    AffectedAssetStatus,
+    AffectedAssetStatusUpdate,
     Asset,
     AssetInput,
     Client,
@@ -78,6 +80,10 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "search_replace_in_report_occurrences" not in method_names
     assert "bulk_update_report_statuses" in method_names
     assert "bulk_adjust_status_of_report" not in method_names
+    assert "remove_affected_asset" in method_names
+    assert "remove_affected_asset_from_flaw" not in method_names
+    assert "bulk_get_affected_asset_statuses" in method_names
+    assert "bulk_get_affected_assets_status" not in method_names
     assert all(not name.endswith(("_v1", "_v2", "_v3")) for name in method_names)
 
 
@@ -163,9 +169,10 @@ def test_asset_request_shape_types_serialize_with_verified_fields():
         "by": "tags",
         "value": ["none"],
     }
-    assert AssetInput(name="host1", type="hostname").to_api() == {
+    assert AssetInput(name="host1", type="hostname", criticality="High").to_api() == {
         "asset": "host1",
         "type": "hostname",
+        "assetCriticality": "High",
     }
 
 
@@ -256,4 +263,23 @@ def test_finding_type_parses_affected_assets_and_identifiers():
     assert finding.cves[0].name == "CVE-2024-0001"
     assert finding.fields[0].key == "synopsis"
     assert isinstance(finding.affected_assets["asset-1"], AffectedAsset)
+    assert finding.affected_assets["asset-1"].status is AffectedAssetStatus.OPEN
     assert finding.affected_assets["asset-1"].vulnerable_parameters[0].text == "q"
+
+
+def test_affected_asset_status_update_serializes_documented_fields():
+    update = AffectedAssetStatusUpdate(
+        asset_id="asset-1",
+        status=AffectedAssetStatus.IN_PROCESS,
+        substatus="Investigating",
+        assigned_to="analyst@example.com",
+        comment="triage started",
+    )
+
+    assert update.to_api(include_asset_id=True) == {
+        "assetId": "asset-1",
+        "status": "In Process",
+        "subStatus": "Investigating",
+        "assignedTo": "analyst@example.com",
+        "comment": "triage started",
+    }
