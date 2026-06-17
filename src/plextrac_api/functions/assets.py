@@ -6,6 +6,7 @@ from typing import BinaryIO
 from plextrac_api.functions.common import rest_request
 from plextrac_api.types.assets import (
     Asset,
+    AssetCreateResult,
     AssetImportSource,
     AssetInput,
     AssetPage,
@@ -93,12 +94,12 @@ def create_asset(
     session: AuthSession,
     client_id: int | str,
     asset: AssetInput,
-) -> OperationResult:
+) -> AssetCreateResult:
     """Create an asset for a client from a reusable AssetInput payload."""
     if asset.name is None:
         raise TypeError("create_asset requires asset.name.")
     data = rest_request(session, "PUT", f"/api/v1/client/{client_id}/asset/0", json=asset.to_api())
-    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
+    return AssetCreateResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
 def update_asset(

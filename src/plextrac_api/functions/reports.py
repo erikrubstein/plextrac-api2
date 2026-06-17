@@ -12,6 +12,7 @@ from plextrac_api.types.common import (
 )
 from plextrac_api.types.reports import (
     Report,
+    ReportCreateResult,
     ReportExhibit,
     ReportFilter,
     ReportInput,
@@ -91,12 +92,12 @@ def create_report(
     session: AuthSession,
     client_id: int | str,
     report: ReportInput,
-) -> OperationResult:
+) -> ReportCreateResult:
     """Create a report for a client from a reusable ReportInput payload."""
     if report.name is None:
         raise TypeError("create_report requires report.name.")
     data = rest_request(session, "POST", f"/api/v1/client/{client_id}/report/create", json=report.to_api())
-    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
+    return ReportCreateResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
 def update_report(

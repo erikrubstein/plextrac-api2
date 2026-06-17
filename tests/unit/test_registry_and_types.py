@@ -4,12 +4,16 @@ from plextrac_api.types import (
     AffectedAssetStatus,
     AffectedAssetStatusUpdate,
     Asset,
+    AssetCreateResult,
+    AssetCriticality,
     AssetInput,
+    AssetType,
     Client,
     ClientAssetFilter,
     ClientAssetFilterField,
     ClientAssetSort,
     ClientAssetSortField,
+    ClientCreateResult,
     ClientFilter,
     ClientFilterField,
     ClientFindingFilter,
@@ -20,6 +24,7 @@ from plextrac_api.types import (
     ClientSortField,
     Filter,
     Finding,
+    FindingCreateResult,
     FindingField,
     FindingFilter,
     FindingFilterField,
@@ -30,8 +35,10 @@ from plextrac_api.types import (
     FindingSortField,
     FindingStatus,
     FindingVisibility,
+    OperationResult,
     Pagination,
     Report,
+    ReportCreateResult,
     ReportFilter,
     ReportFilterField,
     ReportSort,
@@ -91,6 +98,7 @@ def test_client_type_parses_documented_fields():
     client = Client.from_api(
         {
             "client_id": 1,
+            "cuid": "client-cuid",
             "tenant_id": 2,
             "name": "Example",
             "poc": "Alice",
@@ -100,7 +108,8 @@ def test_client_type_parses_documented_fields():
         }
     )
 
-    assert client.id == 1
+    assert client.client_id == 1
+    assert client.cuid == "client-cuid"
     assert client.name == "Example"
     assert client.custom_fields[0].label == "Region"
     assert client.users["user@example.com"].role == "ADMIN"
@@ -113,6 +122,7 @@ def test_asset_type_parses_documented_fields():
             "asset": "host1",
             "client_id": 1,
             "assetCriticality": "High",
+            "type": "Server",
             "knownIps": ["192.0.2.1"],
             "ports": {"443": {"number": "443", "service": "https", "protocol": "tcp"}},
         }
@@ -120,7 +130,8 @@ def test_asset_type_parses_documented_fields():
 
     assert asset.id == "asset-1"
     assert asset.name == "host1"
-    assert asset.criticality == "High"
+    assert asset.criticality is AssetCriticality.HIGH
+    assert asset.type is AssetType.SERVER
     assert asset.ports["443"].protocol == "tcp"
 
 
@@ -149,6 +160,21 @@ def test_client_request_shape_types_serialize_with_verified_fields():
     }
 
 
+def test_operation_result_does_not_flatten_specific_ids():
+    result = OperationResult.from_api({"status": "success", "report_id": 42})
+
+    assert result.ok
+    assert not hasattr(result, "id")
+    assert result.raw == {"status": "success", "report_id": 42}
+
+
+def test_create_result_types_preserve_specific_identifiers():
+    assert ClientCreateResult.from_api({"client_id": 1, "created": True}).client_id == 1
+    assert AssetCreateResult.from_api({"id": "asset-1", "status": "success"}).asset_id == "asset-1"
+    assert ReportCreateResult.from_api({"report_id": 42, "message": "success"}).report_id == 42
+    assert FindingCreateResult.from_api({"flaw_id": 99, "status": "success"}).flaw_id == 99
+
+
 def test_asset_request_shape_types_serialize_with_verified_fields():
     assert TenantAssetSort(
         by=TenantAssetSortField.ASSET_CRITICALITY,
@@ -169,9 +195,13 @@ def test_asset_request_shape_types_serialize_with_verified_fields():
         "by": "tags",
         "value": ["none"],
     }
-    assert AssetInput(name="host1", type="hostname", criticality="High").to_api() == {
+    assert AssetInput(
+        name="host1",
+        type=AssetType.SERVER,
+        criticality=AssetCriticality.HIGH,
+    ).to_api() == {
         "asset": "host1",
-        "type": "hostname",
+        "type": "Server",
         "assetCriticality": "High",
     }
 
@@ -217,6 +247,7 @@ def test_report_type_parses_narratives():
     report = Report.from_api(
         {
             "report_id": 10,
+            "cuid": "report-cuid",
             "client_id": 1,
             "name": "Assessment",
             "status": "Draft",
@@ -226,7 +257,8 @@ def test_report_type_parses_narratives():
         }
     )
 
-    assert report.id == 10
+    assert report.report_id == 10
+    assert report.cuid == "report-cuid"
     assert report.status is ReportStatus.DRAFT
     assert report.narratives[0].label == "Executive Summary"
 
@@ -235,6 +267,7 @@ def test_finding_type_parses_affected_assets_and_identifiers():
     finding = Finding.from_api(
         {
             "flaw_id": 99,
+            "id": "finding-cuid",
             "title": "Example finding",
             "severity": "High",
             "status": "Open",
@@ -257,6 +290,7 @@ def test_finding_type_parses_affected_assets_and_identifiers():
     )
 
     assert finding.flaw_id == 99
+    assert finding.cuid == "finding-cuid"
     assert finding.severity is FindingSeverity.HIGH
     assert finding.status is FindingStatus.OPEN
     assert finding.visibility is FindingVisibility.PUBLISHED

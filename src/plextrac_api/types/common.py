@@ -147,23 +147,13 @@ class ObjectReference:
 class OperationResult:
     status: str | None = None
     message: str | None = None
-    id: int | str | None = None
     raw: JsonDict | None = None
 
     @property
     def ok(self) -> bool:
         if self.raw and self.raw.get("ok") is True:
             return True
-        if self.status is None:
-            return False
-        return self.status.lower() in {
-            "ok",
-            "success",
-            "successful",
-            "deleted",
-            "created",
-            "updated",
-        }
+        return _is_success_text(self.status) or _is_success_text(self.message)
 
     @classmethod
     def from_api(cls, data: JsonDict | list[JsonDict] | None) -> OperationResult:
@@ -171,12 +161,19 @@ class OperationResult:
             return cls(
                 status=data.get("status") or data.get("result"),
                 message=data.get("message") or data.get("detail"),
-                id=(
-                    data.get("id")
-                    or data.get("client_id")
-                    or data.get("report_id")
-                    or data.get("cuid")
-                ),
                 raw=dict(data),
             )
         return cls(raw={"data": data})
+
+
+def _is_success_text(value: object) -> bool:
+    if not isinstance(value, str):
+        return False
+    return value.lower() in {
+        "ok",
+        "success",
+        "successful",
+        "deleted",
+        "created",
+        "updated",
+    }

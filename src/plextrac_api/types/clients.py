@@ -189,8 +189,37 @@ class ClientInput:
 
 
 @dataclass(slots=True)
+class ClientCreateResult:
+    client_id: int | str | None = None
+    created: bool | None = None
+    status: str | None = None
+    message: str | None = None
+    raw: JsonDict | None = None
+
+    @property
+    def ok(self) -> bool:
+        return (
+            self.created is True
+            or _is_success_text(self.status)
+            or _is_success_text(self.message)
+        )
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> ClientCreateResult:
+        created = data.get("created")
+        return cls(
+            client_id=data.get("client_id"),
+            created=created if isinstance(created, bool) else None,
+            status=data.get("status") or data.get("result"),
+            message=data.get("message") or data.get("detail"),
+            raw=dict(data),
+        )
+
+
+@dataclass(slots=True)
 class Client:
-    id: int | str | None = None
+    client_id: int | str | None = None
+    cuid: str | None = None
     name: str | None = None
     tenant_id: int | str | None = None
     classification_id: str | None = None
@@ -209,7 +238,8 @@ class Client:
         custom_fields = data.get("custom_field")
         users = data.get("users")
         return cls(
-            id=data.get("client_id") or data.get("id") or data.get("cuid"),
+            client_id=data.get("client_id"),
+            cuid=data.get("cuid"),
             name=data.get("name"),
             tenant_id=data.get("tenant_id"),
             classification_id=data.get("classificationId"),
@@ -293,6 +323,17 @@ def _api_value(value: object) -> object:
     if isinstance(value, list):
         return [_api_value(item) for item in value]
     return value
+
+
+def _is_success_text(value: object) -> bool:
+    if not isinstance(value, str):
+        return False
+    return value.lower() in {
+        "ok",
+        "success",
+        "successful",
+        "created",
+    }
 
 
 @dataclass(slots=True)

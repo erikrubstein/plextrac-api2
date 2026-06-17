@@ -13,6 +13,7 @@ from plextrac_api.types import (
     AffectedAssetStatus,
     AffectedAssetStatusUpdate,
     AssetInput,
+    AssetType,
     ClientAssetPageLimit,
     ClientAssetSort,
     ClientAssetSortField,
@@ -42,7 +43,7 @@ def test_explicit_client_function_interpolates_path_params(monkeypatch):
 
     result = clients.get_client(session, client_id="123")
 
-    assert result.id == 123
+    assert result.client_id == 123
     assert result.name == "Example"
     assert seen["base_url"] == "https://example.plextrac.com"
     assert seen["method"] == "GET"
@@ -104,13 +105,13 @@ def test_explicit_asset_create_uses_reusable_input(monkeypatch):
     result = assets.create_asset(
         session,
         client_id="client-1",
-        asset=AssetInput(name="host1", type="hostname", tags=["external"]),
+        asset=AssetInput(name="host1", type=AssetType.SERVER, tags=["external"]),
     )
 
-    assert result.id == "asset-1"
+    assert result.asset_id == "asset-1"
     assert seen["method"] == "PUT"
     assert seen["path"] == "/api/v1/client/client-1/asset/0"
-    assert seen["json"] == {"asset": "host1", "type": "hostname", "tags": ["external"]}
+    assert seen["json"] == {"asset": "host1", "type": "Server", "tags": ["external"]}
 
 
 def test_explicit_client_asset_list_uses_assets_group_v2_endpoint(monkeypatch):
@@ -163,7 +164,7 @@ def test_explicit_report_create_uses_reusable_input(monkeypatch):
         report=ReportInput(name="Example Report", status=ReportStatus.DRAFT),
     )
 
-    assert result.id == 42
+    assert result.report_id == 42
     assert seen["method"] == "POST"
     assert seen["path"] == "/api/v1/client/client-1/report/create"
     assert seen["json"] == {"name": "Example Report", "status": "Draft"}
@@ -219,6 +220,7 @@ def test_explicit_finding_create_uses_reusable_input_and_enums(monkeypatch):
     )
 
     assert result.status == "success"
+    assert result.flaw_id == 99
     assert seen["method"] == "POST"
     assert seen["path"] == "/api/v1/client/client-1/report/report-1/flaw/create"
     assert seen["json"] == {

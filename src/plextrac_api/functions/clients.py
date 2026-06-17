@@ -8,6 +8,7 @@ from plextrac_api.functions.common import rest_request
 from plextrac_api.types.auth import AuthSession
 from plextrac_api.types.clients import (
     Client,
+    ClientCreateResult,
     ClientFilter,
     ClientFindingFilter,
     ClientFindingPage,
@@ -121,12 +122,12 @@ def get_client(
 def create_client(
     session: AuthSession,
     client: ClientInput,
-) -> OperationResult:
+) -> ClientCreateResult:
     """Create a client from a reusable ClientInput payload."""
     if client.name is None:
         raise TypeError("create_client requires client.name.")
     data = rest_request(session, "POST", "/api/v1/client/create", json=client.to_api())
-    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
+    return ClientCreateResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
 def update_client(

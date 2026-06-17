@@ -5,6 +5,7 @@ from plextrac_api.types.auth import AuthSession
 from plextrac_api.types.common import JsonDict, OperationResult, clean
 from plextrac_api.types.findings import (
     Finding,
+    FindingCreateResult,
     FindingEvidenceUpdate,
     FindingFilter,
     FindingImportSource,
@@ -134,7 +135,7 @@ def create_finding(
     client_id: int | str,
     report_id: int | str,
     finding: FindingInput,
-) -> OperationResult:
+) -> FindingCreateResult:
     """Create a finding for a report from a reusable FindingInput payload."""
     missing = [
         name
@@ -149,7 +150,7 @@ def create_finding(
     if missing:
         raise TypeError(f"create_finding missing required fields: {', '.join(missing)}.")
     data = rest_request(session, "POST", f"/api/v1/client/{client_id}/report/{report_id}/flaw/create", json=finding.to_api())
-    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
+    return FindingCreateResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
 def update_finding(

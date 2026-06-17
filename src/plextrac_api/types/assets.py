@@ -69,6 +69,22 @@ class AssetImportSource(str, Enum):
     LEGACY_CSV = "csv"
 
 
+class AssetType(str, Enum):
+    SERVER = "Server"
+    WORKSTATION = "Workstation"
+    NETWORK_DEVICE = "Network Device"
+    APPLICATION = "Application"
+    GENERAL = "General"
+
+
+class AssetCriticality(str, Enum):
+    CRITICAL = "Critical"
+    HIGH = "High"
+    MEDIUM = "Medium"
+    LOW = "Low"
+    INFORMATION = "Information"
+
+
 class AffectedAssetImportSource(str, Enum):
     CSV = "csv"
     XML = "xml"
@@ -119,8 +135,8 @@ class ClientAssetFilter:
 @dataclass(slots=True)
 class AssetInput:
     name: str | None = None
-    type: str | None = None
-    criticality: str | None = None
+    type: AssetType | None = None
+    criticality: AssetCriticality | None = None
     description: str | None = None
     hostname: str | None = None
     dns_name: str | None = None
@@ -153,13 +169,34 @@ class AssetInput:
 
 
 @dataclass(slots=True)
+class AssetCreateResult:
+    asset_id: int | str | None = None
+    status: str | None = None
+    message: str | None = None
+    raw: JsonDict | None = None
+
+    @property
+    def ok(self) -> bool:
+        return _is_success_text(self.status) or _is_success_text(self.message)
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> AssetCreateResult:
+        return cls(
+            asset_id=data.get("asset_id") or data.get("id") or data.get("cuid"),
+            status=data.get("status") or data.get("result"),
+            message=data.get("message") or data.get("detail"),
+            raw=dict(data),
+        )
+
+
+@dataclass(slots=True)
 class Asset:
     id: str | None = None
     cuid: str | None = None
     name: str | None = None
     client_id: int | str | None = None
-    type: str | None = None
-    criticality: str | None = None
+    type: AssetType | None = None
+    criticality: AssetCriticality | None = None
     description: str | None = None
     hostname: str | None = None
     dns_name: str | None = None
@@ -182,8 +219,8 @@ class Asset:
             cuid=data.get("cuid"),
             name=data.get("asset") or data.get("name"),
             client_id=data.get("client_id"),
-            type=data.get("type"),
-            criticality=data.get("assetCriticality"),
+            type=_asset_type(data.get("type")),
+            criticality=_asset_criticality(data.get("assetCriticality")),
             description=data.get("description"),
             hostname=data.get("hostname"),
             dns_name=data.get("dns_name"),
@@ -382,8 +419,8 @@ class AffectedAssetStatusUpdate:
 def _asset_payload(
     *,
     name: str | None = None,
-    type: str | None = None,
-    criticality: str | None = None,
+    type: AssetType | None = None,
+    criticality: AssetCriticality | None = None,
     description: str | None = None,
     hostname: str | None = None,
     dns_name: str | None = None,
@@ -399,8 +436,8 @@ def _asset_payload(
     return clean(
         {
             "asset": name,
-            "type": type,
-            "assetCriticality": criticality,
+            "type": type.value if type is not None else None,
+            "assetCriticality": criticality.value if criticality is not None else None,
             "description": description,
             "hostname": hostname,
             "dns_name": dns_name,
@@ -451,3 +488,36 @@ def _affected_asset_status(value: object) -> AffectedAssetStatus | None:
         except ValueError:
             return None
     return None
+
+
+def _asset_type(value: object) -> AssetType | None:
+    if isinstance(value, AssetType):
+        return value
+    if isinstance(value, str):
+        try:
+            return AssetType(value)
+        except ValueError:
+            return None
+    return None
+
+
+def _asset_criticality(value: object) -> AssetCriticality | None:
+    if isinstance(value, AssetCriticality):
+        return value
+    if isinstance(value, str):
+        try:
+            return AssetCriticality(value)
+        except ValueError:
+            return None
+    return None
+
+
+def _is_success_text(value: object) -> bool:
+    if not isinstance(value, str):
+        return False
+    return value.lower() in {
+        "ok",
+        "success",
+        "successful",
+        "created",
+    }

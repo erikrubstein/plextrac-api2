@@ -93,8 +93,30 @@ class ReportInput:
 
 
 @dataclass(slots=True)
+class ReportCreateResult:
+    report_id: int | str | None = None
+    status: str | None = None
+    message: str | None = None
+    raw: JsonDict | None = None
+
+    @property
+    def ok(self) -> bool:
+        return _is_success_text(self.status) or _is_success_text(self.message)
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> ReportCreateResult:
+        return cls(
+            report_id=data.get("report_id"),
+            status=data.get("status") or data.get("result"),
+            message=data.get("message") or data.get("detail"),
+            raw=dict(data),
+        )
+
+
+@dataclass(slots=True)
 class Report:
-    id: int | str | None = None
+    report_id: int | str | None = None
+    cuid: str | None = None
     client_id: int | str | None = None
     name: str | None = None
     status: ReportStatus | None = None
@@ -120,7 +142,8 @@ class Report:
             narrative_items = exec_summary.get("custom_fields")
 
         return cls(
-            id=data.get("report_id") or data.get("id") or data.get("cuid"),
+            report_id=data.get("report_id"),
+            cuid=data.get("cuid"),
             client_id=data.get("client_id"),
             name=data.get("name"),
             status=_report_status(data.get("status")),
@@ -168,7 +191,7 @@ class ReportSummary:
         tags = _list_value(values, 10)
         return cls(
             id=data.get("id"),
-            report_id=_list_value(values, 0) or data.get("report_id") or data.get("id"),
+            report_id=_list_value(values, 0) or data.get("report_id"),
             client_id=_list_value(doc_ids, 0) or data.get("client_id"),
             name=_list_value(values, 1) or data.get("name"),
             status=_report_status(_list_value(values, 3) or data.get("status")),
@@ -332,3 +355,14 @@ def _list_value(value: object, index: int) -> object:
     if isinstance(value, list) and len(value) > index:
         return value[index]
     return None
+
+
+def _is_success_text(value: object) -> bool:
+    if not isinstance(value, str):
+        return False
+    return value.lower() in {
+        "ok",
+        "success",
+        "successful",
+        "created",
+    }

@@ -55,6 +55,7 @@ created = clients.create_client(session, ClientInput(name="Example Client"))
 from plextrac_api.functions import assets
 from plextrac_api.types import (
     AssetInput,
+    AssetType,
     ClientAssetPageLimit,
     ClientAssetSort,
     ClientAssetSortField,
@@ -63,15 +64,15 @@ from plextrac_api.types import (
 
 asset_page = assets.list_client_assets(
     session,
-    client_id="client-cuid",
+    client_id="client-1",
     limit=ClientAssetPageLimit.FIFTY,
     sort=[ClientAssetSort(by=ClientAssetSortField.ASSET, order=SortOrder.ASCENDING)],
 )
 
 created = assets.create_asset(
     session,
-    client_id="client-cuid",
-    asset=AssetInput(name="host1.example.com", type="hostname"),
+    client_id="client-1",
+    asset=AssetInput(name="host1.example.com", type=AssetType.SERVER),
 )
 ```
 

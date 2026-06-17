@@ -104,6 +104,12 @@ Rules:
   `OperationResult`.
 - Use `OperationResult` only for generic operation responses. If an endpoint returns unique
   information, define a dedicated result type that preserves it.
+- Do not collapse explicit response fields into vague generic fields. For example, a response
+  field named `report_id` should become `ReportCreateResult.report_id`, not
+  `OperationResult.id`.
+- Use explicit identifier names on domain models when PlexTrac documents them. For example,
+  prefer `Client.client_id`, `Report.report_id`, and `Finding.flaw_id` over a generic `id`
+  property. Keep separate CUID-style document identifiers in a `cuid` field when present.
 - Keep raw API payloads available on response dataclasses when useful for debugging or forward
   compatibility, but never use `raw` to construct polished request payloads.
 - Do not add public `extra` escape-hatch fields to polished request types or functions. Use the raw

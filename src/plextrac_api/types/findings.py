@@ -255,8 +255,29 @@ class FindingInput:
 
 
 @dataclass(slots=True)
+class FindingCreateResult:
+    flaw_id: int | str | None = None
+    status: str | None = None
+    message: str | None = None
+    raw: JsonDict | None = None
+
+    @property
+    def ok(self) -> bool:
+        return _is_success_text(self.status) or _is_success_text(self.message)
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> FindingCreateResult:
+        return cls(
+            flaw_id=data.get("flaw_id") or data.get("finding_id"),
+            status=data.get("status") or data.get("result"),
+            message=data.get("message") or data.get("detail"),
+            raw=dict(data),
+        )
+
+
+@dataclass(slots=True)
 class Finding:
-    id: int | str | None = None
+    cuid: str | None = None
     flaw_id: int | str | None = None
     client_id: int | str | None = None
     report_id: int | str | None = None
@@ -291,7 +312,7 @@ class Finding:
         affected_assets = data.get("affected_assets")
         fields = data.get("fields")
         return cls(
-            id=data.get("id") or data.get("cuid"),
+            cuid=data.get("cuid") or data.get("id"),
             flaw_id=data.get("flaw_id"),
             client_id=data.get("client_id"),
             report_id=data.get("report_id"),
@@ -575,6 +596,17 @@ def _api_value(value: object) -> object:
     if isinstance(value, list):
         return [_api_value(item) for item in value]
     return value
+
+
+def _is_success_text(value: object) -> bool:
+    if not isinstance(value, str):
+        return False
+    return value.lower() in {
+        "ok",
+        "success",
+        "successful",
+        "created",
+    }
 
 
 def _first_list(data: JsonDict, keys: tuple[str, ...]) -> list[JsonDict]:
