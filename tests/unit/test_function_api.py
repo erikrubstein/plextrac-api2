@@ -5,13 +5,15 @@ import time
 import httpx
 import pytest
 
-from plextrac_api.functions import affected_assets, assets, clients, findings, reports
+from plextrac_api.functions import affected_assets, assets, clients, files, findings, reports
 from plextrac_api.functions.auth import session_from_token
 from plextrac_api.functions.common import PlexTracAuthError, PlexTracNotFoundError
 from plextrac_api.types import (
     AffectedAsset,
     AffectedAssetStatus,
     AffectedAssetStatusUpdate,
+    ArtifactRelation,
+    ArtifactRelationModel,
     AssetInput,
     AssetType,
     ClientAssetPageLimit,
@@ -301,6 +303,81 @@ def test_explicit_affected_asset_bulk_create_statuses_uses_reusable_update(monke
             "comment": "triaging",
         }
     ]
+
+
+def test_explicit_files_list_artifacts_uses_typed_relations(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={
+                "status": "ok",
+                "data": [
+                    {
+                        "id": "artifact-1",
+                        "filename": "proof.png",
+                        "content_type": "image/png",
+                    }
+                ],
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    artifacts = files.list_artifacts(
+        session,
+        components=["report_artifacts"],
+        relations=[ArtifactRelation(model=ArtifactRelationModel.REPORT, id=42)],
+    )
+
+    assert artifacts[0].artifact_id == "artifact-1"
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v1/file-manager/artifacts"
+    assert seen["json"] == {
+        "components": ["report_artifacts"],
+        "relations": [{"model": "report", "id": 42}],
+    }
+
+
+def test_explicit_files_upload_artifact_uses_documented_form_fields(monkeypatch, tmp_path):
+    seen = {}
+    artifact_path = tmp_path / "proof.txt"
+    artifact_path.write_text("proof", encoding="utf-8")
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["data"] = kwargs["data"]
+        seen["files"] = kwargs["files"]
+        return httpx.Response(200, json={"status": "ok", "data": {"id": "artifact-1"}})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = files.upload_artifact(
+        session,
+        artifact_path,
+        description="proof file",
+        components=["report_artifacts"],
+        relations=[ArtifactRelation(model=ArtifactRelationModel.CLIENT, id=123)],
+        content_type="text/plain",
+    )
+
+    assert result.artifact_id == "artifact-1"
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v1/file-manager/upload"
+    assert seen["data"] == {
+        "description": "proof file",
+        "components": "[\"report_artifacts\"]",
+        "relations": "[{\"model\": \"client\", \"id\": 123}]",
+    }
+    assert seen["files"]["file"][0] == "proof.txt"
+    assert seen["files"]["file"][2] == "text/plain"
 
 
 def test_explicit_finding_list_uses_latest_paginated_endpoint(monkeypatch):

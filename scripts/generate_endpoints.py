@@ -21,7 +21,6 @@ GENERATED_FUNCTION_GROUPS = {
     "analytics",
     "assessments",
     "content_library",
-    "files",
     "graph_ql_mutations",
     "graph_ql_queries",
     "integrations",
@@ -34,7 +33,14 @@ GENERATED_FUNCTION_GROUPS = {
     "tenant",
     "users",
 }
-HAND_WRITTEN_FUNCTION_GROUPS = {"affected_assets", "assets", "clients", "findings", "reports"}
+HAND_WRITTEN_FUNCTION_GROUPS = {
+    "affected_assets",
+    "assets",
+    "clients",
+    "files",
+    "findings",
+    "reports",
+}
 VERSION_SUFFIX_RE = re.compile(r"^(?P<base>.+)_v(?P<version>\d+)$")
 METHOD_NAME_OVERRIDES = {
     (
@@ -48,6 +54,11 @@ METHOD_NAME_OVERRIDES = {
     ("Clients", "available_tenant_users"): "list_available_tenant_users",
     ("Clients", "assign_user_to_client"): "assign_users_to_client",
     ("Clients", "remove_user_from_client"): "remove_users_from_client",
+    ("Files", "delete_an_artifact"): "delete_artifact",
+    ("Files", "download_an_artifact"): "download_artifact",
+    ("Files", "get_artifacts"): "list_artifacts",
+    ("Files", "upload_an_artifact_file"): "upload_artifact",
+    ("Files", "upload_image_to_tenant"): "upload_tenant_image",
     ("Reports", "bulk_add_tags_to_report"): "bulk_add_tags_to_reports",
     ("Reports", "bulk_adjust_status_of_report"): "bulk_update_report_statuses",
     ("Reports", "bulk_assign_reviewers_to_report"): "bulk_assign_reviewers_to_reports",

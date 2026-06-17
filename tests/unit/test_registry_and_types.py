@@ -3,6 +3,10 @@ from plextrac_api.types import (
     AffectedAsset,
     AffectedAssetStatus,
     AffectedAssetStatusUpdate,
+    Artifact,
+    ArtifactRelation,
+    ArtifactRelationModel,
+    ArtifactUploadResult,
     Asset,
     AssetCreateResult,
     AssetCriticality,
@@ -50,6 +54,7 @@ from plextrac_api.types import (
     TenantAssetFilterField,
     TenantAssetSort,
     TenantAssetSortField,
+    TenantImageUploadResult,
 )
 
 
@@ -91,6 +96,16 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "remove_affected_asset_from_flaw" not in method_names
     assert "bulk_get_affected_asset_statuses" in method_names
     assert "bulk_get_affected_assets_status" not in method_names
+    assert "list_artifacts" in method_names
+    assert "get_artifacts" not in method_names
+    assert "download_artifact" in method_names
+    assert "download_an_artifact" not in method_names
+    assert "upload_artifact" in method_names
+    assert "upload_an_artifact_file" not in method_names
+    assert "delete_artifact" in method_names
+    assert "delete_an_artifact" not in method_names
+    assert "upload_tenant_image" in method_names
+    assert "upload_image_to_tenant" not in method_names
     assert all(not name.endswith(("_v1", "_v2", "_v3")) for name in method_names)
 
 
@@ -204,6 +219,37 @@ def test_asset_request_shape_types_serialize_with_verified_fields():
         "type": "Server",
         "assetCriticality": "High",
     }
+
+
+def test_file_type_parses_artifacts_and_upload_results():
+    artifact = Artifact.from_api(
+        {
+            "id": "artifact-1",
+            "filename": "proof.png",
+            "content_type": "image/png",
+            "description": "proof",
+            "createdAt": 1682615928019,
+            "components": ["report_artifacts"],
+            "relations": [{"model": "report", "id": 500824}],
+            "size": 757,
+        }
+    )
+
+    assert artifact.artifact_id == "artifact-1"
+    assert artifact.content_type == "image/png"
+    assert artifact.relations[0].model is ArtifactRelationModel.REPORT
+    assert artifact.relations[0].id == 500824
+    assert ArtifactRelation(model=ArtifactRelationModel.CLIENT, id=1045).to_api() == {
+        "model": "client",
+        "id": 1045,
+    }
+    upload_result = ArtifactUploadResult.from_api(
+        {"status": "ok", "data": {"id": "artifact-2"}}
+    )
+    assert upload_result.artifact_id == "artifact-2"
+    assert TenantImageUploadResult.from_api(
+        {"fileUrl": "uploads/image.png"}
+    ).file_url == "uploads/image.png"
 
 
 def test_report_request_shape_types_serialize_with_verified_fields():

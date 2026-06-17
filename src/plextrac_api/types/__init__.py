@@ -55,6 +55,13 @@ from plextrac_api.types.common import (
     VulnerableParameter,
 )
 from plextrac_api.types.evidence import Evidence
+from plextrac_api.types.files import (
+    Artifact,
+    ArtifactRelation,
+    ArtifactRelationModel,
+    ArtifactUploadResult,
+    TenantImageUploadResult,
+)
 from plextrac_api.types.findings import (
     CodeSample,
     CommonIdentifiers,
@@ -110,6 +117,10 @@ __all__ = [
     "AssetPage",
     "AssetType",
     "AuthSession",
+    "Artifact",
+    "ArtifactRelation",
+    "ArtifactRelationModel",
+    "ArtifactUploadResult",
     "Client",
     "ClientCreateResult",
     "ClientAssetFilter",
@@ -184,6 +195,7 @@ __all__ = [
     "TenantAssetPageLimit",
     "TenantAssetSort",
     "TenantAssetSortField",
+    "TenantImageUploadResult",
     "UserRole",
     "VulnerableParameter",
 ]

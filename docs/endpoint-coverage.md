@@ -3,8 +3,8 @@
 This file is an inventory of the currently known PlexTrac API groups and endpoint wrappers. It is
 useful for SDK development and gap tracking, but it is not intended to be the primary user guide.
 
-Most groups are still generated wrappers. The `clients`, `reports`, `findings`, `assets`, and
-`affected_assets` groups are hand-polished and show the intended long-term SDK shape.
+Most groups are still generated wrappers. The `clients`, `reports`, `findings`, `assets`,
+`affected_assets`, and `files` groups are hand-polished and show the intended long-term SDK shape.
 
 The inventory is based on the public PlexTrac Postman collection snapshot.
 
@@ -22,7 +22,7 @@ Total supported endpoint functions in snapshot: **357**
 | Assets | `plextrac_api.functions.assets` | 9 explicit functions |
 | Content Library | `plextrac_api.functions.content_library` | 41 |
 | Clients | `plextrac_api.functions.clients` | 14 explicit functions |
-| Files | `plextrac_api.functions.files` | 6 |
+| Files | `plextrac_api.functions.files` | 6 explicit functions |
 | Findings | `plextrac_api.functions.findings` | 16 explicit functions |
 | Integrations | `plextrac_api.functions.integrations` | 23 |
 | Mailer | `plextrac_api.functions.mailer` | 3 |
@@ -251,12 +251,12 @@ Display name: Files
 
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
-| `get_artifacts` | POST | `/api/v1/file-manager/artifacts` |  |
-| `download_an_artifact` | GET | `/api/v1/file-manager/artifacts/{artifactId}` |  |
-| `upload_an_artifact_file` | POST | `/api/v1/file-manager/upload` |  |
-| `delete_an_artifact` | DELETE | `/api/v1/file-manager/artifacts/{artifactId}` |  |
+| `list_artifacts` | POST | `/api/v1/file-manager/artifacts` |  |
+| `download_artifact` | GET | `/api/v1/file-manager/artifacts/{artifactId}` |  |
+| `upload_artifact` | POST | `/api/v1/file-manager/upload` |  |
+| `delete_artifact` | DELETE | `/api/v1/file-manager/artifacts/{artifactId}` |  |
 | `get_upload_by_name` | GET | `/api/v1/uploads/9bee9f28-7e25-4b4f-8b64-b520fc3c0b7c.png` |  |
-| `upload_image_to_tenant` | POST | `/api/v1/uploads` |  |
+| `upload_tenant_image` | POST | `/api/v1/uploads` |  |
 
 ### `findings`
 
