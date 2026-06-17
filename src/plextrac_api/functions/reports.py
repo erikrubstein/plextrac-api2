@@ -24,7 +24,11 @@ from plextrac_api.types.reports import (
 )
 
 
-def count_report_search_occurrences(session: AuthSession, report_id: int | str, search: str) -> ReportSearchOccurrenceResult:
+def count_report_search_occurrences(
+    session: AuthSession,
+    report_id: int | str,
+    search: str,
+) -> ReportSearchOccurrenceResult:
     """Count occurrences of a search value within a report."""
     data = rest_request(session, "POST", "/api/v1/search-replace/occurrences", json={"search": search, "report_id": report_id})
     if not isinstance(data, dict):
@@ -32,7 +36,12 @@ def count_report_search_occurrences(session: AuthSession, report_id: int | str, 
     return ReportSearchOccurrenceResult.from_api(data)
 
 
-def replace_report_text(session: AuthSession, report_id: int | str, search: str, replace: str) -> ReportReplaceResult:
+def replace_report_text(
+    session: AuthSession,
+    report_id: int | str,
+    search: str,
+    replace: str,
+) -> ReportReplaceResult:
     """Find and replace a text value within a report."""
     data = rest_request(session, "POST", "/api/v1/search-replace", json={"search": search, "replace": replace, "report_id": report_id})
     if not isinstance(data, dict):
@@ -40,13 +49,22 @@ def replace_report_text(session: AuthSession, report_id: int | str, search: str,
     return ReportReplaceResult.from_api(data)
 
 
-def list_client_reports(session: AuthSession, client_id: int | str) -> list[ReportSummary]:
+def list_client_reports(
+    session: AuthSession,
+    client_id: int | str,
+) -> list[ReportSummary]:
     """List summarized reports for a specific client."""
     data = rest_request(session, "GET", f"/api/v1/client/{client_id}/reports")
     return [ReportSummary.from_api(item) for item in data if isinstance(item, dict)] if isinstance(data, list) else []
 
 
-def list_reports(session: AuthSession, *, pagination: Pagination | None = None, sort: list[ReportSort] | None = None, filters: list[ReportFilter] | None = None) -> ReportPage:
+def list_reports(
+    session: AuthSession,
+    *,
+    pagination: Pagination | None = None,
+    sort: list[ReportSort] | None = None,
+    filters: list[ReportFilter] | None = None,
+) -> ReportPage:
     """List tenant reports with pagination, sorting, and filters."""
     payload: JsonDict = {
         "pagination": (pagination or Pagination()).to_api(),
@@ -57,7 +75,11 @@ def list_reports(session: AuthSession, *, pagination: Pagination | None = None, 
     return ReportPage.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def get_report(session: AuthSession, client_id: int | str, report_id: int | str) -> Report:
+def get_report(
+    session: AuthSession,
+    client_id: int | str,
+    report_id: int | str,
+) -> Report:
     """Get one report for a client."""
     data = rest_request(session, "GET", f"/api/v1/client/{client_id}/report/{report_id}")
     if not isinstance(data, dict):
@@ -65,7 +87,11 @@ def get_report(session: AuthSession, client_id: int | str, report_id: int | str)
     return Report.from_api(data)
 
 
-def create_report(session: AuthSession, client_id: int | str, report: ReportInput) -> OperationResult:
+def create_report(
+    session: AuthSession,
+    client_id: int | str,
+    report: ReportInput,
+) -> OperationResult:
     """Create a report for a client from a reusable ReportInput payload."""
     if report.name is None:
         raise TypeError("create_report requires report.name.")
@@ -73,25 +99,43 @@ def create_report(session: AuthSession, client_id: int | str, report: ReportInpu
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def update_report(session: AuthSession, client_id: int | str, report_id: int | str, report: ReportInput) -> OperationResult:
+def update_report(
+    session: AuthSession,
+    client_id: int | str,
+    report_id: int | str,
+    report: ReportInput,
+) -> OperationResult:
     """Update report metadata and narratives for a client report."""
     data = rest_request(session, "PUT", f"/api/v1/client/{client_id}/report/{report_id}", json=report.to_api())
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def delete_report(session: AuthSession, client_id: int | str, report_id: int | str) -> OperationResult:
+def delete_report(
+    session: AuthSession,
+    client_id: int | str,
+    report_id: int | str,
+) -> OperationResult:
     """Delete one report for a client."""
     data = rest_request(session, "DELETE", f"/api/v1/client/{client_id}/report/{report_id}")
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def bulk_delete_reports(session: AuthSession, client_id: int | str, report_ids: list[int | str]) -> OperationResult:
+def bulk_delete_reports(
+    session: AuthSession,
+    client_id: int | str,
+    report_ids: list[int | str],
+) -> OperationResult:
     """Delete multiple reports for a client."""
     data = rest_request(session, "POST", "/api/v2/reports/bulk/delete", json={"clientId": client_id, "reportIDs": report_ids})
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def get_report_exhibit(session: AuthSession, client_id: int | str, report_id: int | str, exhibit_id: int | str) -> ReportExhibit:
+def get_report_exhibit(
+    session: AuthSession,
+    client_id: int | str,
+    report_id: int | str,
+    exhibit_id: int | str,
+) -> ReportExhibit:
     """Get an exhibit filename/reference from a report."""
     data = rest_request(session, "GET", f"/api/v1/client/{client_id}/report/{report_id}/{exhibit_id}")
     if not isinstance(data, dict):
@@ -99,44 +143,84 @@ def get_report_exhibit(session: AuthSession, client_id: int | str, report_id: in
     return ReportExhibit.from_api(data)
 
 
-def bulk_add_tags_to_reports(session: AuthSession, client_id: int | str, report_ids: list[int | str], tags: list[str]) -> OperationResult:
+def bulk_add_tags_to_reports(
+    session: AuthSession,
+    client_id: int | str,
+    report_ids: list[int | str],
+    tags: list[str],
+) -> OperationResult:
     """Add tags to multiple reports for a client."""
     data = rest_request(session, "POST", "/api/v2/reports/bulk/tags", json={"clientId": client_id, "reportIDs": report_ids, "tags": tags})
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def bulk_assign_reviewers_to_reports(session: AuthSession, client_id: int | str, report_ids: list[int | str], reviewers: list[str]) -> OperationResult:
+def bulk_assign_reviewers_to_reports(
+    session: AuthSession,
+    client_id: int | str,
+    report_ids: list[int | str],
+    reviewers: list[str],
+) -> OperationResult:
     """Assign reviewers to multiple reports by email address."""
     data = rest_request(session, "POST", "/api/v2/reports/bulk/reviewers", json={"clientId": client_id, "reportIDs": report_ids, "reviewers": reviewers})
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def bulk_update_report_statuses(session: AuthSession, client_id: int | str, report_ids: list[int | str], status: ReportStatus) -> OperationResult:
+def bulk_update_report_statuses(
+    session: AuthSession,
+    client_id: int | str,
+    report_ids: list[int | str],
+    status: ReportStatus,
+) -> OperationResult:
     """Set the same status on multiple reports."""
     data = rest_request(session, "POST", "/api/v2/reports/bulk/status", json={"clientId": client_id, "reportIDs": report_ids, "status": status.value})
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def export_report_to_ptrac(session: AuthSession, client_id: int | str, report_id: int | str) -> bytes:
+def export_report_to_ptrac(
+    session: AuthSession,
+    client_id: int | str,
+    report_id: int | str,
+) -> bytes:
     """Export a report in .ptrac format."""
     return _bytes_response(rest_request(session, "GET", f"/api/v1/client/{client_id}/report/{report_id}/export/ptrac"))
 
 
-def export_report_to_word(session: AuthSession, client_id: int | str, report_id: int | str, *, include_evidence: bool = False, template_id: int | str | None = None) -> bytes:
+def export_report_to_word(
+    session: AuthSession,
+    client_id: int | str,
+    report_id: int | str,
+    *,
+    include_evidence: bool = False,
+    template_id: int | str | None = None,
+) -> bytes:
     """Export a report as a Word document."""
     params: JsonDict = {"includeEvidence": include_evidence, "templateID": template_id}
     data = rest_request(session, "GET", f"/api/v1/client/{client_id}/report/{report_id}/export/doc", params={key: value for key, value in params.items() if value is not None})
     return _bytes_response(data)
 
 
-def export_report_to_pdf(session: AuthSession, client_id: int | str, report_id: int | str, *, include_evidence: bool = False, template_id: int | str | None = None) -> bytes:
+def export_report_to_pdf(
+    session: AuthSession,
+    client_id: int | str,
+    report_id: int | str,
+    *,
+    include_evidence: bool = False,
+    template_id: int | str | None = None,
+) -> bytes:
     """Export a report as a PDF."""
     params: JsonDict = {"includeEvidence": include_evidence, "templateID": template_id}
     data = rest_request(session, "GET", f"/api/v1/client/{client_id}/report/{report_id}/export/pdf", params={key: value for key, value in params.items() if value is not None})
     return _bytes_response(data)
 
 
-def import_report_from_ptrac(session: AuthSession, client_id: int | str, file: str | Path | BinaryIO, *, filename: str | None = None, content_type: str | None = None) -> OperationResult:
+def import_report_from_ptrac(
+    session: AuthSession,
+    client_id: int | str,
+    file: str | Path | BinaryIO,
+    *,
+    filename: str | None = None,
+    content_type: str | None = None,
+) -> OperationResult:
     """Import a .ptrac file as a report for a client."""
     close_after = None
     if isinstance(file, (str, Path)):

@@ -1,7 +1,13 @@
 from plextrac_api.generated.endpoints import GROUPS
 from plextrac_api.types import (
     AffectedAsset,
+    Asset,
+    AssetInput,
     Client,
+    ClientAssetFilter,
+    ClientAssetFilterField,
+    ClientAssetSort,
+    ClientAssetSortField,
     ClientFilter,
     ClientFilterField,
     ClientFindingFilter,
@@ -31,6 +37,10 @@ from plextrac_api.types import (
     ReportStatus,
     Sort,
     SortOrder,
+    TenantAssetFilter,
+    TenantAssetFilterField,
+    TenantAssetSort,
+    TenantAssetSortField,
 )
 
 
@@ -39,6 +49,7 @@ def test_generated_registry_covers_public_snapshot():
 
     assert total == 357
     assert "clients" in GROUPS
+    assert "assets" in GROUPS
     assert "reports" in GROUPS
     assert "findings" in GROUPS
     assert "runbooks" in GROUPS
@@ -89,6 +100,24 @@ def test_client_type_parses_documented_fields():
     assert client.users["user@example.com"].role == "ADMIN"
 
 
+def test_asset_type_parses_documented_fields():
+    asset = Asset.from_api(
+        {
+            "id": "asset-1",
+            "asset": "host1",
+            "client_id": 1,
+            "assetCriticality": "High",
+            "knownIps": ["192.0.2.1"],
+            "ports": {"443": {"number": "443", "service": "https", "protocol": "tcp"}},
+        }
+    )
+
+    assert asset.id == "asset-1"
+    assert asset.name == "host1"
+    assert asset.criticality == "High"
+    assert asset.ports["443"].protocol == "tcp"
+
+
 def test_client_request_shape_types_serialize_with_verified_fields():
     assert Pagination(limit=50, offset=25).to_api() == {"offset": 25, "limit": 50}
     assert Sort(by="name", order=SortOrder.DESCENDING).to_api() == {"by": "name", "order": "DESC"}
@@ -111,6 +140,32 @@ def test_client_request_shape_types_serialize_with_verified_fields():
     ).to_api() == {
         "by": "visibility",
         "value": "published",
+    }
+
+
+def test_asset_request_shape_types_serialize_with_verified_fields():
+    assert TenantAssetSort(
+        by=TenantAssetSortField.ASSET_CRITICALITY,
+        order=SortOrder.DESCENDING,
+    ).to_api() == {
+        "by": "assetCriticality",
+        "order": "DESC",
+    }
+    assert TenantAssetFilter(by=TenantAssetFilterField.TAGS, value=["external"]).to_api() == {
+        "by": "tags",
+        "value": ["external"],
+    }
+    assert ClientAssetSort(by=ClientAssetSortField.ASSET, order=SortOrder.ASCENDING).to_api() == {
+        "by": "asset",
+        "order": "ASC",
+    }
+    assert ClientAssetFilter(by=ClientAssetFilterField.TAGS, value=["none"]).to_api() == {
+        "by": "tags",
+        "value": ["none"],
+    }
+    assert AssetInput(name="host1", type="hostname").to_api() == {
+        "asset": "host1",
+        "type": "hostname",
     }
 
 

@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 
-from plextrac_api.types.assets import Asset
 from plextrac_api.types.common import CustomField, JsonDict, SortOrder, UserRole, clean
 from plextrac_api.types.findings import Finding, FindingSeverity, FindingStatus, FindingVisibility
 
@@ -312,27 +311,6 @@ class ClientFindingPage:
         items = _first_list(data, ("findings", "data", "items", "results"))
         return cls(
             findings=[Finding.from_api(item) for item in items if isinstance(item, dict)],
-            total_count=_first_int(data, ("total", "totalCount", "count")),
-            raw=dict(data),
-        )
-
-
-@dataclass(slots=True)
-class ClientAssetPage:
-    assets: list[Asset]
-    total_count: int | None = None
-    raw: JsonDict | None = None
-
-    @classmethod
-    def from_api(cls, data: JsonDict | list[JsonDict]) -> ClientAssetPage:
-        if isinstance(data, list):
-            return cls(
-                assets=[Asset.from_api(item) for item in data if isinstance(item, dict)],
-                raw={"data": data},
-            )
-        items = _first_list(data, ("assets", "data", "items", "results"))
-        return cls(
-            assets=[Asset.from_api(item) for item in items if isinstance(item, dict)],
             total_count=_first_int(data, ("total", "totalCount", "count")),
             raw=dict(data),
         )

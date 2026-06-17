@@ -5,11 +5,15 @@ import time
 import httpx
 import pytest
 
-from plextrac_api.functions import clients, findings, reports
+from plextrac_api.functions import assets, clients, findings, reports
 from plextrac_api.functions.auth import session_from_token
 from plextrac_api.functions.common import PlexTracAuthError, PlexTracNotFoundError
 from plextrac_api.types import (
     AffectedAsset,
+    AssetInput,
+    ClientAssetPageLimit,
+    ClientAssetSort,
+    ClientAssetSortField,
     ClientInput,
     FindingField,
     FindingInput,
@@ -17,6 +21,7 @@ from plextrac_api.types import (
     FindingStatus,
     ReportInput,
     ReportStatus,
+    SortOrder,
 )
 
 
@@ -80,6 +85,62 @@ def test_explicit_client_create_uses_reusable_input(monkeypatch):
 
     assert seen["method"] == "POST"
     assert seen["json"] == {"name": "Example Client"}
+
+
+def test_explicit_asset_create_uses_reusable_input(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"status": "success", "id": "asset-1"})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = assets.create_asset(
+        session,
+        client_id="client-1",
+        asset=AssetInput(name="host1", type="hostname", tags=["external"]),
+    )
+
+    assert result.id == "asset-1"
+    assert seen["method"] == "PUT"
+    assert seen["path"] == "/api/v1/client/client-1/asset/0"
+    assert seen["json"] == {"asset": "host1", "type": "hostname", "tags": ["external"]}
+
+
+def test_explicit_client_asset_list_uses_assets_group_v2_endpoint(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={"data": [{"id": "asset-1", "asset": "host1"}], "total": 1},
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    page = assets.list_client_assets(
+        session,
+        client_id="client-1",
+        limit=ClientAssetPageLimit.FIFTY,
+        sort=[ClientAssetSort(by=ClientAssetSortField.ASSET, order=SortOrder.ASCENDING)],
+    )
+
+    assert page.total_count == 1
+    assert page.assets[0].name == "host1"
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v2/clients/client-1/assets"
+    assert seen["json"] == {
+        "pagination": {"offset": 0, "limit": 50},
+        "sort": [{"by": "asset", "order": "ASC"}],
+    }
 
 
 def test_explicit_report_create_uses_reusable_input(monkeypatch):

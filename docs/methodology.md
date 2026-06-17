@@ -131,6 +131,19 @@ Examples:
 Generated endpoint functions are allowed to use `**kwargs` and `Any` temporarily. They exist to
 preserve broad coverage while individual groups are polished.
 
+## Formatting Policy
+
+Polished public function signatures should be easy to scan as typed API declarations.
+
+Rules:
+
+- Use multiline function signatures for polished public functions, even when the signature would
+  fit on one line.
+- Put one parameter per line, including `session`.
+- Put `*` on its own line when keyword-only arguments are used.
+- Put the closing parenthesis and return annotation on their own line.
+- Private helpers may stay compact when their signatures are short and obvious.
+
 ## Docstring Policy
 
 Polished functions should include concise docstrings that describe the operation from the SDK
@@ -153,7 +166,7 @@ The SDK currently has two layers:
 Generated functions should be considered scaffolding. As a group is polished, replace ambiguous
 generated-style wrappers with explicit signatures and typed returns.
 
-The `clients`, `reports`, and `findings` groups are the current models for polished groups:
+The `clients`, `reports`, `findings`, and `assets` groups are the current models for polished groups:
 
 - explicit function arguments
 - reusable input dataclasses only when shared across functions
@@ -163,6 +176,7 @@ The `clients`, `reports`, and `findings` groups are the current models for polis
 - documented sort/filter fields represented as enums
 - canonical endpoint version only
 - naming fixes where needed
+- multiline public function signatures
 - concise docstrings
 
 ## REST, GraphQL, And Webhooks
@@ -212,6 +226,7 @@ When polishing an API group:
 14. Replace documented nested dictionaries with dataclasses.
 15. Use dedicated result types instead of `OperationResult` when endpoint responses contain unique
     information.
-16. Add concise docstrings to polished functions.
-17. Update endpoint coverage and docs.
-18. Add tests for request shape, response parsing, enum serialization, and naming regressions.
+16. Format public function signatures across multiple lines.
+17. Add concise docstrings to polished functions.
+18. Update endpoint coverage and docs.
+19. Add tests for request shape, response parsing, enum serialization, and naming regressions.

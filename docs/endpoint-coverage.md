@@ -3,8 +3,8 @@
 This file is an inventory of the currently known PlexTrac API groups and endpoint wrappers. It is
 useful for SDK development and gap tracking, but it is not intended to be the primary user guide.
 
-Most groups are still generated wrappers. The `clients` and `reports` groups are hand-polished and
-show the intended long-term SDK shape.
+Most groups are still generated wrappers. The `clients`, `reports`, `findings`, and `assets`
+groups are hand-polished and show the intended long-term SDK shape.
 
 The inventory is based on the public PlexTrac Postman collection snapshot.
 
@@ -19,9 +19,9 @@ Total supported endpoint functions in snapshot: **357**
 | Affected Assets | `plextrac_api.functions.affected_assets` | 6 |
 | Analytics | `plextrac_api.functions.analytics` | 11 |
 | Assessments | `plextrac_api.functions.assessments` | 33 |
-| Assets | `plextrac_api.functions.assets` | 11 |
+| Assets | `plextrac_api.functions.assets` | 9 explicit functions |
 | Content Library | `plextrac_api.functions.content_library` | 41 |
-| Clients | `plextrac_api.functions.clients` | 15 explicit functions |
+| Clients | `plextrac_api.functions.clients` | 14 explicit functions |
 | Files | `plextrac_api.functions.files` | 6 |
 | Findings | `plextrac_api.functions.findings` | 16 explicit functions |
 | Integrations | `plextrac_api.functions.integrations` | 23 |
@@ -166,17 +166,15 @@ Display name: Assets
 
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
-| `get_tenant_assets` | POST | `/api/v2/tenant/assets` |  |
-| `get_assets_by_client` | POST | `/api/v2/clients/{clientId}/assets` |  |
-| `list_client_assets` | GET | `/api/v1/client/{clientId}/assets` |  |
+| `list_tenant_assets` | POST | `/api/v2/tenant/assets` |  |
+| `list_client_assets` | POST | `/api/v2/clients/{clientId}/assets` |  |
 | `list_report_assets` | GET | `/api/v2/clients/{clientId}/reports/{reportId}/assets` |  |
-| `get_asset` | GET | `/api/v1/client/{clientId}/asset/{assetId}` | `get` |
-| `create_asset` | PUT | `/api/v1/client/{clientId}/asset/0` | `create` |
-| `update_asset` | PUT | `/api/v1/client/{clientId}/asset/{assetId}` | `update` |
-| `delete_asset` | DELETE | `/api/v1/client/{clientId}/asset/{assetId}` | `delete` |
+| `get_asset` | GET | `/api/v1/client/{clientId}/asset/{assetId}` |  |
+| `create_asset` | PUT | `/api/v1/client/{clientId}/asset/0` |  |
+| `update_asset` | PUT | `/api/v1/client/{clientId}/asset/{assetId}` |  |
+| `delete_asset` | DELETE | `/api/v1/client/{clientId}/asset/{assetId}` |  |
 | `import_client_assets` | POST | `/api/v2/client/{clientId}/assets/import/{source}` |  |
 | `bulk_delete_client_assets` | POST | `/api/v1/client/{clientId}/bulk/assets/delete` |  |
-| `get_scanner_output` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/asset/{assetId}/scanoutput` |  |
 
 ### `content_library`
 
@@ -246,7 +244,6 @@ Display name: Clients
 | `add_client_logo` | POST | `/api/v1/client/{clientId}/logo` |  |
 | `delete_client_logo` | DELETE | `/api/v1/client/{clientId}/logo` |  |
 | `list_client_findings` | POST | `/api/v2/client/{clientId}/findings` |  |
-| `list_client_assets` | POST | `/api/v2/clients/{clientId}/assets` |  |
 
 ### `files`
 

@@ -1,14 +1,144 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum, IntEnum
 
 from plextrac_api.types.common import (
     JsonDict,
     ObjectReference,
     Port,
+    SortOrder,
     VulnerableParameter,
     clean,
 )
+
+
+class TenantAssetPageLimit(IntEnum):
+    FIVE = 5
+    TEN = 10
+    TWENTY_FIVE = 25
+    FIFTY = 50
+    ONE_HUNDRED = 100
+    ONE_THOUSAND = 1000
+
+
+class ClientAssetPageLimit(IntEnum):
+    FIVE = 5
+    TEN = 10
+    TWENTY_FIVE = 25
+    FIFTY = 50
+    ONE_HUNDRED = 100
+
+
+class TenantAssetSortField(str, Enum):
+    SEARCH_TERM = "searchTerm"
+    CLIENT_ID = "client_id"
+    ASSET_CRITICALITY = "assetCriticality"
+    TAGS = "tags"
+    TYPE = "type"
+    PCI_STATUS = "pci_status"
+    SYSTEM_OWNER = "system_owner"
+    DATA_OWNER = "data_owner"
+
+
+class TenantAssetFilterField(str, Enum):
+    SEARCH_TERM = "searchTerm"
+    CLIENT_ID = "client_id"
+    ASSET_CRITICALITY = "assetCriticality"
+    TAGS = "tags"
+    TYPE = "type"
+    PCI_STATUS = "pci_status"
+    SYSTEM_OWNER = "system_owner"
+    DATA_OWNER = "data_owner"
+
+
+class ClientAssetSortField(str, Enum):
+    ASSET = "asset"
+    TAGS = "tags"
+
+
+class ClientAssetFilterField(str, Enum):
+    ASSET = "asset"
+    TAGS = "tags"
+
+
+class AssetImportSource(str, Enum):
+    NMAP_XML = "nmap-xml"
+    NMAP_CSV = "nmap-csv"
+    LEGACY_NMAP = "nmap"
+    LEGACY_CSV = "csv"
+
+
+@dataclass(slots=True)
+class TenantAssetSort:
+    by: TenantAssetSortField
+    order: SortOrder = SortOrder.ASCENDING
+
+    def to_api(self) -> JsonDict:
+        return {"by": self.by.value, "order": self.order.value}
+
+
+@dataclass(slots=True)
+class TenantAssetFilter:
+    by: TenantAssetFilterField
+    value: str | int | list[str] | list[int]
+
+    def to_api(self) -> JsonDict:
+        return {"by": self.by.value, "value": self.value}
+
+
+@dataclass(slots=True)
+class ClientAssetSort:
+    by: ClientAssetSortField
+    order: SortOrder = SortOrder.ASCENDING
+
+    def to_api(self) -> JsonDict:
+        return {"by": self.by.value, "order": self.order.value}
+
+
+@dataclass(slots=True)
+class ClientAssetFilter:
+    by: ClientAssetFilterField
+    value: str | list[str]
+
+    def to_api(self) -> JsonDict:
+        return {"by": self.by.value, "value": self.value}
+
+
+@dataclass(slots=True)
+class AssetInput:
+    name: str | None = None
+    type: str | None = None
+    criticality: str | None = None
+    description: str | None = None
+    hostname: str | None = None
+    dns_name: str | None = None
+    host_fqdn: str | None = None
+    host_rdns: str | None = None
+    mac_address: str | None = None
+    known_ips: list[str] | None = None
+    operating_system: list[str] | None = None
+    parent_asset: ObjectReference | None = None
+    ports: dict[str, Port] | None = None
+    tags: list[str] | None = None
+
+    def to_api(self) -> JsonDict:
+        return _asset_payload(
+            name=self.name,
+            type=self.type,
+            criticality=self.criticality,
+            description=self.description,
+            hostname=self.hostname,
+            dns_name=self.dns_name,
+            host_fqdn=self.host_fqdn,
+            host_rdns=self.host_rdns,
+            mac_address=self.mac_address,
+            known_ips=self.known_ips,
+            operating_system=self.operating_system,
+            parent_asset=self.parent_asset,
+            ports=self.ports,
+            tags=self.tags,
+        )
 
 
 @dataclass(slots=True)
@@ -71,31 +201,54 @@ class Asset:
         )
 
     def to_api(self) -> JsonDict:
-        return clean(
-            {
-                "id": self.id,
-                "cuid": self.cuid,
-                "asset": self.name,
-                "client_id": self.client_id,
-                "type": self.type,
-                "assetCriticality": self.criticality,
-                "description": self.description,
-                "hostname": self.hostname,
-                "dns_name": self.dns_name,
-                "host_fqdn": self.host_fqdn,
-                "host_rdns": self.host_rdns,
-                "mac_address": self.mac_address,
-                "knownIps": self.known_ips,
-                "operating_system": self.operating_system,
-                "parent_asset": self.parent_asset.to_api()
-                if self.parent_asset is not None
-                else None,
-                "ports": {key: port.to_api() for key, port in self.ports.items()}
-                if self.ports is not None
-                else None,
-                "tags": self.tags,
-                "doc_type": self.doc_type,
-            }
+        data = _asset_payload(
+            name=self.name,
+            type=self.type,
+            criticality=self.criticality,
+            description=self.description,
+            hostname=self.hostname,
+            dns_name=self.dns_name,
+            host_fqdn=self.host_fqdn,
+            host_rdns=self.host_rdns,
+            mac_address=self.mac_address,
+            known_ips=self.known_ips,
+            operating_system=self.operating_system,
+            parent_asset=self.parent_asset,
+            ports=self.ports,
+            tags=self.tags,
+        )
+        return {
+            **clean(
+                {
+                    "id": self.id,
+                    "cuid": self.cuid,
+                    "client_id": self.client_id,
+                    "doc_type": self.doc_type,
+                }
+            ),
+            **data,
+        }
+
+
+@dataclass(slots=True)
+class AssetPage:
+    assets: list[Asset]
+    total_count: int | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict | list[JsonDict]) -> AssetPage:
+        if isinstance(data, list):
+            return cls(
+                assets=[Asset.from_api(item) for item in data if isinstance(item, dict)],
+                raw={"data": data},
+            )
+
+        items = _first_list(data, ("assets", "data", "items", "results"))
+        return cls(
+            assets=[Asset.from_api(item) for item in items if isinstance(item, dict)],
+            total_count=_first_int(data, ("total", "totalCount", "count")),
+            raw=dict(data),
         )
 
 
@@ -179,3 +332,66 @@ class AffectedAsset(Asset):
 
     def _asset_api(self) -> JsonDict:
         return super().to_api()
+
+
+def _asset_payload(
+    *,
+    name: str | None = None,
+    type: str | None = None,
+    criticality: str | None = None,
+    description: str | None = None,
+    hostname: str | None = None,
+    dns_name: str | None = None,
+    host_fqdn: str | None = None,
+    host_rdns: str | None = None,
+    mac_address: str | None = None,
+    known_ips: list[str] | None = None,
+    operating_system: list[str] | None = None,
+    parent_asset: ObjectReference | None = None,
+    ports: dict[str, Port] | None = None,
+    tags: list[str] | None = None,
+) -> JsonDict:
+    return clean(
+        {
+            "asset": name,
+            "type": type,
+            "assetCriticality": criticality,
+            "description": description,
+            "hostname": hostname,
+            "dns_name": dns_name,
+            "host_fqdn": host_fqdn,
+            "host_rdns": host_rdns,
+            "mac_address": mac_address,
+            "knownIps": known_ips,
+            "operating_system": operating_system,
+            "parent_asset": parent_asset.to_api() if parent_asset is not None else None,
+            "ports": {key: port.to_api() for key, port in ports.items()}
+            if ports is not None
+            else None,
+            "tags": tags,
+        }
+    )
+
+
+def _first_list(data: JsonDict, keys: tuple[str, ...]) -> list[JsonDict]:
+    for key in keys:
+        value = data.get(key)
+        if isinstance(value, list):
+            return value
+        if isinstance(value, dict):
+            nested = _first_list(value, keys)
+            if nested:
+                return nested
+    return []
+
+
+def _first_int(data: JsonDict, keys: tuple[str, ...]) -> int | None:
+    for key in keys:
+        value = data.get(key)
+        if isinstance(value, int):
+            return value
+        if isinstance(value, dict):
+            nested = _first_int(value, keys)
+            if nested is not None:
+                return nested
+    return None

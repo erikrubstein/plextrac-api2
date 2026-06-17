@@ -1,7 +1,7 @@
 # Usage Notes
 
-This SDK is still being polished group by group. Treat `clients`, `reports`, and `findings` as the
-current examples of the intended public API shape.
+This SDK is still being polished group by group. Treat `clients`, `reports`, `findings`, and
+`assets` as the current examples of the intended public API shape.
 
 Generated function modules remain available for broad endpoint coverage, but they are scaffolding:
 their signatures and return values may be less explicit until that group is polished.
@@ -47,6 +47,32 @@ page = clients.list_clients(
 
 client = clients.get_client(session, client_id="client-cuid")
 created = clients.create_client(session, ClientInput(name="Example Client"))
+```
+
+## Assets
+
+```python
+from plextrac_api.functions import assets
+from plextrac_api.types import (
+    AssetInput,
+    ClientAssetPageLimit,
+    ClientAssetSort,
+    ClientAssetSortField,
+    SortOrder,
+)
+
+asset_page = assets.list_client_assets(
+    session,
+    client_id="client-cuid",
+    limit=ClientAssetPageLimit.FIFTY,
+    sort=[ClientAssetSort(by=ClientAssetSortField.ASSET, order=SortOrder.ASCENDING)],
+)
+
+created = assets.create_asset(
+    session,
+    client_id="client-cuid",
+    asset=AssetInput(name="host1.example.com", type="hostname"),
+)
 ```
 
 ## Reports
