@@ -104,6 +104,7 @@ from plextrac_api.types.reports import (
     ReportStatus,
     ReportSummary,
 )
+from plextrac_api.types.substatus import Substatus, SubstatusInput, SubstatusStatus
 
 __all__ = [
     "AffectedAsset",
@@ -193,6 +194,9 @@ __all__ = [
     "ReportSummary",
     "Sort",
     "SortOrder",
+    "Substatus",
+    "SubstatusInput",
+    "SubstatusStatus",
     "TenantAssetFilter",
     "TenantAssetFilterField",
     "TenantAssetPageLimit",

@@ -4,8 +4,8 @@ This file is an inventory of the currently known PlexTrac API groups and endpoin
 useful for SDK development and gap tracking, but it is not intended to be the primary user guide.
 
 Most groups are still generated wrappers. The `clients`, `reports`, `findings`, `assets`,
-`affected_assets`, `files`, and `mailer` groups are hand-polished and show the intended long-term
-SDK shape.
+`affected_assets`, `files`, `mailer`, and `substatus` groups are hand-polished and show the
+intended long-term SDK shape.
 
 The inventory is based on the public PlexTrac Postman collection snapshot.
 
@@ -32,7 +32,7 @@ Total supported endpoint functions in snapshot: **357**
 | Reports | `plextrac_api.functions.reports` | 17 explicit functions |
 | Runbooks | `plextrac_api.functions.runbooks` | 63 |
 | Scheduler | `plextrac_api.functions.scheduler` | 10 |
-| Substatus | `plextrac_api.functions.substatus` | 4 |
+| Substatus | `plextrac_api.functions.substatus` | 4 explicit functions |
 | Templates | `plextrac_api.functions.templates` | 14 |
 | Tenant | `plextrac_api.functions.tenant` | 13 |
 | Users | `plextrac_api.functions.users` | 17 |
@@ -461,10 +461,10 @@ Display name: Substatus
 
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
-| `list_substatus` | GET | `/api/v3/substatus` | `list` |
-| `create_substatus` | POST | `/api/v3/substatus` | `create` |
-| `update_substatus` | PATCH | `/api/v3/substatus/{substatusCuid}` | `update` |
-| `delete_substatus` | DELETE | `/api/v3/substatus/{substatusCuid}` | `delete` |
+| `list_substatuses` | GET | `/api/v3/substatus` |  |
+| `create_substatus` | POST | `/api/v3/substatus` |  |
+| `update_substatus` | PATCH | `/api/v3/substatus/{substatusCuid}` |  |
+| `delete_substatus` | DELETE | `/api/v3/substatus/{substatusCuid}` |  |
 
 ### `templates`
 

@@ -52,6 +52,9 @@ from plextrac_api.types import (
     ReportStatus,
     Sort,
     SortOrder,
+    Substatus,
+    SubstatusInput,
+    SubstatusStatus,
     TenantAssetFilter,
     TenantAssetFilterField,
     TenantAssetSort,
@@ -110,6 +113,8 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "upload_image_to_tenant" not in method_names
     assert "list_mailer_templates" in method_names
     assert "get_mailer_templates" not in method_names
+    assert "list_substatuses" in method_names
+    assert "list_substatus" not in method_names
     assert all(not name.endswith(("_v1", "_v2", "_v3")) for name in method_names)
 
 
@@ -268,6 +273,26 @@ def test_mailer_type_parses_documented_template_fields():
     assert template.template is EmailTemplateKind.FORGOTTEN_PASSWORD
     assert template.subject == "Reset your password"
     assert template.body == "<html>Reset</html>"
+
+
+def test_substatus_type_parses_and_serializes_documented_fields():
+    parsed = Substatus.from_api(
+        {
+            "cuid": "substatus-1",
+            "tenantCuid": "tenant-1",
+            "status": "In Process",
+            "value": "In Development",
+        }
+    )
+
+    assert parsed.cuid == "substatus-1"
+    assert parsed.tenant_cuid == "tenant-1"
+    assert parsed.status is SubstatusStatus.IN_PROCESS
+    assert parsed.value == "In Development"
+    assert SubstatusInput(status=SubstatusStatus.CLOSED, value="Accepted").to_api() == {
+        "status": "Closed",
+        "value": "Accepted",
+    }
 
 
 def test_report_request_shape_types_serialize_with_verified_fields():

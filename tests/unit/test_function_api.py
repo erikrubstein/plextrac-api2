@@ -13,6 +13,7 @@ from plextrac_api.functions import (
     findings,
     mailer,
     reports,
+    substatus,
 )
 from plextrac_api.functions.auth import session_from_token
 from plextrac_api.functions.common import PlexTracAuthError, PlexTracNotFoundError
@@ -36,6 +37,8 @@ from plextrac_api.types import (
     ReportInput,
     ReportStatus,
     SortOrder,
+    SubstatusInput,
+    SubstatusStatus,
 )
 
 
@@ -413,6 +416,40 @@ def test_explicit_mailer_upsert_template_uses_template_enum(monkeypatch):
     assert seen["method"] == "PUT"
     assert seen["path"] == "/api/v2/tenants/1/mailer/templates/FORGOTTEN_PASSWORD"
     assert seen["json"] == {"body": "<html>Reset</html>", "subject": "Reset"}
+
+
+def test_explicit_substatus_create_uses_reusable_input(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={
+                "data": {
+                    "cuid": "substatus-1",
+                    "tenantCuid": "tenant-1",
+                    "status": "Open",
+                    "value": "Ready",
+                }
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = substatus.create_substatus(
+        session,
+        SubstatusInput(status=SubstatusStatus.OPEN, value="Ready"),
+    )
+
+    assert result.cuid == "substatus-1"
+    assert result.status is SubstatusStatus.OPEN
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v3/substatus"
+    assert seen["json"] == {"status": "Open", "value": "Ready"}
 
 
 def test_explicit_finding_list_uses_latest_paginated_endpoint(monkeypatch):

@@ -27,7 +27,6 @@ GENERATED_FUNCTION_GROUPS = {
     "parser_actions",
     "runbooks",
     "scheduler",
-    "substatus",
     "templates",
     "tenant",
     "users",
@@ -40,6 +39,7 @@ HAND_WRITTEN_FUNCTION_GROUPS = {
     "findings",
     "mailer",
     "reports",
+    "substatus",
 }
 VERSION_SUFFIX_RE = re.compile(r"^(?P<base>.+)_v(?P<version>\d+)$")
 METHOD_NAME_OVERRIDES = {
@@ -68,6 +68,7 @@ METHOD_NAME_OVERRIDES = {
     ("Reports", "import_ptrac_report"): "import_report_from_ptrac",
     ("Reports", "search_replace_in_report_occurrences"): "count_report_search_occurrences",
     ("Reports", "search_replace_in_report_replace"): "replace_report_text",
+    ("Substatus", "list_substatus"): "list_substatuses",
 }
 
 
