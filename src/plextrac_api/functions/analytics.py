@@ -1,67 +1,161 @@
-"""Generated PlexTrac endpoint functions.
-
-Do not edit by hand. Run scripts/generate_endpoints.py to refresh.
-"""
-
 from __future__ import annotations
 
-from typing import Any
-
-from plextrac_api.functions.common import endpoint_request
+from plextrac_api.functions.common import rest_request
+from plextrac_api.types.analytics import (
+    AnalyticsFilter,
+    AnalyticsResult,
+    AnalyticsTrendFilter,
+    AssetAnalyticsFilter,
+    FindingAnalyticsBootstrapFilter,
+    SlaAnalyticsFilter,
+)
 from plextrac_api.types.auth import AuthSession
 
 
-def retrieve_analytics(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v1/clients/analytics\n\nPlexTrac endpoint: Retrieve Analytics"""
-    return endpoint_request(session, "analytics", "retrieve_analytics", **kwargs)
+def retrieve_analytics(
+    session: AuthSession,
+    filters: AnalyticsFilter,
+) -> AnalyticsResult:
+    """Retrieve client/report/finding analytics with the documented analytics filter."""
+    data = rest_request(session, "POST", "/api/v1/clients/analytics", json=filters.to_api())
+    return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def retrieve_analytics_findings(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v1/clients/analytics/findings\n\nPlexTrac endpoint: Retrieve Analytics Findings"""
-    return endpoint_request(session, "analytics", "retrieve_analytics_findings", **kwargs)
+def retrieve_analytics_findings(
+    session: AuthSession,
+    filters: AnalyticsFilter,
+) -> AnalyticsResult:
+    """Retrieve paginated analytics finding rows."""
+    data = rest_request(session, "POST", "/api/v1/clients/analytics/findings", json=filters.to_api())
+    return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def retreive_analytics_findings_aging(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v1/clients/analytics/findings/aging\n\nPlexTrac endpoint: Retreive Analytics Findings Aging"""
-    return endpoint_request(session, "analytics", "retreive_analytics_findings_aging", **kwargs)
+def retrieve_analytics_findings_aging(
+    session: AuthSession,
+    filters: AnalyticsFilter,
+) -> AnalyticsResult:
+    """Retrieve finding aging analytics."""
+    data = rest_request(
+        session,
+        "POST",
+        "/api/v1/clients/analytics/findings/aging",
+        json=filters.to_api(),
+    )
+    return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def get_finding_analytics_bootstrap(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v2/findingAnalytics/bootstrap\n\nPlexTrac endpoint: Get Finding Analytics Bootstrap"""
-    return endpoint_request(session, "analytics", "get_finding_analytics_bootstrap", **kwargs)
+def get_finding_analytics_bootstrap(
+    session: AuthSession,
+    filters: FindingAnalyticsBootstrapFilter,
+) -> AnalyticsResult:
+    """Retrieve bootstrap values for finding analytics filters."""
+    data = rest_request(
+        session,
+        "POST",
+        "/api/v2/findingAnalytics/bootstrap",
+        json=filters.to_api(),
+    )
+    return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def retrieve_analytics_assets(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v2/clients/analytics/assets/overview\n\nPlexTrac endpoint: Retrieve Analytics Assets"""
-    return endpoint_request(session, "analytics", "retrieve_analytics_assets", **kwargs)
+def retrieve_analytics_assets(
+    session: AuthSession,
+    filters: AssetAnalyticsFilter,
+) -> AnalyticsResult:
+    """Retrieve asset analytics overview data."""
+    data = rest_request(
+        session,
+        "POST",
+        "/api/v2/clients/analytics/assets/overview",
+        json=filters.to_api(),
+    )
+    return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def retrieve_analytics_assets_with_filter(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v2/clients/analytics/assets\n\nPlexTrac endpoint: Retrieve Analytics Assets with Filter"""
-    return endpoint_request(session, "analytics", "retrieve_analytics_assets_with_filter", **kwargs)
+def retrieve_analytics_assets_with_filter(
+    session: AuthSession,
+    filters: AssetAnalyticsFilter,
+) -> AnalyticsResult:
+    """Retrieve filtered asset analytics rows."""
+    params = {
+        "limit": filters.limit,
+        "offset": filters.offset,
+    }
+    data = rest_request(
+        session,
+        "POST",
+        "/api/v2/clients/analytics/assets",
+        params={key: value for key, value in params.items() if value is not None},
+        json=filters.to_api(),
+    )
+    return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def analytics_trends_opened_closed(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v2/clients/analytics/trends/opened-closed\n\nPlexTrac endpoint: Analytics - Trends - Opened Closed"""
-    return endpoint_request(session, "analytics", "analytics_trends_opened_closed", **kwargs)
+def analytics_trends_opened_closed(
+    session: AuthSession,
+    filters: AnalyticsTrendFilter,
+) -> AnalyticsResult:
+    """Retrieve opened-versus-closed trend analytics."""
+    data = rest_request(
+        session,
+        "POST",
+        "/api/v2/clients/analytics/trends/opened-closed",
+        json=filters.to_api(),
+    )
+    return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def analytics_trends_from_creation_to_close(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v2/clients/analytics/trends/from-creation-to-close\n\nPlexTrac endpoint: Analytics - Trends - From creation to close"""
-    return endpoint_request(session, "analytics", "analytics_trends_from_creation_to_close", **kwargs)
+def analytics_trends_from_creation_to_close(
+    session: AuthSession,
+    filters: AnalyticsTrendFilter,
+) -> AnalyticsResult:
+    """Retrieve trend analytics for finding creation-to-close time."""
+    data = rest_request(
+        session,
+        "POST",
+        "/api/v2/clients/analytics/trends/from-creation-to-close",
+        json=filters.to_api(),
+    )
+    return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def analytics_trends_age_of_open_findings(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v2/clients/analytics/trends/age-of-open-findings\n\nPlexTrac endpoint: Analytics - Trends - Age of open findings"""
-    return endpoint_request(session, "analytics", "analytics_trends_age_of_open_findings", **kwargs)
+def analytics_trends_age_of_open_findings(
+    session: AuthSession,
+    filters: AnalyticsTrendFilter,
+) -> AnalyticsResult:
+    """Retrieve trend analytics for the age of open findings."""
+    data = rest_request(
+        session,
+        "POST",
+        "/api/v2/clients/analytics/trends/age-of-open-findings",
+        json=filters.to_api(),
+    )
+    return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def analytics_trends_slas(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v2/sla/analytics/mean-time\n\nPlexTrac endpoint: Analytics - Trends - SLAs"""
-    return endpoint_request(session, "analytics", "analytics_trends_slas", **kwargs)
+def analytics_trends_slas(
+    session: AuthSession,
+    filters: SlaAnalyticsFilter,
+) -> AnalyticsResult:
+    """Retrieve SLA mean-time analytics."""
+    data = rest_request(
+        session,
+        "POST",
+        "/api/v2/sla/analytics/mean-time",
+        json=filters.to_api(),
+    )
+    return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def analytics_trends_sla_findings(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v2/sla/analytics/findings\n\nPlexTrac endpoint: Analytics - Trends - SLA Findings"""
-    return endpoint_request(session, "analytics", "analytics_trends_sla_findings", **kwargs)
-
+def analytics_trends_sla_findings(
+    session: AuthSession,
+    filters: SlaAnalyticsFilter,
+) -> AnalyticsResult:
+    """Retrieve SLA finding analytics."""
+    data = rest_request(
+        session,
+        "POST",
+        "/api/v2/sla/analytics/findings",
+        json=filters.to_api(),
+    )
+    return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})

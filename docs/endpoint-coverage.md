@@ -4,8 +4,8 @@ This file is an inventory of the currently known PlexTrac API groups and endpoin
 useful for SDK development and gap tracking, but it is not intended to be the primary user guide.
 
 Most groups are still generated wrappers. The `clients`, `reports`, `findings`, `assets`,
-`affected_assets`, `files`, `mailer`, and `substatus` groups are hand-polished and show the
-intended long-term SDK shape.
+`affected_assets`, `files`, `mailer`, `substatus`, and `analytics` groups are hand-polished and
+show the intended long-term SDK shape.
 
 The inventory is based on the public PlexTrac Postman collection snapshot.
 
@@ -18,7 +18,7 @@ Total supported endpoint functions in snapshot: **357**
 | Authentication | `plextrac_api.functions.auth` | manual auth helpers |
 | Admin | `plextrac_api.functions.admin` | 29 |
 | Affected Assets | `plextrac_api.functions.affected_assets` | 6 explicit functions |
-| Analytics | `plextrac_api.functions.analytics` | 11 |
+| Analytics | `plextrac_api.functions.analytics` | 11 explicit functions |
 | Assessments | `plextrac_api.functions.assessments` | 33 |
 | Assets | `plextrac_api.functions.assets` | 9 explicit functions |
 | Content Library | `plextrac_api.functions.content_library` | 41 |
@@ -111,7 +111,7 @@ Display name: Analytics
 |---|---|---|---|
 | `retrieve_analytics` | POST | `/api/v1/clients/analytics` |  |
 | `retrieve_analytics_findings` | POST | `/api/v1/clients/analytics/findings` |  |
-| `retreive_analytics_findings_aging` | POST | `/api/v1/clients/analytics/findings/aging` |  |
+| `retrieve_analytics_findings_aging` | POST | `/api/v1/clients/analytics/findings/aging` |  |
 | `get_finding_analytics_bootstrap` | POST | `/api/v2/findingAnalytics/bootstrap` |  |
 | `retrieve_analytics_assets` | POST | `/api/v2/clients/analytics/assets/overview` |  |
 | `retrieve_analytics_assets_with_filter` | POST | `/api/v2/clients/analytics/assets` |  |

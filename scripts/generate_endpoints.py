@@ -18,7 +18,6 @@ FUNCTIONS_DIR = PACKAGE_DIR / "functions"
 DOCS_DIR = ROOT / "docs"
 GENERATED_FUNCTION_GROUPS = {
     "admin",
-    "analytics",
     "assessments",
     "content_library",
     "graph_ql_mutations",
@@ -33,6 +32,7 @@ GENERATED_FUNCTION_GROUPS = {
 }
 HAND_WRITTEN_FUNCTION_GROUPS = {
     "affected_assets",
+    "analytics",
     "assets",
     "clients",
     "files",
@@ -43,6 +43,7 @@ HAND_WRITTEN_FUNCTION_GROUPS = {
 }
 VERSION_SUFFIX_RE = re.compile(r"^(?P<base>.+)_v(?P<version>\d+)$")
 METHOD_NAME_OVERRIDES = {
+    ("Analytics", "retreive_analytics_findings_aging"): "retrieve_analytics_findings_aging",
     (
         "Affected Assets",
         "bulk_create_affected_asset_status",

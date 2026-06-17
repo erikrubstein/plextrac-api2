@@ -7,6 +7,7 @@ import pytest
 
 from plextrac_api.functions import (
     affected_assets,
+    analytics,
     assets,
     clients,
     files,
@@ -21,6 +22,8 @@ from plextrac_api.types import (
     AffectedAsset,
     AffectedAssetStatus,
     AffectedAssetStatusUpdate,
+    AnalyticsFilter,
+    AnalyticsTags,
     ArtifactRelation,
     ArtifactRelationModel,
     AssetInput,
@@ -450,6 +453,41 @@ def test_explicit_substatus_create_uses_reusable_input(monkeypatch):
     assert seen["method"] == "POST"
     assert seen["path"] == "/api/v3/substatus"
     assert seen["json"] == {"status": "Open", "value": "Ready"}
+
+
+def test_explicit_analytics_findings_uses_filter_type(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"status": "success", "data": {"total": 1}})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = analytics.retrieve_analytics_findings(
+        session,
+        AnalyticsFilter(
+            clients=[1045],
+            tags=AnalyticsTags(findings=["pci"]),
+            statuses=[FindingStatus.OPEN],
+            limit=10,
+            offset=0,
+        ),
+    )
+
+    assert result.status == "success"
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v1/clients/analytics/findings"
+    assert seen["json"] == {
+        "clients": [1045],
+        "tags": {"findings": ["pci"]},
+        "statuses": ["Open"],
+        "limit": 10,
+        "offset": 0,
+    }
 
 
 def test_explicit_finding_list_uses_latest_paginated_endpoint(monkeypatch):

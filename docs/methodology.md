@@ -172,8 +172,8 @@ The SDK currently has two layers:
 Generated functions should be considered scaffolding. As a group is polished, replace ambiguous
 generated-style wrappers with explicit signatures and typed returns.
 
-The `clients`, `reports`, `findings`, `assets`, `affected_assets`, `files`, `mailer`, and
-`substatus` groups are the current models for polished groups:
+The `clients`, `reports`, `findings`, `assets`, `affected_assets`, `files`, `mailer`, `substatus`,
+and `analytics` groups are the current models for polished groups:
 
 - explicit function arguments
 - reusable input dataclasses only when shared across functions

@@ -3,6 +3,9 @@ from plextrac_api.types import (
     AffectedAsset,
     AffectedAssetStatus,
     AffectedAssetStatusUpdate,
+    AnalyticsFilter,
+    AnalyticsResult,
+    AnalyticsTags,
     Artifact,
     ArtifactRelation,
     ArtifactRelationModel,
@@ -115,6 +118,8 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "get_mailer_templates" not in method_names
     assert "list_substatuses" in method_names
     assert "list_substatus" not in method_names
+    assert "retrieve_analytics_findings_aging" in method_names
+    assert "retreive_analytics_findings_aging" not in method_names
     assert all(not name.endswith(("_v1", "_v2", "_v3")) for name in method_names)
 
 
@@ -292,6 +297,27 @@ def test_substatus_type_parses_and_serializes_documented_fields():
     assert SubstatusInput(status=SubstatusStatus.CLOSED, value="Accepted").to_api() == {
         "status": "Closed",
         "value": "Accepted",
+    }
+
+
+def test_analytics_filter_serializes_documented_fields():
+    payload = AnalyticsFilter(
+        clients=[1045],
+        tags=AnalyticsTags(findings=["pci"], finding_tags_is_union=True),
+        statuses=[FindingStatus.OPEN],
+        limit=10,
+        offset=0,
+    ).to_api()
+
+    assert payload == {
+        "clients": [1045],
+        "tags": {"findings": ["pci"], "findingTagsIsUnion": True},
+        "statuses": ["Open"],
+        "limit": 10,
+        "offset": 0,
+    }
+    assert AnalyticsResult.from_api({"status": "success", "data": {"total": 1}}).data == {
+        "total": 1
     }
 
 
