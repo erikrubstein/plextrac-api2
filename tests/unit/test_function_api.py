@@ -15,6 +15,7 @@ from plextrac_api.functions import (
     mailer,
     reports,
     substatus,
+    tenant,
 )
 from plextrac_api.functions.auth import session_from_token
 from plextrac_api.functions.common import PlexTracAuthError, PlexTracNotFoundError
@@ -37,6 +38,7 @@ from plextrac_api.types import (
     FindingInput,
     FindingSeverity,
     FindingStatus,
+    FindingVisibility,
     ReportInput,
     ReportStatus,
     SortOrder,
@@ -487,6 +489,34 @@ def test_explicit_analytics_findings_uses_filter_type(monkeypatch):
         "statuses": ["Open"],
         "limit": 10,
         "offset": 0,
+    }
+
+
+def test_explicit_tenant_settings_uses_named_parameters(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"status": "success"})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = tenant.update_settings(
+        session,
+        tenant_id=1,
+        visibility=FindingVisibility.PUBLISHED,
+        sender_email_address="reports@example.com",
+    )
+
+    assert result.ok
+    assert seen["method"] == "PUT"
+    assert seen["path"] == "/api/v2/tenants/1/settings"
+    assert seen["json"] == {
+        "visibility": "published",
+        "senderEmailAddress": "reports@example.com",
     }
 
 

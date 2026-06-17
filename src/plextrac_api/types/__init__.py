@@ -114,6 +114,15 @@ from plextrac_api.types.reports import (
     ReportSummary,
 )
 from plextrac_api.types.substatus import Substatus, SubstatusInput, SubstatusStatus
+from plextrac_api.types.tenant import (
+    NotificationSettings,
+    RootInfo,
+    Tenant,
+    TenantAnalytics,
+    TenantPointOfContact,
+    TenantRiskCounts,
+    TenantSettings,
+)
 
 __all__ = [
     "AffectedAsset",
@@ -188,6 +197,7 @@ __all__ = [
     "Filter",
     "Identifier",
     "JsonDict",
+    "NotificationSettings",
     "Narrative",
     "ObjectReference",
     "OperationResult",
@@ -207,18 +217,24 @@ __all__ = [
     "ReportSearchOccurrenceResult",
     "ReportStatus",
     "ReportSummary",
+    "RootInfo",
     "SlaAnalyticsFilter",
     "Sort",
     "SortOrder",
     "Substatus",
     "SubstatusInput",
     "SubstatusStatus",
+    "Tenant",
     "TenantAssetFilter",
     "TenantAssetFilterField",
     "TenantAssetPageLimit",
     "TenantAssetSort",
     "TenantAssetSortField",
     "TenantImageUploadResult",
+    "TenantAnalytics",
+    "TenantPointOfContact",
+    "TenantRiskCounts",
+    "TenantSettings",
     "UserRole",
     "VulnerableParameter",
 ]

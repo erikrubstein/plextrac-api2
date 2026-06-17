@@ -4,8 +4,8 @@ This file is an inventory of the currently known PlexTrac API groups and endpoin
 useful for SDK development and gap tracking, but it is not intended to be the primary user guide.
 
 Most groups are still generated wrappers. The `clients`, `reports`, `findings`, `assets`,
-`affected_assets`, `files`, `mailer`, `substatus`, and `analytics` groups are hand-polished and
-show the intended long-term SDK shape.
+`affected_assets`, `files`, `mailer`, `substatus`, `analytics`, and `tenant` groups are
+hand-polished and show the intended long-term SDK shape.
 
 The inventory is based on the public PlexTrac Postman collection snapshot.
 
@@ -34,7 +34,7 @@ Total supported endpoint functions in snapshot: **357**
 | Scheduler | `plextrac_api.functions.scheduler` | 10 |
 | Substatus | `plextrac_api.functions.substatus` | 4 explicit functions |
 | Templates | `plextrac_api.functions.templates` | 14 |
-| Tenant | `plextrac_api.functions.tenant` | 13 |
+| Tenant | `plextrac_api.functions.tenant` | 13 explicit functions |
 | Users | `plextrac_api.functions.users` | 17 |
 | Graph QL Queries | `plextrac_api.functions.graph_ql_queries` | 1 |
 | Graph QL Mutations | `plextrac_api.functions.graph_ql_mutations` | 2 |
@@ -498,14 +498,14 @@ Display name: Tenant
 | `update_tenant` | PUT | `/api/v1/tenant/{tenantId}` | `update` |
 | `get_notification_settings` | GET | `/api/v1/tenant/{tenantId}/notificationsettings` |  |
 | `update_notification_settings` | PUT | `/api/v1/tenant/{tenantId}/notificationsettings` |  |
-| `tenant_analytics` | GET | `/api/v1/tenant/{tenantId}/analytics` |  |
-| `add_tenant_logo` | POST | `/api/v1/tenant/{tenantId}/logo` |  |
-| `add_tenant_logo_dark` | POST | `/api/v1/tenant/{tenantId}/logo/dark` |  |
+| `get_tenant_analytics` | GET | `/api/v1/tenant/{tenantId}/analytics` |  |
+| `upload_tenant_logo` | POST | `/api/v1/tenant/{tenantId}/logo` |  |
+| `upload_tenant_dark_logo` | POST | `/api/v1/tenant/{tenantId}/logo/dark` |  |
 | `delete_tenant_logo` | DELETE | `/api/v1/tenant/{tenantId}/logo` |  |
-| `delete_tenant_logo_dark` | DELETE | `/api/v1/tenant/{tenantId}/logo/dark` |  |
+| `delete_tenant_dark_logo` | DELETE | `/api/v1/tenant/{tenantId}/logo/dark` |  |
 | `delete_tenant_icon` | DELETE | `/api/v1/tenant/{tenantId}/icon` |  |
-| `delete_tenant_icon_dark` | DELETE | `/api/v1/tenant/{tenantId}/icon/dark` |  |
-| `root_request` | GET | `/api/v1/` |  |
+| `delete_tenant_dark_icon` | DELETE | `/api/v1/tenant/{tenantId}/icon/dark` |  |
+| `get_root_info` | GET | `/api/v1/` |  |
 
 ### `users`
 

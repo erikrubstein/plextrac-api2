@@ -58,6 +58,7 @@ from plextrac_api.types import (
     Substatus,
     SubstatusInput,
     SubstatusStatus,
+    Tenant,
     TenantAssetFilter,
     TenantAssetFilterField,
     TenantAssetSort,
@@ -120,6 +121,14 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "list_substatus" not in method_names
     assert "retrieve_analytics_findings_aging" in method_names
     assert "retreive_analytics_findings_aging" not in method_names
+    assert "get_tenant_analytics" in method_names
+    assert "tenant_analytics" not in method_names
+    assert "upload_tenant_logo" in method_names
+    assert "add_tenant_logo" not in method_names
+    assert "delete_tenant_dark_icon" in method_names
+    assert "delete_tenant_icon_dark" not in method_names
+    assert "get_root_info" in method_names
+    assert "root_request" not in method_names
     assert all(not name.endswith(("_v1", "_v2", "_v3")) for name in method_names)
 
 
@@ -322,6 +331,23 @@ def test_analytics_filter_serializes_documented_fields():
 
 
 def test_report_request_shape_types_serialize_with_verified_fields():
+def test_tenant_type_parses_documented_fields():
+    parsed = Tenant.from_api(
+        {
+            "tenant_id": 1,
+            "cuid": "tenant-cuid",
+            "name": "Example",
+            "poc": {"first": "Ada", "last": "Lovelace", "email": "ada@example.com"},
+            "settings": {"visibility": "draft", "rapidTemplating": False},
+        }
+    )
+
+    assert parsed.tenant_id == 1
+    assert parsed.point_of_contact.email == "ada@example.com"
+    assert parsed.settings.visibility is FindingVisibility.DRAFT
+    assert parsed.settings.rapid_templating is False
+
+
     assert ReportSort(
         by=ReportSortField.STATUS,
         order=SortOrder.DESCENDING,
