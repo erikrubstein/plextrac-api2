@@ -26,7 +26,6 @@ GENERATED_FUNCTION_GROUPS = {
     "parser_actions",
     "runbooks",
     "scheduler",
-    "templates",
     "users",
 }
 HAND_WRITTEN_FUNCTION_GROUPS = {
@@ -39,8 +38,9 @@ HAND_WRITTEN_FUNCTION_GROUPS = {
     "mailer",
     "reports",
     "substatus",
-}
+    "templates",
     "tenant",
+}
 VERSION_SUFFIX_RE = re.compile(r"^(?P<base>.+)_v(?P<version>\d+)$")
 METHOD_NAME_OVERRIDES = {
     ("Analytics", "retreive_analytics_findings_aging"): "retrieve_analytics_findings_aging",
@@ -70,13 +70,16 @@ METHOD_NAME_OVERRIDES = {
     ("Reports", "search_replace_in_report_occurrences"): "count_report_search_occurrences",
     ("Reports", "search_replace_in_report_replace"): "replace_report_text",
     ("Substatus", "list_substatus"): "list_substatuses",
-}
+    ("Templates", "get_export_template"): "download_export_template",
+    ("Templates", "get_findings_template"): "get_finding_template",
+    ("Templates", "list_findings_templates"): "list_finding_templates",
     ("Tenant", "add_tenant_logo"): "upload_tenant_logo",
     ("Tenant", "add_tenant_logo_dark"): "upload_tenant_dark_logo",
     ("Tenant", "delete_tenant_icon_dark"): "delete_tenant_dark_icon",
     ("Tenant", "delete_tenant_logo_dark"): "delete_tenant_dark_logo",
     ("Tenant", "root_request"): "get_root_info",
     ("Tenant", "tenant_analytics"): "get_tenant_analytics",
+}
 
 
 def main() -> None:

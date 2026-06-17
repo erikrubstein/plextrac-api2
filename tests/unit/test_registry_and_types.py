@@ -43,6 +43,8 @@ from plextrac_api.types import (
     FindingSort,
     FindingSortField,
     FindingStatus,
+    FindingTemplate,
+    FindingTemplateInput,
     FindingVisibility,
     OperationResult,
     Pagination,
@@ -58,6 +60,7 @@ from plextrac_api.types import (
     Substatus,
     SubstatusInput,
     SubstatusStatus,
+    TemplateField,
     Tenant,
     TenantAssetFilter,
     TenantAssetFilterField,
@@ -129,6 +132,12 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "delete_tenant_icon_dark" not in method_names
     assert "get_root_info" in method_names
     assert "root_request" not in method_names
+    assert "list_finding_templates" in method_names
+    assert "list_findings_templates" not in method_names
+    assert "get_finding_template" in method_names
+    assert "get_findings_template" not in method_names
+    assert "download_export_template" in method_names
+    assert "get_export_template" not in method_names
     assert all(not name.endswith(("_v1", "_v2", "_v3")) for name in method_names)
 
 
@@ -330,7 +339,6 @@ def test_analytics_filter_serializes_documented_fields():
     }
 
 
-def test_report_request_shape_types_serialize_with_verified_fields():
 def test_tenant_type_parses_documented_fields():
     parsed = Tenant.from_api(
         {
@@ -348,6 +356,27 @@ def test_tenant_type_parses_documented_fields():
     assert parsed.settings.rapid_templating is False
 
 
+def test_template_type_parses_and_serializes_documented_fields():
+    parsed = FindingTemplate.from_api(
+        {
+            "doc_id": "template-1",
+            "template_name": "Finding Template",
+            "fields": {"synopsis": {"label": "Synopsis", "value": "<p>Example</p>"}},
+        }
+    )
+
+    assert parsed.template_id == "template-1"
+    assert parsed.fields["synopsis"].label == "Synopsis"
+    assert FindingTemplateInput(
+        template_name="Finding Template",
+        fields={"synopsis": TemplateField(label="Synopsis", value="<p>Example</p>")},
+    ).to_api() == {
+        "template_name": "Finding Template",
+        "fields": {"synopsis": {"label": "Synopsis", "value": "<p>Example</p>"}},
+    }
+
+
+def test_report_request_shape_types_serialize_with_verified_fields():
     assert ReportSort(
         by=ReportSortField.STATUS,
         order=SortOrder.DESCENDING,

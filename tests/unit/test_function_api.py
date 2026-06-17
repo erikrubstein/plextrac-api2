@@ -15,6 +15,7 @@ from plextrac_api.functions import (
     mailer,
     reports,
     substatus,
+    templates,
     tenant,
 )
 from plextrac_api.functions.auth import session_from_token
@@ -38,12 +39,14 @@ from plextrac_api.types import (
     FindingInput,
     FindingSeverity,
     FindingStatus,
+    FindingTemplateInput,
     FindingVisibility,
     ReportInput,
     ReportStatus,
     SortOrder,
     SubstatusInput,
     SubstatusStatus,
+    TemplateField,
 )
 
 
@@ -518,6 +521,69 @@ def test_explicit_tenant_settings_uses_named_parameters(monkeypatch):
         "visibility": "published",
         "senderEmailAddress": "reports@example.com",
     }
+
+
+def test_explicit_template_create_finding_template_uses_input_type(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={"status": "success", "message": "template saved successfully", "doc_id": "tpl-1"},
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = templates.create_finding_template(
+        session,
+        tenant_id=1,
+        template=FindingTemplateInput(
+            template_name="Finding Template",
+            fields={"synopsis": TemplateField(label="Synopsis", value="<p>Example</p>")},
+        ),
+    )
+
+    assert result.template_id == "tpl-1"
+    assert seen["method"] == "PUT"
+    assert seen["path"] == "/api/v1/tenant/1/field-template"
+    assert seen["json"] == {
+        "template_name": "Finding Template",
+        "fields": {"synopsis": {"label": "Synopsis", "value": "<p>Example</p>"}},
+    }
+
+
+def test_explicit_template_import_uses_named_template_type(monkeypatch, tmp_path):
+    seen = {}
+    template_path = tmp_path / "export.docx"
+    template_path.write_bytes(b"docx")
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["params"] = kwargs["params"]
+        seen["files"] = kwargs["files"]
+        return httpx.Response(200, json={"status": "success", "doc_id": "tpl-1"})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = templates.import_export_template(
+        session,
+        tenant_id=1,
+        file=template_path,
+        name="Export Template",
+        template_type="custom",
+    )
+
+    assert result.template_id == "tpl-1"
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v1/tenant/1/template/import"
+    assert seen["params"] == {"name": "Export Template", "type": "custom"}
+    assert seen["files"]["file"][0] == "export.docx"
 
 
 def test_explicit_finding_list_uses_latest_paginated_endpoint(monkeypatch):

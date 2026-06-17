@@ -4,8 +4,8 @@ This file is an inventory of the currently known PlexTrac API groups and endpoin
 useful for SDK development and gap tracking, but it is not intended to be the primary user guide.
 
 Most groups are still generated wrappers. The `clients`, `reports`, `findings`, `assets`,
-`affected_assets`, `files`, `mailer`, `substatus`, `analytics`, and `tenant` groups are
-hand-polished and show the intended long-term SDK shape.
+`affected_assets`, `files`, `mailer`, `substatus`, `analytics`, `tenant`, and `templates` groups
+are hand-polished and show the intended long-term SDK shape.
 
 The inventory is based on the public PlexTrac Postman collection snapshot.
 
@@ -33,7 +33,7 @@ Total supported endpoint functions in snapshot: **357**
 | Runbooks | `plextrac_api.functions.runbooks` | 63 |
 | Scheduler | `plextrac_api.functions.scheduler` | 10 |
 | Substatus | `plextrac_api.functions.substatus` | 4 explicit functions |
-| Templates | `plextrac_api.functions.templates` | 14 |
+| Templates | `plextrac_api.functions.templates` | 14 explicit functions |
 | Tenant | `plextrac_api.functions.tenant` | 13 explicit functions |
 | Users | `plextrac_api.functions.users` | 17 |
 | Graph QL Queries | `plextrac_api.functions.graph_ql_queries` | 1 |
@@ -477,13 +477,13 @@ Display name: Templates
 | `create_report_template` | PUT | `/api/v1/tenant/{tenantId}/report-template` |  |
 | `update_report_template` | PUT | `/api/v1/tenant/{tenantId}/report-template/{reportTemplateId}` |  |
 | `delete_report_template` | DELETE | `/api/v1/tenant/{tenantId}/report-template/{reportTemplateId}` |  |
-| `list_findings_templates` | GET | `/api/v1/field-templates` |  |
-| `get_findings_template` | GET | `/api/v1/field-template/{findingTemplateId}` |  |
+| `list_finding_templates` | GET | `/api/v1/field-templates` |  |
+| `get_finding_template` | GET | `/api/v1/field-template/{findingTemplateId}` |  |
 | `create_finding_template` | PUT | `/api/v1/tenant/{tenantId}/field-template` |  |
 | `update_finding_template` | PUT | `/api/v1/tenant/{tenantId}/field-template/{findingTemplateId}` |  |
 | `delete_finding_template` | DELETE | `/api/v1/tenant/{tenantId}/field-template/{findingTemplateId}` |  |
 | `list_export_templates` | GET | `/api/v2/tenant/{tenantId}/export-templates` |  |
-| `get_export_template` | GET | `/api/v1/tenant/{tenantId}/export-template/{exportTemplateId}` |  |
+| `download_export_template` | GET | `/api/v1/tenant/{tenantId}/export-template/{exportTemplateId}` |  |
 | `import_export_template` | POST | `/api/v1/tenant/{tenantId}/template/import` |  |
 | `delete_export_template` | DELETE | `/api/v1/tenant/{tenantId}/template/{exportTemplateId}` |  |
 

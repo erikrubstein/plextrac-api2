@@ -77,6 +77,8 @@ Rules:
   normal use.
 - Prefer consistency inside a group over strict title-to-function mechanical conversion.
 - Add generator overrides for intentional naming fixes so regenerated files stay stable.
+- Avoid Python built-in names for public parameters when a clear SDK name exists. Keep the
+  documented PlexTrac field name at the wire boundary.
 
 Example:
 
@@ -173,7 +175,7 @@ Generated functions should be considered scaffolding. As a group is polished, re
 generated-style wrappers with explicit signatures and typed returns.
 
 The `clients`, `reports`, `findings`, `assets`, `affected_assets`, `files`, `mailer`, `substatus`,
-`analytics`, and `tenant` groups are the current models for polished groups:
+`analytics`, `tenant`, and `templates` groups are the current models for polished groups:
 
 - explicit function arguments
 - reusable input dataclasses only when shared across functions
