@@ -87,6 +87,7 @@ from plextrac_api.types.findings import (
     Identifier,
     PresignedUpload,
 )
+from plextrac_api.types.mailer import EmailTemplate, EmailTemplateKind
 from plextrac_api.types.reports import (
     Narrative,
     Report,
@@ -147,6 +148,8 @@ __all__ = [
     "CommonIdentifiers",
     "CustomField",
     "Evidence",
+    "EmailTemplate",
+    "EmailTemplateKind",
     "Finding",
     "FindingCreateResult",
     "FindingEvidenceUpdate",

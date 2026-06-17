@@ -4,7 +4,8 @@ This file is an inventory of the currently known PlexTrac API groups and endpoin
 useful for SDK development and gap tracking, but it is not intended to be the primary user guide.
 
 Most groups are still generated wrappers. The `clients`, `reports`, `findings`, `assets`,
-`affected_assets`, and `files` groups are hand-polished and show the intended long-term SDK shape.
+`affected_assets`, `files`, and `mailer` groups are hand-polished and show the intended long-term
+SDK shape.
 
 The inventory is based on the public PlexTrac Postman collection snapshot.
 
@@ -25,7 +26,7 @@ Total supported endpoint functions in snapshot: **357**
 | Files | `plextrac_api.functions.files` | 6 explicit functions |
 | Findings | `plextrac_api.functions.findings` | 16 explicit functions |
 | Integrations | `plextrac_api.functions.integrations` | 23 |
-| Mailer | `plextrac_api.functions.mailer` | 3 |
+| Mailer | `plextrac_api.functions.mailer` | 3 explicit functions |
 | Parser Actions | `plextrac_api.functions.parser_actions` | 8 |
 | QA Workflow | _not generated_ | 0 |
 | Reports | `plextrac_api.functions.reports` | 17 explicit functions |
@@ -317,7 +318,7 @@ Display name: Mailer
 
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
-| `get_mailer_templates` | GET | `/api/v2/tenants/{tenantId}/mailer/templates` |  |
+| `list_mailer_templates` | GET | `/api/v2/tenants/{tenantId}/mailer/templates` |  |
 | `get_email_template` | GET | `/api/v2/tenants/{tenantId}/mailer/templates/FORGOTTEN_PASSWORD` |  |
 | `upsert_email_template` | PUT | `/api/v2/tenants/{tenantId}/mailer/templates/FORGOTTEN_PASSWORD` |  |
 

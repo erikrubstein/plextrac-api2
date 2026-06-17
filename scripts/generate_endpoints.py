@@ -24,7 +24,6 @@ GENERATED_FUNCTION_GROUPS = {
     "graph_ql_mutations",
     "graph_ql_queries",
     "integrations",
-    "mailer",
     "parser_actions",
     "runbooks",
     "scheduler",
@@ -39,6 +38,7 @@ HAND_WRITTEN_FUNCTION_GROUPS = {
     "clients",
     "files",
     "findings",
+    "mailer",
     "reports",
 }
 VERSION_SUFFIX_RE = re.compile(r"^(?P<base>.+)_v(?P<version>\d+)$")
@@ -59,6 +59,7 @@ METHOD_NAME_OVERRIDES = {
     ("Files", "get_artifacts"): "list_artifacts",
     ("Files", "upload_an_artifact_file"): "upload_artifact",
     ("Files", "upload_image_to_tenant"): "upload_tenant_image",
+    ("Mailer", "get_mailer_templates"): "list_mailer_templates",
     ("Reports", "bulk_add_tags_to_report"): "bulk_add_tags_to_reports",
     ("Reports", "bulk_adjust_status_of_report"): "bulk_update_report_statuses",
     ("Reports", "bulk_assign_reviewers_to_report"): "bulk_assign_reviewers_to_reports",

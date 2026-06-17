@@ -26,6 +26,8 @@ from plextrac_api.types import (
     ClientPagination,
     ClientSort,
     ClientSortField,
+    EmailTemplate,
+    EmailTemplateKind,
     Filter,
     Finding,
     FindingCreateResult,
@@ -106,6 +108,8 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "delete_an_artifact" not in method_names
     assert "upload_tenant_image" in method_names
     assert "upload_image_to_tenant" not in method_names
+    assert "list_mailer_templates" in method_names
+    assert "get_mailer_templates" not in method_names
     assert all(not name.endswith(("_v1", "_v2", "_v3")) for name in method_names)
 
 
@@ -250,6 +254,20 @@ def test_file_type_parses_artifacts_and_upload_results():
     assert TenantImageUploadResult.from_api(
         {"fileUrl": "uploads/image.png"}
     ).file_url == "uploads/image.png"
+
+
+def test_mailer_type_parses_documented_template_fields():
+    template = EmailTemplate.from_api(
+        {
+            "template": "FORGOTTEN_PASSWORD",
+            "subject": "Reset your password",
+            "body": "<html>Reset</html>",
+        }
+    )
+
+    assert template.template is EmailTemplateKind.FORGOTTEN_PASSWORD
+    assert template.subject == "Reset your password"
+    assert template.body == "<html>Reset</html>"
 
 
 def test_report_request_shape_types_serialize_with_verified_fields():

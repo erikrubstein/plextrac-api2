@@ -5,7 +5,15 @@ import time
 import httpx
 import pytest
 
-from plextrac_api.functions import affected_assets, assets, clients, files, findings, reports
+from plextrac_api.functions import (
+    affected_assets,
+    assets,
+    clients,
+    files,
+    findings,
+    mailer,
+    reports,
+)
 from plextrac_api.functions.auth import session_from_token
 from plextrac_api.functions.common import PlexTracAuthError, PlexTracNotFoundError
 from plextrac_api.types import (
@@ -20,6 +28,7 @@ from plextrac_api.types import (
     ClientAssetSort,
     ClientAssetSortField,
     ClientInput,
+    EmailTemplateKind,
     FindingField,
     FindingInput,
     FindingSeverity,
@@ -378,6 +387,32 @@ def test_explicit_files_upload_artifact_uses_documented_form_fields(monkeypatch,
     }
     assert seen["files"]["file"][0] == "proof.txt"
     assert seen["files"]["file"][2] == "text/plain"
+
+
+def test_explicit_mailer_upsert_template_uses_template_enum(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"status": "success"})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = mailer.upsert_email_template(
+        session,
+        tenant_id=1,
+        template=EmailTemplateKind.FORGOTTEN_PASSWORD,
+        subject="Reset",
+        body="<html>Reset</html>",
+    )
+
+    assert result.ok
+    assert seen["method"] == "PUT"
+    assert seen["path"] == "/api/v2/tenants/1/mailer/templates/FORGOTTEN_PASSWORD"
+    assert seen["json"] == {"body": "<html>Reset</html>", "subject": "Reset"}
 
 
 def test_explicit_finding_list_uses_latest_paginated_endpoint(monkeypatch):
