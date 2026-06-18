@@ -1,12 +1,8 @@
 # Endpoint Coverage Snapshot
 
-This file is an inventory of the currently known PlexTrac API groups and endpoint wrappers. It is
-useful for SDK development and gap tracking, but it is not intended to be the primary user guide.
+This file is an inventory of the currently known PlexTrac API groups and endpoint wrappers. It is useful for SDK development and gap tracking, but it is not intended to be the primary user guide.
 
-Most groups are still generated wrappers. The `clients`, `reports`, `findings`, `assets`,
-`affected_assets`, `files`, `mailer`, `substatus`, `analytics`, `tenant`, `templates`,
-`integrations`, `parser_actions`, `scheduler`, `users`, `admin`, and `assessments` groups are
-hand-polished and show the intended long-term SDK shape.
+Most groups are still generated wrappers. The `clients`, `reports`, `findings`, `assets`, `affected_assets`, `files`, `mailer`, `substatus`, `analytics`, `tenant`, `templates`, `integrations`, `parser_actions`, `scheduler`, `users`, `admin`, `assessments`, and `content_library` groups are hand-polished and show the intended long-term SDK shape.
 
 The inventory is based on the public PlexTrac Postman collection snapshot.
 
@@ -22,7 +18,7 @@ Total supported endpoint functions in snapshot: **357**
 | Analytics | `plextrac_api.functions.analytics` | 11 explicit functions |
 | Assessments | `plextrac_api.functions.assessments` | 32 explicit functions |
 | Assets | `plextrac_api.functions.assets` | 9 explicit functions |
-| Content Library | `plextrac_api.functions.content_library` | 41 |
+| Content Library | `plextrac_api.functions.content_library` | 39 explicit functions |
 | Clients | `plextrac_api.functions.clients` | 14 explicit functions |
 | Files | `plextrac_api.functions.files` | 6 explicit functions |
 | Findings | `plextrac_api.functions.findings` | 16 explicit functions |
@@ -147,7 +143,7 @@ Display name: Assessments
 | `export_questionnaire` | GET | `/api/v2/assessments/questionnaires/{questionnaireId}/export` |  |
 | `import_questionnaire` | POST | `/api/v2/import/questionnaire` |  |
 | `list_tenant_assessments` | GET | `/api/v2/tenants/{tenantId}/assessments` |  |
-| `list_client_assessments_legacy` | GET | `/api/v1/tenant/{tenantId}/client/{clientId}/assessments` | legacy; not exposed in polished module |
+| `list_client_assessments_legacy` | GET | `/api/v1/tenant/{tenantId}/client/{clientId}/assessments` |  |
 | `list_client_assessments` | GET | `/api/v2/tenants/{tenantId}/clients/{clientId}/assessments` |  |
 | `get_client_assessment_details` | GET | `/api/v1/tenant/{tenantId}/client/{clientId}/assessment/{assessmentId}` |  |
 | `get_client_assessment` | GET | `/api/v2/tenants/{tenantId}/clients/{clientId}/assessments/{assessmentId}` |  |
@@ -168,15 +164,17 @@ Display name: Assets
 
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
-| `list_tenant_assets` | POST | `/api/v2/tenant/assets` |  |
-| `list_client_assets` | POST | `/api/v2/clients/{clientId}/assets` |  |
+| `get_tenant_assets` | POST | `/api/v2/tenant/assets` |  |
+| `get_assets_by_client` | POST | `/api/v2/clients/{clientId}/assets` |  |
+| `list_client_assets` | GET | `/api/v1/client/{clientId}/assets` |  |
 | `list_report_assets` | GET | `/api/v2/clients/{clientId}/reports/{reportId}/assets` |  |
-| `get_asset` | GET | `/api/v1/client/{clientId}/asset/{assetId}` |  |
-| `create_asset` | PUT | `/api/v1/client/{clientId}/asset/0` |  |
-| `update_asset` | PUT | `/api/v1/client/{clientId}/asset/{assetId}` |  |
-| `delete_asset` | DELETE | `/api/v1/client/{clientId}/asset/{assetId}` |  |
+| `get_asset` | GET | `/api/v1/client/{clientId}/asset/{assetId}` | `get` |
+| `create_asset` | PUT | `/api/v1/client/{clientId}/asset/0` | `create` |
+| `update_asset` | PUT | `/api/v1/client/{clientId}/asset/{assetId}` | `update` |
+| `delete_asset` | DELETE | `/api/v1/client/{clientId}/asset/{assetId}` | `delete` |
 | `import_client_assets` | POST | `/api/v2/client/{clientId}/assets/import/{source}` |  |
 | `bulk_delete_client_assets` | POST | `/api/v1/client/{clientId}/bulk/assets/delete` |  |
+| `get_scanner_output` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/asset/{assetId}/scanoutput` |  |
 
 ### `content_library`
 
@@ -187,44 +185,44 @@ Display name: Content Library
 | `list_all_sections` | POST | `/api/v2/narratives/sections/all` |  |
 | `list_narrative_repository_sections` | POST | `/api/v2/narratives/{repositoryId}/sections` |  |
 | `get_narrative_repository_section` | GET | `/api/v2/narratives/sections/{sectionId}` |  |
-| `create_narratives_db_repository` | POST | `/api/v2/narratives/createNarrativesRepository` |  |
-| `create_narratives_repository_section` | POST | `/api/v2/narratives/sections` |  |
-| `update_narrative_db_section` | PUT | `/api/v2/narratives/sections/{sectionId}` |  |
-| `delete_narrative_db_section` | DELETE | `/api/v2/narratives/{repositoryId}/sections/{sectionId}` |  |
-| `list_narrative_dbs` | POST | `/api/v2/narratives/getAllNarrativesRepositories` |  |
-| `copy_section_to_narative_repository` | POST | `/api/v2/narratives/sections/copy` |  |
-| `get_all_narrative_db_users` | POST | `/api/v2/narratives/users/all` |  |
-| `get_narrative_db_users_by_repository` | POST | `/api/v2/narratives/{narrativeRepositoryId}/users` |  |
-| `update_narrative_db_users_by_repository` | PUT | `/api/v2/narratives/{narrativeRepositoryId}/users` |  |
-| `get_narrative_db` | GET | `/api/v2/narratives/{narrativeRepositoryId}/getNarrativesRepository` |  |
-| `update_narrative_db` | PUT | `/api/v2/narratives/{narrativeRepositoryId}/updateNarrativesRepository` |  |
-| `delete_narrative_db` | DELETE | `/api/v2/narratives/{narrativeRepositoryId}/deleteNarrativesRepository` |  |
+| `create_narrative_repository` | POST | `/api/v2/narratives/createNarrativesRepository` |  |
+| `create_narrative_repository_section` | POST | `/api/v2/narratives/sections` |  |
+| `update_narrative_repository_section` | PUT | `/api/v2/narratives/sections/{sectionId}` |  |
+| `delete_narrative_repository_section` | DELETE | `/api/v2/narratives/{repositoryId}/sections/{sectionId}` |  |
+| `list_narrative_repositories` | POST | `/api/v2/narratives/getAllNarrativesRepositories` |  |
+| `copy_section_to_narrative_repository` | POST | `/api/v2/narratives/sections/copy` |  |
+| `list_all_narrative_repository_users` | POST | `/api/v2/narratives/users/all` |  |
+| `list_narrative_repository_users` | POST | `/api/v2/narratives/{narrativeRepositoryId}/users` |  |
+| `update_narrative_repository_users` | PUT | `/api/v2/narratives/{narrativeRepositoryId}/users` |  |
+| `get_narrative_repository` | GET | `/api/v2/narratives/{narrativeRepositoryId}/getNarrativesRepository` |  |
+| `update_narrative_repository` | PUT | `/api/v2/narratives/{narrativeRepositoryId}/updateNarrativesRepository` |  |
+| `delete_narrative_repository` | DELETE | `/api/v2/narratives/{narrativeRepositoryId}/deleteNarrativesRepository` |  |
 | `list_writeups` | GET | `/api/v1/template/list` |  |
 | `get_writeup` | GET | `/api/v1/template/{writeupId}` |  |
-| `create_writeups` | POST | `/api/v1/template/create` |  |
-| `update_writeups` | PUT | `/api/v1/template/{writeupId}` |  |
-| `delete_writeups` | DELETE | `/api/v1/template/{writeupId}` |  |
-| `add_writeup_to_report` | PUT | `/api/v1/copy/{writeupId}` |  |
+| `create_writeup` | POST | `/api/v1/template/create` |  |
+| `update_writeup` | PUT | `/api/v1/template/{writeupId}` |  |
+| `delete_writeup` | DELETE | `/api/v1/template/{writeupId}` |  |
+| `add_writeup_to_report` | PUT | `/api/v1/copy/{writeupId}` | `deprecated; not exposed in polished module` |
 | `bulk_add_writeups_to_report` | POST | `/api/v2/writeups/bulk/addToReport` |  |
-| `get_writeups_from_repository` | POST | `/api/v2/repositories/{repositoryId}/getWriteups` |  |
+| `list_writeups_from_repository` | POST | `/api/v2/repositories/{repositoryId}/getWriteups` |  |
 | `add_writeups_to_repository` | POST | `/api/v2/repositories/{repositoryId}/addWriteups` |  |
-| `copy_finding_to_writeups_repository` | POST | `/api/v2/repositories/copyFlawToWriteupsRepository` |  |
+| `copy_finding_to_writeups_repository` | POST | `/api/v2/repositories/copyFlawToWriteupsRepository` | `deprecated; use create_writeup instead` |
 | `import_writeups_to_repository` | POST | `/api/v2/writeups/import/{source}` |  |
 | `remove_writeups_from_repository` | POST | `/api/v2/repositories/{repositoryId}/removeWriteup` |  |
 | `bulk_copy_writeups` | POST | `/api/v2/writeups/bulk/copy` |  |
 | `bulk_move_writeups` | POST | `/api/v2/writeups/bulk/move` |  |
 | `bulk_add_tags_to_writeups` | POST | `/api/v2/writeups/bulk/tags` |  |
 | `bulk_delete_writeups` | POST | `/api/v2/writeups/bulk/delete` |  |
-| `list_all_writeup_repositories` | POST | `/api/v2/repositories/getAllWriteupsRepositories` |  |
-| `get_writeups_repository_users_can_edit` | GET | `/api/v2/repositories/listUserCanEdit` |  |
+| `list_writeup_repositories` | POST | `/api/v2/repositories/getAllWriteupsRepositories` |  |
+| `list_editable_writeup_repositories` | GET | `/api/v2/repositories/listUserCanEdit` |  |
 | `get_writeup_repository` | POST | `/api/v2/repositories/{repositoryId}` |  |
 | `create_writeup_repository` | POST | `/api/v2/repositories/add` |  |
 | `update_writeup_repository` | POST | `/api/v2/repositories/{repositoryId}/update` |  |
 | `delete_writeup_repository` | POST | `/api/v2/repositories/delete` |  |
-| `get_writeups_repository_users` | GET | `/api/v2/repositories/{repositoryId}/users` |  |
-| `add_writeups_repository_users` | POST | `/api/v2/repositories/{repositoryId}/users` |  |
-| `update_writeups_repository_users` | PUT | `/api/v2/repositories/{repositoryId}/users` |  |
-| `get_all_writeups_repository_users` | POST | `/api/v2/repositories/users` |  |
+| `list_writeup_repository_users` | GET | `/api/v2/repositories/{repositoryId}/users` |  |
+| `add_writeup_repository_users` | POST | `/api/v2/repositories/{repositoryId}/users` |  |
+| `update_writeup_repository_users` | PUT | `/api/v2/repositories/{repositoryId}/users` |  |
+| `search_writeup_repository_users` | POST | `/api/v2/repositories/users` |  |
 
 ### `clients`
 
@@ -246,6 +244,7 @@ Display name: Clients
 | `add_client_logo` | POST | `/api/v1/client/{clientId}/logo` |  |
 | `delete_client_logo` | DELETE | `/api/v1/client/{clientId}/logo` |  |
 | `list_client_findings` | POST | `/api/v2/client/{clientId}/findings` |  |
+| `list_client_assets` | POST | `/api/v2/clients/{clientId}/assets` |  |
 
 ### `files`
 
@@ -266,22 +265,25 @@ Display name: Findings
 
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
-| `request_presigned_upload_url` | POST | `/api/v2/presigned-url` |  |
-| `import_preuploaded_findings` | POST | `/api/v2/client/{clientId}/report/{reportId}/preuploaded-import/{source}` |  |
-| `list_import_statuses` | GET | `/api/v2/my-imports` |  |
+| `add_findings_from_file_imports` | POST | `/api/v2/client/{clientId}/report/{reportId}/importAsync/{source}` |  |
+| `request_presigned_url` | POST | `/api/v2/presigned-url ` |  |
+| `add_findings_async_from_preuploaded_file_imports` | POST | `/api/v2/client/{clientId}/report/{reportId}/preuploaded-import/{source}` |  |
+| `get_import_status` | GET | `/api/v2/my-imports` |  |
 | `get_scanner_output` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/asset/{assetId}/scanoutput` |  |
-| `update_finding_evidence` | PUT | `/api/v2/client/{clientId}/report/{reportId}/finding/{findingId}/asset/{assetId}/evidence/{evidenceId}` |  |
-| `bulk_upsert_finding_evidence` | PUT | `/api/v2/tenant/{tenantId}/client/{clientId}/report/{reportId}/finding/{findingId}/asset/evidence` |  |
-| `list_report_findings` | POST | `/api/v2/clients/{clientId}/reports/{reportId}/findings` |  |
-| `get_finding` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}` |  |
-| `create_finding` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaw/create` |  |
-| `update_finding` | PUT | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}` |  |
-| `bulk_update_findings_metadata` | PUT | `/api/v2/clients/{clientId}/reports/{reportId}/findings` |  |
-| `bulk_update_finding_statuses` | PUT | `/api/v2/client/{clientId}/findings` |  |
-| `delete_finding` | DELETE | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}` |  |
+| `bulk_get_evidence` | POST | `/api/v2/tenant/{tenantId}/client/{clientId}/report/{reportId}/finding/{findingId}/asset/evidence` |  |
+| `update_evidence` | PUT | `/api/v2/client/{clientId}/report/{reportId}/finding/{findingId}/asset/{assetId}/evidence/{evidenceId}` |  |
+| `bulk_upsert_evidence` | PUT | `/api/v2/tenant/{tenantId}/client/{clientId}/report/{reportId}/finding/{findingId}/asset/evidence` |  |
+| `list_report_findings` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaws` |  |
+| `get_findings_by_report` | POST | `/api/v2/clients/{clientId}/reports/{reportId}/findings` |  |
+| `get_finding` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}` | `get` |
+| `create_finding` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaw/create` | `create` |
+| `update_finding` | PUT | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}` | `update` |
+| `bulk_update_findings` | PUT | `/api/v2/clients/{clientId}/reports/{reportId}/findings` |  |
+| `bulk_update_findings_assign_update_status` | PUT | `/api/v2/client/{clientId}/findings` |  |
+| `delete_finding` | DELETE | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}` | `delete` |
 | `bulk_delete_findings` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaws/delete` |  |
-| `list_finding_status_updates` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/status` |  |
-| `create_finding_status_update` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/status/update` |  |
+| `get_finding_status_list` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/status` |  |
+| `create_status_update` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/status/update` |  |
 
 ### `integrations`
 
@@ -295,8 +297,8 @@ Display name: Integrations
 | `list_tenable_io_tags` | GET | `/api/v2/integrations/tenable-io/tags` |  |
 | `sync_tenable_io_tags` | GET | `/api/v2/integrations/tenable-io/tags/sync` |  |
 | `list_jira_projects` | GET | `/api/v1/jira/projects` |  |
-| `create_and_link_jira_ticket_to_finding` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/createAndLinkJiraTicket` | deprecated; not exposed in polished module |
-| `bulk_create_and_link_jira_tickets_to_findings` | POST | `/api/v2/client/{clientId}/report/{reportId}/findings/createJiraTickets` | deprecated; not exposed in polished module |
+| `create_and_link_jira_ticket_to_finding` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/createAndLinkJiraTicket` |  |
+| `bulk_create_and_link_jira_tickets_to_findings` | POST | `/api/v2/client/{clientId}/report/{reportId}/findings/createJiraTickets` |  |
 | `create_jira_connection` | POST | `/api/v2/jira/connect` |  |
 | `update_jira_connection` | PUT | `/api/v2/jira/connect/{integrationId}` |  |
 | `delete_jira_connection` | DELETE | `/api/v2/jira/connect/{integrationId}` |  |
@@ -463,9 +465,9 @@ Display name: Substatus
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
 | `list_substatuses` | GET | `/api/v3/substatus` |  |
-| `create_substatus` | POST | `/api/v3/substatus` |  |
-| `update_substatus` | PATCH | `/api/v3/substatus/{substatusCuid}` |  |
-| `delete_substatus` | DELETE | `/api/v3/substatus/{substatusCuid}` |  |
+| `create_substatus` | POST | `/api/v3/substatus` | `create` |
+| `update_substatus` | PATCH | `/api/v3/substatus/{substatusCuid}` | `update` |
+| `delete_substatus` | DELETE | `/api/v3/substatus/{substatusCuid}` | `delete` |
 
 ### `templates`
 
@@ -517,7 +519,7 @@ Display name: Users
 | `get_authenticated_user` | GET | `/api/v2/whoami` |  |
 | `list_tenant_users` | GET | `/api/v1/tenant/{tenantId}/user/list` |  |
 | `list_tenant_users_paginated` | GET | `/api/v2/tenants/{tenantId}/users` |  |
-| `create_user_deprecated` | POST | `/api/v1/tenant/{tenantId}/user/create` | deprecated; not exposed in polished module |
+| `create_user_deprecated` | POST | `/api/v1/tenant/{tenantId}/user/create` |  |
 | `bulk_create_users` | POST | `/api/v1/tenant/{tenantId}/user/create/bulk` |  |
 | `update_user` | PUT | `/api/v1/user/update` | `update` |
 | `delete_user` | DELETE | `/api/v2/user/delete` | `delete` |

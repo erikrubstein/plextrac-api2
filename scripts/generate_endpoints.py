@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import keyword
 import re
@@ -17,7 +18,6 @@ OUT_DIR = PACKAGE_DIR / "generated"
 FUNCTIONS_DIR = PACKAGE_DIR / "functions"
 DOCS_DIR = ROOT / "docs"
 GENERATED_FUNCTION_GROUPS = {
-    "content_library",
     "graph_ql_mutations",
     "graph_ql_queries",
     "runbooks",
@@ -29,6 +29,7 @@ HAND_WRITTEN_FUNCTION_GROUPS = {
     "assessments",
     "assets",
     "clients",
+    "content_library",
     "files",
     "findings",
     "integrations",
@@ -80,6 +81,61 @@ METHOD_NAME_OVERRIDES = {
     ("Clients", "available_tenant_users"): "list_available_tenant_users",
     ("Clients", "assign_user_to_client"): "assign_users_to_client",
     ("Clients", "remove_user_from_client"): "remove_users_from_client",
+    (
+        "Content Library",
+        "copy_section_to_narative_repository",
+    ): "copy_section_to_narrative_repository",
+    ("Content Library", "create_narratives_db_repository"): "create_narrative_repository",
+    (
+        "Content Library",
+        "create_narratives_repository_section",
+    ): "create_narrative_repository_section",
+    ("Content Library", "create_writeups"): "create_writeup",
+    ("Content Library", "delete_narrative_db"): "delete_narrative_repository",
+    (
+        "Content Library",
+        "delete_narrative_db_section",
+    ): "delete_narrative_repository_section",
+    ("Content Library", "delete_writeups"): "delete_writeup",
+    (
+        "Content Library",
+        "get_all_narrative_db_users",
+    ): "list_all_narrative_repository_users",
+    ("Content Library", "get_all_writeups_repository_users"): "search_writeup_repository_users",
+    ("Content Library", "get_narrative_db"): "get_narrative_repository",
+    (
+        "Content Library",
+        "get_narrative_db_users_by_repository",
+    ): "list_narrative_repository_users",
+    ("Content Library", "get_writeups_from_repository"): "list_writeups_from_repository",
+    (
+        "Content Library",
+        "get_writeups_repository_users",
+    ): "list_writeup_repository_users",
+    (
+        "Content Library",
+        "get_writeups_repository_users_can_edit",
+    ): "list_editable_writeup_repositories",
+    ("Content Library", "list_all_writeup_repositories"): "list_writeup_repositories",
+    ("Content Library", "list_narrative_dbs"): "list_narrative_repositories",
+    ("Content Library", "update_narrative_db"): "update_narrative_repository",
+    (
+        "Content Library",
+        "update_narrative_db_section",
+    ): "update_narrative_repository_section",
+    (
+        "Content Library",
+        "update_narrative_db_users_by_repository",
+    ): "update_narrative_repository_users",
+    ("Content Library", "update_writeups"): "update_writeup",
+    (
+        "Content Library",
+        "add_writeups_repository_users",
+    ): "add_writeup_repository_users",
+    (
+        "Content Library",
+        "update_writeups_repository_users",
+    ): "update_writeup_repository_users",
     ("Files", "delete_an_artifact"): "delete_artifact",
     ("Files", "download_an_artifact"): "download_artifact",
     ("Files", "get_artifacts"): "list_artifacts",
@@ -131,6 +187,13 @@ METHOD_NAME_OVERRIDES = {
     ("Users", "get_user_notifications"): "list_user_notifications",
     ("Users", "get_tenants_users"): "list_tenant_users_paginated",
     ("Users", "set_user_notifications_read"): "mark_user_notifications_read",
+}
+NOT_EXPOSED_NOTES = {
+    ("content_library", "add_writeup_to_report"): "deprecated; not exposed in polished module",
+    (
+        "content_library",
+        "copy_finding_to_writeups_repository",
+    ): "deprecated; use create_writeup instead",
 }
 
 
@@ -451,9 +514,19 @@ def render_functions(attr_name: str, group_data: dict) -> str:
 def render_coverage(rows: list[tuple[str, str, int]], groups: dict) -> str:
     total = sum(count for _, _, count in rows)
     lines = [
-        "# Endpoint Coverage",
+        "# Endpoint Coverage Snapshot",
         "",
-        "Generated from the public PlexTrac Postman collection snapshot.",
+        "This file is an inventory of the currently known PlexTrac API groups and endpoint "
+        "wrappers. It is useful for SDK development and gap tracking, but it is not intended to "
+        "be the primary user guide.",
+        "",
+        "Most groups are still generated wrappers. The `clients`, `reports`, `findings`, "
+        "`assets`, `affected_assets`, `files`, `mailer`, `substatus`, `analytics`, `tenant`, "
+        "`templates`, `integrations`, `parser_actions`, `scheduler`, `users`, `admin`, "
+        "`assessments`, and `content_library` groups are hand-polished and show the intended "
+        "long-term SDK shape.",
+        "",
+        "The inventory is based on the public PlexTrac Postman collection snapshot.",
         "",
         "When multiple documented versions expose the same operation, this SDK keeps only the "
         "latest supported version.",
@@ -476,7 +549,11 @@ def render_coverage(rows: list[tuple[str, str, int]], groups: dict) -> str:
         lines.append("| Method | HTTP | Path | Aliases |")
         lines.append("|---|---|---|---|")
         for endpoint in data["endpoints"]:
-            aliases = ", ".join(f"`{alias}`" for alias in endpoint["aliases"]) or ""
+            notes = list(endpoint["aliases"])
+            not_exposed_note = NOT_EXPOSED_NOTES.get((attr_name, endpoint["method_name"]))
+            if not_exposed_note:
+                notes.append(not_exposed_note)
+            aliases = ", ".join(f"`{alias}`" for alias in notes) or ""
             lines.append(
                 f"| `{endpoint['method_name']}` | {endpoint['method']} | "
                 f"`{endpoint['path']}` | {aliases} |"
@@ -501,12 +578,24 @@ def coverage_count_label(attr_name: str, count: int) -> str:
     if attr_name in GENERATED_FUNCTION_GROUPS:
         return str(count)
     if attr_name in HAND_WRITTEN_FUNCTION_GROUPS:
-        return f"{count} explicit functions"
+        return f"{public_function_count(attr_name) or count} explicit functions"
     if attr_name == "authentication":
         return "manual auth helpers"
     if attr_name == "webhooks":
         return "manual receiver helper"
     return str(count)
+
+
+def public_function_count(attr_name: str) -> int:
+    path = FUNCTIONS_DIR / f"{attr_name}.py"
+    if not path.exists():
+        return 0
+    tree = ast.parse(path.read_text())
+    return sum(
+        1
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef) and not node.name.startswith("_")
+    )
 
 
 if __name__ == "__main__":

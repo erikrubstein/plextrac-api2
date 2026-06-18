@@ -35,6 +35,8 @@ from plextrac_api.types import (
     ClientPagination,
     ClientSort,
     ClientSortField,
+    ContentLibraryUser,
+    ContentLibraryUserInput,
     DefaultUserRole,
     EmailTemplate,
     EmailTemplateKind,
@@ -59,6 +61,9 @@ from plextrac_api.types import (
     IntegrationConfigurationType,
     JiraConnectionInput,
     JiraSyncFrequency,
+    NarrativeRepository,
+    NarrativeRepositoryInput,
+    NarrativeSectionInput,
     OperationResult,
     Pagination,
     ParserActionInput,
@@ -90,6 +95,12 @@ from plextrac_api.types import (
     TenantImageUploadResult,
     TenantUserInput,
     UserFindingSearch,
+    Writeup,
+    WriteupDeleteResult,
+    WriteupImportSource,
+    WriteupRepository,
+    WriteupRepositoryInput,
+    WriteupTransfer,
 )
 
 
@@ -238,6 +249,16 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "set_user_notifications_read" not in method_names
     assert "search_user_findings" in method_names
     assert "get_user_findings" not in method_names
+    assert "create_narrative_repository" in method_names
+    assert "create_narratives_db_repository" not in method_names
+    assert "copy_section_to_narrative_repository" in method_names
+    assert "copy_section_to_narative_repository" not in method_names
+    assert "create_writeup" in method_names
+    assert "create_writeups" not in method_names
+    assert "list_writeup_repositories" in method_names
+    assert "list_all_writeup_repositories" not in method_names
+    assert "search_writeup_repository_users" in method_names
+    assert "get_all_writeups_repository_users" not in method_names
     assert all(not name.endswith(("_v1", "_v2", "_v3")) for name in method_names)
 
 
@@ -476,6 +497,68 @@ def test_template_type_parses_and_serializes_documented_fields():
         "template_name": "Finding Template",
         "fields": {"synopsis": {"label": "Synopsis", "value": "<p>Example</p>"}},
     }
+
+
+def test_content_library_types_parse_and_serialize_documented_fields():
+    assert WriteupImportSource.CSV.value == "csv"
+    assert ContentLibraryUserInput(user_id=12, permission_level="EDITOR").to_api() == {
+        "userId": 12,
+        "permissionLevel": "EDITOR",
+    }
+    assert NarrativeSectionInput(
+        title="Executive Summary",
+        repository_id="repo-1",
+        text="<p>Summary</p>",
+    ).to_api() == {
+        "title": "Executive Summary",
+        "repositoryId": "repo-1",
+        "text": "<p>Summary</p>",
+    }
+    assert NarrativeRepositoryInput(name="Narratives", description="Shared").to_api() == {
+        "name": "Narratives",
+        "description": "Shared",
+    }
+    assert WriteupRepositoryInput(name="Default", description="Shared").to_api() == {
+        "name": "Default",
+        "description": "Shared",
+    }
+    assert WriteupTransfer(
+        writeup_ids=["template_1"],
+        source_repository_id="repo-1",
+        destination_repository_id="repo-2",
+    ).to_api() == {
+        "writeups": ["template_1"],
+        "destinationRepositoryId": "repo-2",
+        "sourceRepositoryId": "repo-1",
+    }
+
+    writeup = Writeup.from_api(
+        {
+            "id": "template_104560",
+            "doc_id": 104560,
+            "repositoryId": "repo-1",
+            "severity": "Critical",
+            "title": "Password returned in URL query string",
+            "tags": ["web"],
+        }
+    )
+    repository = WriteupRepository.from_api(
+        {"id": "repo-1", "name": "Default", "writeups": [writeup.raw]}
+    )
+    narrative = NarrativeRepository.from_api(
+        {
+            "id": "narrative-repo-1",
+            "name": "Narratives",
+            "sections": [{"id": "section-1", "title": "Executive Summary"}],
+        }
+    )
+    user = ContentLibraryUser.from_api({"userId": 12, "email": "ada@example.com"})
+
+    assert writeup.severity is FindingSeverity.CRITICAL
+    assert repository.writeups[0].writeup_id == "template_104560"
+    assert narrative.sections[0].section_id == "section-1"
+    assert user.email == "ada@example.com"
+    assert WriteupDeleteResult.from_api({"message": "success", "doc_id": "template_1"}).ok
 
 
 def test_integration_type_serializes_documented_enums():

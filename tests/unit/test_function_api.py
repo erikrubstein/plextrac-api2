@@ -12,6 +12,7 @@ from plextrac_api.functions import (
     assessments,
     assets,
     clients,
+    content_library,
     files,
     findings,
     integrations,
@@ -45,6 +46,7 @@ from plextrac_api.types import (
     ClientAssetSort,
     ClientAssetSortField,
     ClientInput,
+    ContentLibraryUserInput,
     EmailTemplateKind,
     EngagementScheduleEventSearch,
     ExportTemplateType,
@@ -56,6 +58,7 @@ from plextrac_api.types import (
     FindingVisibility,
     JiraConnectionInput,
     JiraSyncFrequency,
+    NarrativeSectionInput,
     ParserActionSearchType,
     QuestionAnswerType,
     QuestionInput,
@@ -69,6 +72,8 @@ from plextrac_api.types import (
     TemplateField,
     UserSortField,
     UserSortOrder,
+    WriteupImportSource,
+    WriteupInput,
 )
 
 
@@ -93,6 +98,132 @@ def test_explicit_client_function_interpolates_path_params(monkeypatch):
     assert seen["method"] == "GET"
     assert seen["path"] == "/api/v1/client/123"
     assert seen["headers"]["Authorization"] == "Bearer test-token"
+
+
+def test_explicit_content_library_create_section_serializes_input(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={
+                "id": "section-1",
+                "repositoryId": "repo-1",
+                "title": "Executive Summary",
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = content_library.create_narrative_repository_section(
+        session,
+        NarrativeSectionInput(
+            title="Executive Summary",
+            repository_id="repo-1",
+            text="<p>Summary</p>",
+        ),
+    )
+
+    assert result.section_id == "section-1"
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v2/narratives/sections"
+    assert seen["json"] == {
+        "title": "Executive Summary",
+        "repositoryId": "repo-1",
+        "text": "<p>Summary</p>",
+    }
+
+
+def test_explicit_content_library_create_writeup_serializes_documented_fields(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={
+                "id": "template_104560",
+                "doc_id": 104560,
+                "repositoryId": "repo-1",
+                "severity": "High",
+                "title": "Password returned in URL query string",
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = content_library.create_writeup(
+        session,
+        WriteupInput(
+            title="Password returned in URL query string",
+            repository_id="repo-1",
+            severity=FindingSeverity.HIGH,
+            description="Description",
+            recommendations="Recommendation",
+            tags=["web"],
+        ),
+    )
+
+    assert result.writeup_id == "template_104560"
+    assert result.severity is FindingSeverity.HIGH
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v1/template/create"
+    assert seen["json"] == {
+        "title": "Password returned in URL query string",
+        "repositoryID": "repo-1",
+        "severity": "High",
+        "description": "Description",
+        "recommendations": "Recommendation",
+        "tags": ["web"],
+    }
+
+
+def test_explicit_content_library_repository_users_and_import_use_typed_shapes(
+    monkeypatch,
+    tmp_path,
+):
+    seen = {}
+    upload_path = tmp_path / "writeups.csv"
+    upload_path.write_text("title,severity\nExample,High\n")
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs.get("json")
+        seen["files"] = kwargs.get("files")
+        if path.endswith("/users"):
+            return httpx.Response(200, json={"users": [{"userId": 12, "email": "ada@example.com"}]})
+        return httpx.Response(200, json={"status": "success", "importId": "import-1"})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    users = content_library.add_writeup_repository_users(
+        session,
+        repository_id="repo-1",
+        users=[ContentLibraryUserInput(user_id=12, permission_level="EDITOR")],
+    )
+
+    assert users[0].user_id == 12
+    assert seen["json"] == {"users": [{"userId": 12, "permissionLevel": "EDITOR"}]}
+
+    result = content_library.import_writeups_to_repository(
+        session,
+        upload_path,
+        source=WriteupImportSource.CSV,
+    )
+
+    assert result.import_id == "import-1"
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v2/writeups/import/csv"
+    assert seen["files"]["file"][0] == "writeups.csv"
 
 
 def test_explicit_report_export_uses_snake_case_query_options(monkeypatch):
