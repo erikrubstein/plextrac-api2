@@ -161,3 +161,21 @@ result = execute_graphql(
     variables={"tenantId": "tenant-cuid"},
 )
 ```
+
+## Webhooks
+
+Webhook helpers verify and parse inbound PlexTrac requests without depending on a web framework.
+
+```python
+from plextrac_api.functions.webhooks import parse_verified_webhook_event, signature_from_headers
+
+signature = signature_from_headers(request.headers)
+if signature is None:
+    raise ValueError("Missing PlexTrac webhook signature.")
+
+event = parse_verified_webhook_event(
+    payload=request.body,
+    signature=signature,
+    secret="configured-webhook-secret",
+)
+```

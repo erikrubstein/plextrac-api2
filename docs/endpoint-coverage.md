@@ -2,13 +2,13 @@
 
 This file is an inventory of the currently known PlexTrac API groups and endpoint wrappers. It is useful for SDK development and gap tracking, but it is not intended to be the primary user guide.
 
-Most groups are still generated wrappers. The `clients`, `reports`, `findings`, `assets`, `affected_assets`, `files`, `mailer`, `substatus`, `analytics`, `tenant`, `templates`, `integrations`, `parser_actions`, `scheduler`, `users`, `admin`, `assessments`, and `content_library` groups are hand-polished and show the intended long-term SDK shape.
+The `clients`, `reports`, `findings`, `assets`, `affected_assets`, `files`, `mailer`, `substatus`, `analytics`, `tenant`, `templates`, `integrations`, `parser_actions`, `scheduler`, `users`, `admin`, `assessments`, `content_library`, and `runbooks` groups are hand-polished and show the intended long-term SDK shape.
 
 The inventory is based on the public PlexTrac Postman collection snapshot.
 
 When multiple documented versions expose the same operation, this SDK keeps only the latest supported version.
 
-Total supported endpoint functions in snapshot: **357**
+Total documented endpoint operations in snapshot: **357**
 
 | API group | Function module | Endpoint functions |
 |---|---|---:|
@@ -33,9 +33,9 @@ Total supported endpoint functions in snapshot: **357**
 | Templates | `plextrac_api.functions.templates` | 14 explicit functions |
 | Tenant | `plextrac_api.functions.tenant` | 13 explicit functions |
 | Users | `plextrac_api.functions.users` | 16 explicit functions |
-| Graph QL Queries | `plextrac_api.functions.graph_ql_queries` | 1 |
-| Graph QL Mutations | `plextrac_api.functions.graph_ql_mutations` | 2 |
-| Webhooks | `plextrac_api.functions.webhooks` | manual receiver helper |
+| Graph QL Queries | `plextrac_api.functions.common.execute_graphql` | raw GraphQL helper only |
+| Graph QL Mutations | `plextrac_api.functions.common.execute_graphql` | raw GraphQL helper only |
+| Webhooks | `plextrac_api.functions.webhooks` | typed receiver helpers |
 
 ## Method Inventory
 
@@ -540,7 +540,7 @@ Display name: Graph QL Queries
 
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
-| `client_asset` | POST | `/graphql` |  |
+| `client_asset` | POST | `/graphql` | transport-only; use `assets.get_asset` or raw `execute_graphql` |
 
 ### `graph_ql_mutations`
 
@@ -548,8 +548,8 @@ Display name: Graph QL Mutations
 
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
-| `finding_update` | POST | `/graphql` |  |
-| `narrative_update` | POST | `/graphql` |  |
+| `finding_update` | POST | `/graphql` | transport-only; use `findings.update_finding` or raw `execute_graphql` |
+| `narrative_update` | POST | `/graphql` | transport-only; use `reports.update_report` or raw `execute_graphql` |
 
 ### `webhooks`
 

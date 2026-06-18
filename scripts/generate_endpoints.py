@@ -17,7 +17,8 @@ PACKAGE_DIR = ROOT / "src" / "plextrac_api"
 OUT_DIR = PACKAGE_DIR / "generated"
 FUNCTIONS_DIR = PACKAGE_DIR / "functions"
 DOCS_DIR = ROOT / "docs"
-GENERATED_FUNCTION_GROUPS = {
+GENERATED_FUNCTION_GROUPS: set[str] = set()
+TRANSPORT_ONLY_GROUPS = {
     "graph_ql_mutations",
     "graph_ql_queries",
 }
@@ -318,6 +319,18 @@ NOT_EXPOSED_NOTES = {
         "content_library",
         "copy_finding_to_writeups_repository",
     ): "deprecated; use create_writeup instead",
+    (
+        "graph_ql_mutations",
+        "finding_update",
+    ): "transport-only; use findings.update_finding or raw execute_graphql",
+    (
+        "graph_ql_mutations",
+        "narrative_update",
+    ): "transport-only; use reports.update_report or raw execute_graphql",
+    (
+        "graph_ql_queries",
+        "client_asset",
+    ): "transport-only; use assets.get_asset or raw execute_graphql",
 }
 
 
@@ -644,18 +657,17 @@ def render_coverage(rows: list[tuple[str, str, int]], groups: dict) -> str:
         "wrappers. It is useful for SDK development and gap tracking, but it is not intended to "
         "be the primary user guide.",
         "",
-        "Most groups are still generated wrappers. The `clients`, `reports`, `findings`, "
-        "`assets`, `affected_assets`, `files`, `mailer`, `substatus`, `analytics`, `tenant`, "
-        "`templates`, `integrations`, `parser_actions`, `scheduler`, `users`, `admin`, "
-        "`assessments`, and `content_library` groups are hand-polished and show the intended "
-        "long-term SDK shape.",
+        "The `clients`, `reports`, `findings`, `assets`, `affected_assets`, `files`, `mailer`, "
+        "`substatus`, `analytics`, `tenant`, `templates`, `integrations`, `parser_actions`, "
+        "`scheduler`, `users`, `admin`, `assessments`, `content_library`, and `runbooks` groups "
+        "are hand-polished and show the intended long-term SDK shape.",
         "",
         "The inventory is based on the public PlexTrac Postman collection snapshot.",
         "",
         "When multiple documented versions expose the same operation, this SDK keeps only the "
         "latest supported version.",
         "",
-        f"Total supported endpoint functions in snapshot: **{total}**",
+        f"Total documented endpoint operations in snapshot: **{total}**",
         "",
         "| API group | Function module | Endpoint functions |",
         "|---|---|---:|",
@@ -689,6 +701,8 @@ def render_coverage(rows: list[tuple[str, str, int]], groups: dict) -> str:
 def coverage_module_label(attr_name: str) -> str:
     if attr_name in GENERATED_FUNCTION_GROUPS:
         return f"`plextrac_api.functions.{attr_name}`"
+    if attr_name in TRANSPORT_ONLY_GROUPS:
+        return "`plextrac_api.functions.common.execute_graphql`"
     if attr_name in HAND_WRITTEN_FUNCTION_GROUPS:
         return f"`plextrac_api.functions.{attr_name}`"
     if attr_name == "authentication":
@@ -701,12 +715,14 @@ def coverage_module_label(attr_name: str) -> str:
 def coverage_count_label(attr_name: str, count: int) -> str:
     if attr_name in GENERATED_FUNCTION_GROUPS:
         return str(count)
+    if attr_name in TRANSPORT_ONLY_GROUPS:
+        return "raw GraphQL helper only"
     if attr_name in HAND_WRITTEN_FUNCTION_GROUPS:
         return f"{public_function_count(attr_name) or count} explicit functions"
     if attr_name == "authentication":
         return "manual auth helpers"
     if attr_name == "webhooks":
-        return "manual receiver helper"
+        return "typed receiver helpers"
     return str(count)
 
 

@@ -1,3 +1,4 @@
+from plextrac_api.functions import __all__ as function_groups
 from plextrac_api.generated.endpoints import GROUPS
 from plextrac_api.types import (
     AffectedAsset,
@@ -127,6 +128,13 @@ def test_generated_registry_covers_public_snapshot():
     assert "reports" in GROUPS
     assert "findings" in GROUPS
     assert "runbooks" in GROUPS
+
+
+def test_graphql_transport_groups_are_not_public_function_modules():
+    assert "graph_ql_queries" in GROUPS
+    assert "graph_ql_mutations" in GROUPS
+    assert "graph_ql_queries" not in function_groups
+    assert "graph_ql_mutations" not in function_groups
 
 
 def test_generated_registry_exposes_canonical_latest_names():

@@ -274,6 +274,18 @@ from plextrac_api.types.users import (
     UserSortField,
     UserSortOrder,
 )
+from plextrac_api.types.webhooks import (
+    AssessmentSubmittedEvent,
+    FindingPublishedEvent,
+    ParsedWebhookEvent,
+    ReportCreatedOrEditedEvent,
+    ReportFindingCreatedOrEditedEvent,
+    ReportPublishedEvent,
+    SchedulerEngagementSubmittedEvent,
+    UnknownWebhookEvent,
+    WebhookEventType,
+    WebhookSignatureAlgorithm,
+)
 
 __all__ = [
     "AffectedAsset",
@@ -514,6 +526,16 @@ __all__ = [
     "UserSortField",
     "UserSortOrder",
     "VulnerableParameter",
+    "AssessmentSubmittedEvent",
+    "FindingPublishedEvent",
+    "ParsedWebhookEvent",
+    "ReportCreatedOrEditedEvent",
+    "ReportFindingCreatedOrEditedEvent",
+    "ReportPublishedEvent",
+    "SchedulerEngagementSubmittedEvent",
+    "UnknownWebhookEvent",
+    "WebhookEventType",
+    "WebhookSignatureAlgorithm",
     "Writeup",
     "WriteupDeleteResult",
     "WriteupImportSource",

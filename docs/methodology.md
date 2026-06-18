@@ -197,15 +197,23 @@ REST is the primary SDK surface.
 
 GraphQL policy:
 
-- Expose documented GraphQL operations when they exist.
-- Keep GraphQL mostly raw/generated until a real workflow justifies polished wrappers.
+- Keep `execute_graphql` as the raw helper for callers who need direct GraphQL access.
+- Do not expose standalone GraphQL query/mutation modules when documented operations overlap
+  existing REST-backed domain functions.
+- Move a GraphQL operation into the relevant domain group only when it represents a unique workflow
+  or response shape that REST does not cover.
 - Do not assume GraphQL is a complete replacement for REST.
 
 Webhook policy:
 
 - Webhooks are inbound events, not SDK calls to PlexTrac.
-- Keep receiver-side helpers such as signature verification.
-- Defer broader webhook modeling until there is a concrete event-driven workflow.
+- Keep receiver-side helpers such as signature verification, signature-header lookup, and payload
+  parsing.
+- Do not depend on a web framework; helpers should accept raw request bytes/strings and header
+  mappings.
+- Model documented webhook payload identifiers with explicit event dataclasses.
+- Preserve raw webhook payloads on parsed events because PlexTrac may include fields beyond the
+  documented identifiers.
 
 ## Compatibility Policy
 
