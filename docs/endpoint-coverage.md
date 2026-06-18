@@ -4,8 +4,8 @@ This file is an inventory of the currently known PlexTrac API groups and endpoin
 useful for SDK development and gap tracking, but it is not intended to be the primary user guide.
 
 Most groups are still generated wrappers. The `clients`, `reports`, `findings`, `assets`,
-`affected_assets`, `files`, `mailer`, `substatus`, `analytics`, `tenant`, `templates`, and
-`integrations` groups are hand-polished and show the intended long-term SDK shape.
+`affected_assets`, `files`, `mailer`, `substatus`, `analytics`, `tenant`, `templates`,
+`integrations`, and `parser_actions` groups are hand-polished and show the intended long-term SDK shape.
 
 The inventory is based on the public PlexTrac Postman collection snapshot.
 
@@ -27,7 +27,7 @@ Total supported endpoint functions in snapshot: **357**
 | Findings | `plextrac_api.functions.findings` | 16 explicit functions |
 | Integrations | `plextrac_api.functions.integrations` | 21 explicit functions |
 | Mailer | `plextrac_api.functions.mailer` | 3 explicit functions |
-| Parser Actions | `plextrac_api.functions.parser_actions` | 8 |
+| Parser Actions | `plextrac_api.functions.parser_actions` | 8 explicit functions |
 | QA Workflow | _not generated_ | 0 |
 | Reports | `plextrac_api.functions.reports` | 17 explicit functions |
 | Runbooks | `plextrac_api.functions.runbooks` | 63 |
@@ -328,9 +328,9 @@ Display name: Parser Actions
 
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
-| `enable_disable_parser_plugin_actions` | POST | `/api/v1/tenant/{tenantId}/integrationconfig/parserConfig` |  |
+| `set_parser_plugin_actions_enabled` | POST | `/api/v1/tenant/{tenantId}/integrationconfig/parserConfig` |  |
 | `get_tenant_parsers` | GET | `/api/v1/tenant/{tenantId}/actions` |  |
-| `get_tenant_parser_actions` | GET | `/api/v1/tenant/{tenantId}/actions/{parserName}` |  |
+| `list_tenant_parser_actions` | GET | `/api/v1/tenant/{tenantId}/actions/{parserName}` |  |
 | `get_tenant_parser_action` | GET | `/api/v1/tenant/{tenantId}/actions/{parserName}/action/{actionId}` |  |
 | `create_tenant_parser_action` | POST | `/api/v1/tenant/{tenantId}/actions/{parserName}/action` |  |
 | `update_parser_action` | PUT | `/api/v1/tenant/{tenantId}/actions/{parserName}/action/{actionId}` | `update` |

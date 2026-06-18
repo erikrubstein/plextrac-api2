@@ -110,6 +110,15 @@ from plextrac_api.types.integrations import (
     JiraTicketCreateResult,
     TenableTag,
 )
+from plextrac_api.types.parser_actions import (
+    Parser,
+    ParserAction,
+    ParserActionInput,
+    ParserActionSearchType,
+    ParserActionType,
+    ParserPluginImportResult,
+    ParserPluginSource,
+)
     PresignedUpload,
 )
 from plextrac_api.types.mailer import EmailTemplate, EmailTemplateKind
@@ -214,6 +223,13 @@ __all__ = [
     "FindingInput",
     "FindingPage",
     "FindingPageLimit",
+    "Parser",
+    "ParserAction",
+    "ParserActionInput",
+    "ParserActionSearchType",
+    "ParserActionType",
+    "ParserPluginImportResult",
+    "ParserPluginSource",
     "FindingPagination",
     "FindingSeverity",
     "FindingSort",

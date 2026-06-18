@@ -14,6 +14,7 @@ from plextrac_api.functions import (
     findings,
     integrations,
     mailer,
+    parser_actions,
     reports,
     substatus,
     templates,
@@ -39,6 +40,7 @@ from plextrac_api.types import (
     FindingField,
     FindingInput,
     JiraConnectionInput,
+    ParserActionSearchType,
     JiraSyncFrequency,
     FindingSeverity,
     FindingStatus,
@@ -634,6 +636,32 @@ def test_explicit_integration_create_jira_connection_uses_enum(monkeypatch):
 
         seen["json"] = kwargs["json"]
         return httpx.Response(
+def test_explicit_parser_action_list_uses_named_action_type(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["params"] = kwargs["params"]
+        return httpx.Response(200, json=[{"id": "sql-1", "action": "IGNORE"}])
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    actions = parser_actions.list_tenant_parser_actions(
+        session,
+        tenant_id=1,
+        parser_name="nessus",
+        action_type=ParserActionSearchType.IGNORE,
+        query="sql",
+    )
+
+    assert actions[0].id == "sql-1"
+    assert seen["method"] == "GET"
+    assert seen["path"] == "/api/v1/tenant/1/actions/nessus"
+    assert seen["params"] == {"limit": 985, "skip": 0, "type": "IGNORE", "query": "sql"}
+
+
             200,
             json={"data": [{"flaw_id": 99, "title": "Example", "severity": "Low"}], "total": 1},
         )

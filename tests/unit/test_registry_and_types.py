@@ -52,6 +52,9 @@ from plextrac_api.types import (
     JiraConnectionInput,
     JiraSyncFrequency,
     Pagination,
+    ParserActionInput,
+    ParserActionType,
+    ParserPluginSource,
     Report,
     ReportCreateResult,
     ReportFilter,
@@ -161,6 +164,10 @@ def test_client_type_parses_documented_fields():
     assert "list_jira_issue_mappings" in method_names
     assert "get_issue_mapping_types" not in method_names
     assert "reset_jira_issue_mappings" in method_names
+    assert "list_tenant_parser_actions" in method_names
+    assert "get_tenant_parser_actions" not in method_names
+    assert "set_parser_plugin_actions_enabled" in method_names
+    assert "enable_disable_parser_plugin_actions" not in method_names
     assert "reset_issue_mapping_types" not in method_names
     assert "bulk_update_jira_issue_type_mappings" in method_names
     assert "bulk_update_issue_type_mappings" not in method_names
@@ -422,6 +429,21 @@ def test_integration_type_serializes_documented_enums():
         integration_type=IntegrationConfigurationType.SNYK,
         api_key="secret",
         api_username="api-user",
+def test_parser_action_type_serializes_documented_enums():
+    assert ParserActionInput(
+        id="sql-1",
+        severity=FindingSeverity.HIGH,
+        title="SQL Injection",
+        action=ParserActionType.IGNORE,
+    ).to_api() == {
+        "id": "sql-1",
+        "severity": "High",
+        "title": "SQL Injection",
+        "action": "IGNORE",
+    }
+    assert ParserPluginSource.OWASP_ZAP.value == "owaspzap"
+
+
         org_id="org-1",
     ).to_api() == {
         "integrationType": "Snyk",
