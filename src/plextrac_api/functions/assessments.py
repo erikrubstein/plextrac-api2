@@ -90,14 +90,14 @@ def update_question(
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def change_question_order(
+def update_question_order(
     session: AuthSession,
     questionnaire_id: int | str,
     question_id: int | str,
     *,
     order: int,
 ) -> OperationResult:
-    """Change a questionnaire question's display order."""
+    """Update a questionnaire question's display order."""
     data = rest_request(
         session,
         "PUT",

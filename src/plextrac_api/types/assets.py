@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import ItemsView, KeysView, ValuesView
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 
@@ -414,6 +415,56 @@ class AffectedAssetStatusUpdate:
                 "comment": self.comment,
             }
         )
+
+
+@dataclass(slots=True)
+class AffectedAssetStatusMap:
+    statuses: dict[str, AffectedAssetStatusUpdate]
+    raw: JsonDict | list[JsonDict] | None = None
+
+    def __getitem__(self, asset_id: int | str) -> AffectedAssetStatusUpdate:
+        return self.statuses[str(asset_id)]
+
+    def get(self, asset_id: int | str) -> AffectedAssetStatusUpdate | None:
+        return self.statuses.get(str(asset_id))
+
+    def items(self) -> ItemsView[str, AffectedAssetStatusUpdate]:
+        return self.statuses.items()
+
+    def keys(self) -> KeysView[str]:
+        return self.statuses.keys()
+
+    def values(self) -> ValuesView[AffectedAssetStatusUpdate]:
+        return self.statuses.values()
+
+    def __contains__(self, asset_id: object) -> bool:
+        return str(asset_id) in self.statuses
+
+    def __len__(self) -> int:
+        return len(self.statuses)
+
+    @classmethod
+    def from_api(cls, data: object) -> AffectedAssetStatusMap:
+        if isinstance(data, dict):
+            statuses: dict[str, AffectedAssetStatusUpdate] = {}
+            for asset_id, value in data.items():
+                if isinstance(value, dict):
+                    update = AffectedAssetStatusUpdate.from_api(value)
+                    update.asset_id = update.asset_id or asset_id
+                    statuses[str(asset_id)] = update
+            return cls(statuses=statuses, raw=dict(data))
+        if isinstance(data, list):
+            statuses = {
+                str(update.asset_id): update
+                for update in (
+                    AffectedAssetStatusUpdate.from_api(item)
+                    for item in data
+                    if isinstance(item, dict)
+                )
+                if update.asset_id is not None
+            }
+            return cls(statuses=statuses, raw=list(data))
+        return cls(statuses={}, raw={"data": data})
 
 
 def _asset_payload(

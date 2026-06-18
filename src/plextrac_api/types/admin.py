@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from plextrac_api.types.assets import AssetCriticality
-from plextrac_api.types.common import JsonDict, clean
+from plextrac_api.types.common import AuthenticationProviderName, JsonDict, clean
 from plextrac_api.types.findings import FindingSeverity
 
 
@@ -37,17 +37,17 @@ class AuditLogEventType(str, Enum):
 
 @dataclass(slots=True)
 class AuthenticationProvider:
-    provider: str | None = None
+    provider: AuthenticationProviderName | None = None
     enabled: bool | None = None
     raw: JsonDict | None = None
 
     @classmethod
     def from_api(cls, data: object) -> AuthenticationProvider:
         if isinstance(data, str):
-            return cls(provider=data, raw={"provider": data})
+            return cls(provider=_authentication_provider(data), raw={"provider": data})
         if isinstance(data, dict):
             return cls(
-                provider=data.get("provider") or data.get("name"),
+                provider=_authentication_provider(data.get("provider") or data.get("name")),
                 enabled=data.get("enabled"),
                 raw=dict(data),
             )
@@ -57,7 +57,7 @@ class AuthenticationProvider:
 @dataclass(slots=True)
 class AuthenticationProviderConfiguration:
     enabled: bool | None = None
-    provider: str | None = None
+    provider: AuthenticationProviderName | None = None
     uri: str | None = None
     provider_client_id: str | None = None
     auth_server_id: str | None = None
@@ -67,7 +67,7 @@ class AuthenticationProviderConfiguration:
     def from_api(cls, data: JsonDict) -> AuthenticationProviderConfiguration:
         return cls(
             enabled=data.get("enabled"),
-            provider=data.get("provider"),
+            provider=_authentication_provider(data.get("provider")),
             uri=data.get("uri"),
             provider_client_id=data.get("providerClientId"),
             auth_server_id=data.get("authServerId"),
@@ -545,6 +545,17 @@ def _name_part(data: JsonDict, part: str) -> str | None:
 def _string_list(value: object) -> list[str] | None:
     if isinstance(value, list):
         return [str(item) for item in value]
+    return None
+
+
+def _authentication_provider(value: object) -> AuthenticationProviderName | None:
+    if isinstance(value, AuthenticationProviderName):
+        return value
+    if isinstance(value, str):
+        try:
+            return AuthenticationProviderName(value)
+        except ValueError:
+            return None
     return None
 
 

@@ -6,6 +6,7 @@ from typing import BinaryIO
 from plextrac_api.functions.common import rest_request
 from plextrac_api.types.assets import (
     AffectedAssetImportSource,
+    AffectedAssetStatusMap,
     AffectedAssetStatusUpdate,
 )
 from plextrac_api.types.auth import AuthSession
@@ -71,7 +72,7 @@ def bulk_get_affected_asset_statuses(
     report_id: int | str,
     finding_id: int | str,
     asset_ids: list[int | str],
-) -> dict[str, AffectedAssetStatusUpdate]:
+) -> AffectedAssetStatusMap:
     """Get the latest status tracker update for multiple affected assets."""
     data = rest_request(
         session,
@@ -79,7 +80,7 @@ def bulk_get_affected_asset_statuses(
         f"/api/v2/client/{client_id}/report/{report_id}/flaw/{finding_id}/assets/status",
         json={"assetIds": asset_ids},
     )
-    return _status_update_map(data)
+    return AffectedAssetStatusMap.from_api(data)
 
 
 def list_affected_asset_status_updates(
@@ -135,21 +136,3 @@ def bulk_create_affected_asset_status_updates(
         json=[update.to_api(include_asset_id=True) for update in updates],
     )
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
-
-
-def _status_update_map(data: object) -> dict[str, AffectedAssetStatusUpdate]:
-    if isinstance(data, dict):
-        updates: dict[str, AffectedAssetStatusUpdate] = {}
-        for asset_id, value in data.items():
-            if isinstance(value, dict):
-                update = AffectedAssetStatusUpdate.from_api(value)
-                update.asset_id = update.asset_id or asset_id
-                updates[str(asset_id)] = update
-        return updates
-    if isinstance(data, list):
-        return {
-            str(update.asset_id): update
-            for update in (AffectedAssetStatusUpdate.from_api(item) for item in data if isinstance(item, dict))
-            if update.asset_id is not None
-        }
-    return {}

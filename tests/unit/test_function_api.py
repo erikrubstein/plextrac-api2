@@ -31,6 +31,7 @@ from plextrac_api.functions.common import PlexTracAuthError, PlexTracNotFoundErr
 from plextrac_api.types import (
     AffectedAsset,
     AffectedAssetStatus,
+    AffectedAssetStatusMap,
     AffectedAssetStatusUpdate,
     AnalyticsFilter,
     AnalyticsTags,
@@ -43,6 +44,7 @@ from plextrac_api.types import (
     AssetInput,
     AssetType,
     AuditLogEventType,
+    AuthenticationProviderName,
     ClientAssetPageLimit,
     ClientAssetSort,
     ClientAssetSortField,
@@ -65,8 +67,10 @@ from plextrac_api.types import (
     QuestionInput,
     ReportInput,
     ReportStatus,
+    RunbookAssetInput,
     RunbookListArgs,
     RunbookRecordInput,
+    RunbookUserInput,
     SLABenchmark,
     SLABenchmarkNotificationSettings,
     SortOrder,
@@ -303,6 +307,83 @@ def test_explicit_list_runbook_repositories_parses_graphql_items(monkeypatch):
     assert seen["json"]["variables"] == {"args": {"limit": 10, "offset": 5, "search": "default"}}
 
 
+def test_explicit_runbook_update_asset_uses_single_asset_payload(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={
+                "data": {
+                    "runbookEngagementProcedureAssetUpdateV2": {
+                        "id": "asset-1",
+                        "name": "host1",
+                        "hostname": "host1.example.com",
+                    }
+                }
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = runbooks.update_runbook_engagement_procedure_asset(
+        session,
+        asset_id="asset-1",
+        procedure_id="procedure-1",
+        asset=RunbookAssetInput(name="host1", hostname="host1.example.com"),
+        evidence_ids=["evidence-1"],
+    )
+
+    assert result.asset_id == "asset-1"
+    assert seen["json"]["operationName"] == "RunbookEngagementProcedureAssetUpdateV2"
+    assert seen["json"]["variables"] == {
+        "id": "asset-1",
+        "procedureId": "procedure-1",
+        "clientAsset": {"name": "host1", "hostname": "host1.example.com"},
+        "evidences": [{"id": "evidence-1"}],
+    }
+    assert "input" not in seen["json"]["variables"]
+
+
+def test_explicit_runbook_update_repository_user_serializes_user_input(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={
+                "data": {
+                    "runbookRepositoryUserUpdateV2": {
+                        "id": "user-1",
+                        "userId": "user-1",
+                        "role": "operator",
+                    }
+                }
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = runbooks.update_runbook_repository_user(
+        session,
+        repository_id="repo-1",
+        user_id="user-1",
+        user=RunbookUserInput(user_id="user-1", role="operator"),
+    )
+
+    assert result.user_id == "user-1"
+    assert seen["json"]["operationName"] == "RunbookRepositoryUserUpdateV2"
+    assert seen["json"]["variables"] == {
+        "repositoryId": "repo-1",
+        "userId": "user-1",
+        "data": {"userId": "user-1", "role": "operator"},
+    }
+
+
 def test_explicit_runbook_attachment_upload_uses_rest_endpoint(monkeypatch, tmp_path):
     seen = {}
     upload_path = tmp_path / "evidence.txt"
@@ -537,7 +618,10 @@ def test_explicit_affected_asset_bulk_statuses_return_typed_map(monkeypatch):
         asset_ids=["asset-1"],
     )
 
+    assert isinstance(statuses, AffectedAssetStatusMap)
     assert statuses["asset-1"].status is AffectedAssetStatus.CLOSED
+    assert statuses.get("asset-1") is statuses["asset-1"]
+    assert len(statuses) == 1
     assert statuses["asset-1"].comment == "fixed"
     assert seen["method"] == "POST"
     assert seen["path"] == "/api/v2/client/client-1/report/report-1/flaw/finding-1/assets/status"
@@ -993,7 +1077,7 @@ def test_explicit_admin_updates_provider_configuration(monkeypatch):
         session,
         tenant_id=1,
         enabled=True,
-        provider="okta",
+        provider=AuthenticationProviderName.OKTA,
         uri="https://dev.okta.com",
         provider_client_id="client-id",
         provider_client_secret="secret",

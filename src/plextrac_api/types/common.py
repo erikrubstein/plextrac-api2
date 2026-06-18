@@ -12,6 +12,14 @@ class SortOrder(str, Enum):
     DESCENDING = "DESC"
 
 
+class AuthenticationProviderName(str, Enum):
+    PLEXTRAC = "plextrac"
+    OKTA = "okta"
+    GOOGLE = "google"
+    AZURE = "azure"
+    OPENID_CONNECT = "openid_connect"
+
+
 def clean(data: JsonDict) -> JsonDict:
     return {key: value for key, value in data.items() if value is not None}
 

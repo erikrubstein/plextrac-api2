@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
-from plextrac_api.types.common import JsonDict, clean
+from plextrac_api.types.common import AuthenticationProviderName, JsonDict, clean
 from plextrac_api.types.findings import Finding, FindingFilter, FindingPagination, FindingSort
 
 
@@ -76,13 +76,15 @@ class TenantUserInput:
 class CurrentUserUpdate:
     first_name: str | None = None
     last_name: str | None = None
-    authentication_provider: str | None = None
+    authentication_provider: AuthenticationProviderName | None = None
 
     def to_api(self) -> JsonDict:
         return clean(
             {
                 "name": clean({"first": self.first_name, "last": self.last_name}),
-                "authenticationProvider": self.authentication_provider,
+                "authenticationProvider": self.authentication_provider.value
+                if self.authentication_provider is not None
+                else None,
             }
         )
 

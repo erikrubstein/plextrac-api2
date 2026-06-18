@@ -2,6 +2,7 @@ from plextrac_api.generated.endpoints import GROUPS
 from plextrac_api.types import (
     AffectedAsset,
     AffectedAssetStatus,
+    AffectedAssetStatusMap,
     AffectedAssetStatusUpdate,
     AnalyticsFilter,
     AnalyticsResult,
@@ -21,6 +22,9 @@ from plextrac_api.types import (
     AssetType,
     AuditLogEntry,
     AuditLogEventType,
+    AuthenticationProvider,
+    AuthenticationProviderConfiguration,
+    AuthenticationProviderName,
     Client,
     ClientAssetFilter,
     ClientAssetFilterField,
@@ -37,6 +41,7 @@ from plextrac_api.types import (
     ClientSortField,
     ContentLibraryUser,
     ContentLibraryUserInput,
+    CurrentUserUpdate,
     DefaultUserRole,
     EmailTemplate,
     EmailTemplateKind,
@@ -84,6 +89,7 @@ from plextrac_api.types import (
     RunbookProcedureLogInput,
     RunbookRecordInput,
     RunbookRepository,
+    RunbookTag,
     RunbookTeam,
     RunbookUploadResult,
     SLABenchmark,
@@ -170,6 +176,22 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "get_assessment_reviewers" not in method_names
     assert "copy_assessment_questionnaire" in method_names
     assert "copy_asessment_questionnaire" not in method_names
+    assert "update_question_order" in method_names
+    assert "change_question_order" not in method_names
+    assert "retrieve_analytics_trends_opened_closed" in method_names
+    assert "analytics_trends_opened_closed" not in method_names
+    assert "retrieve_analytics_trends_from_creation_to_close" in method_names
+    assert "analytics_trends_from_creation_to_close" not in method_names
+    assert "retrieve_analytics_trends_age_of_open_findings" in method_names
+    assert "analytics_trends_age_of_open_findings" not in method_names
+    assert "retrieve_analytics_trends_slas" in method_names
+    assert "analytics_trends_slas" not in method_names
+    assert "retrieve_analytics_trends_sla_findings" in method_names
+    assert "analytics_trends_sla_findings" not in method_names
+    assert "upsert_integration" in method_names
+    assert "save_integration" not in method_names
+    assert "get_tenant_tag_by_name" in method_names
+    assert "find_tenant_tag" not in method_names
     assert "list_runbook_engagements" in method_names
     assert "runbook_engagement_list" not in method_names
     assert "get_runbook_engagement" in method_names
@@ -619,6 +641,7 @@ def test_runbook_types_parse_and_serialize_graphql_shapes():
     )
 
     assert repository.record_id == "repo-1"
+    assert isinstance(repository.tags[0], RunbookTag)
     assert repository.tags[0].tag == "attack"
     assert log.engagement_procedure_id == "procedure-1"
     assert RunbookMutationResult.from_api({"id": "repo-1"}).ok
@@ -697,9 +720,33 @@ def test_user_type_serializes_documented_fields():
         "pagination": {"offset": 0, "limit": 10},
         "sort": [{"by": "severity", "order": "DESC"}],
     }
+    assert CurrentUserUpdate(
+        first_name="Ada",
+        authentication_provider=AuthenticationProviderName.PLEXTRAC,
+    ).to_api() == {
+        "name": {"first": "Ada"},
+        "authenticationProvider": "plextrac",
+    }
 
 
 def test_admin_type_serializes_documented_sla_and_audit_fields():
+    providers = [
+        AuthenticationProvider.from_api(value)
+        for value in ["plextrac", "okta", "google", "azure", "openid_connect"]
+    ]
+    configuration = AuthenticationProviderConfiguration.from_api(
+        {"enabled": True, "provider": "okta"}
+    )
+
+    assert [provider.provider for provider in providers] == [
+        AuthenticationProviderName.PLEXTRAC,
+        AuthenticationProviderName.OKTA,
+        AuthenticationProviderName.GOOGLE,
+        AuthenticationProviderName.AZURE,
+        AuthenticationProviderName.OPENID_CONNECT,
+    ]
+    assert configuration.provider is AuthenticationProviderName.OKTA
+
     benchmark = SLABenchmark(
         name="Critical SLA",
         days_to_close=5,
@@ -918,3 +965,11 @@ def test_affected_asset_status_update_serializes_documented_fields():
         "assignedTo": "analyst@example.com",
         "comment": "triage started",
     }
+
+    status_map = AffectedAssetStatusMap.from_api(
+        {"asset-1": {"status": "In Process", "comment": "triage started"}}
+    )
+
+    assert status_map["asset-1"].status is AffectedAssetStatus.IN_PROCESS
+    assert status_map.get("asset-1") is status_map["asset-1"]
+    assert list(status_map.keys()) == ["asset-1"]

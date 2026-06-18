@@ -125,7 +125,6 @@ def update_runbook_engagement_procedure_asset(
     procedure_id: int | str,
     asset: RunbookAssetInput | None = None,
     evidence_ids: list[int | str] | None = None,
-    input: RunbookAssetInput | None = None,
 ) -> RunbookAsset:
     """Execute the runbook engagement procedure asset update operation."""
     variables = {
@@ -133,7 +132,6 @@ def update_runbook_engagement_procedure_asset(
         "procedureId": procedure_id,
         "clientAsset": asset.to_api() if asset is not None else None,
         "evidences": [_id_input(item) for item in evidence_ids] if evidence_ids is not None else None,
-        "input": input.to_api() if input is not None else None,
     }
     data = _graphql_data(session, "update_runbook_engagement_procedure_asset", variables)
     return RunbookAsset.from_api(_record_object(data))
@@ -505,7 +503,7 @@ def update_runbook_repository_user(
     variables = {
         "repositoryId": repository_id,
         "userId": user_id,
-        "data": user,
+        "data": user.to_api(),
     }
     data = _graphql_data(session, "update_runbook_repository_user", variables)
     return RunbookUser.from_api(_record_object(data))

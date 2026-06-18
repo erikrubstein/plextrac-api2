@@ -31,13 +31,13 @@ def get_integration(
     return IntegrationSettings.from_api(product, data)
 
 
-def save_integration(
+def upsert_integration(
     session: AuthSession,
     tenant_id: int | str,
     product: str,
     settings: JsonDict,
 ) -> IntegrationSettings:
-    """Save one tenant integration configuration."""
+    """Create or update one tenant integration configuration."""
     data = rest_request(
         session,
         "POST",

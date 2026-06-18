@@ -22,7 +22,7 @@ from plextrac_api.types.admin import (
     UserPermissions,
 )
 from plextrac_api.types.auth import AuthSession
-from plextrac_api.types.common import JsonDict, OperationResult, clean
+from plextrac_api.types.common import AuthenticationProviderName, JsonDict, OperationResult, clean
 
 
 def list_authentication_providers(
@@ -47,7 +47,7 @@ def update_tenant_authentication_provider_configuration(
     tenant_id: int | str,
     *,
     enabled: bool,
-    provider: str,
+    provider: AuthenticationProviderName,
     uri: str,
     provider_client_id: str,
     provider_client_secret: str,
@@ -60,7 +60,7 @@ def update_tenant_authentication_provider_configuration(
         f"/api/v2/tenants/{tenant_id}/providers/plextrac",
         json=clean({
             "enabled": enabled,
-            "provider": provider,
+            "provider": provider.value,
             "uri": uri,
             "providerClientId": provider_client_id,
             "providerClientSecret": provider_client_secret,
@@ -75,7 +75,7 @@ def update_tenant_user_authentication_method(
     tenant_id: int | str,
     user_id: int | str,
     *,
-    authentication_provider: str,
+    authentication_provider: AuthenticationProviderName,
     mfa_enabled: bool,
     mfa_qrcode: str = "",
     mfa_secret: str = "",
@@ -87,7 +87,7 @@ def update_tenant_user_authentication_method(
         "PUT",
         f"/api/v2/authenticate/tenants/{tenant_id}/users/{user_id}/configuration",
         json={
-            "authentication_provider": authentication_provider,
+            "authentication_provider": authentication_provider.value,
             "mfa": {
                 "enabled": mfa_enabled,
                 "qrcode": mfa_qrcode,
@@ -344,13 +344,13 @@ def search_tenant_tags(
     return TenantTagPage.from_api(_object(data, "tenant tag search"))
 
 
-def find_tenant_tag(
+def get_tenant_tag_by_name(
     session: AuthSession,
     tenant_id: int | str,
     *,
     name: str,
 ) -> TenantTag:
-    """Find a tenant tag by exact name."""
+    """Get a tenant tag by exact name."""
     data = rest_request(
         session,
         "POST",

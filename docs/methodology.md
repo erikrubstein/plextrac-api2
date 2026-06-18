@@ -71,7 +71,8 @@ Function names should be Pythonic and consistent, even when the source documenta
 Rules:
 
 - Prefer action-oriented verbs: `list_`, `get_`, `create_`, `update_`, `delete_`, `import_`,
-  `export_`.
+  `export_`, `count_`, `request_`, `upsert_`, and other clear workflow verbs when they describe
+  the operation more precisely than the core CRUD verbs.
 - Preserve PlexTrac terminology when it is clear.
 - Fix names when the documented name is misleading, inconsistent, misspelled, or too awkward for
   normal use.

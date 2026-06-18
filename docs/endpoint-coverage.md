@@ -79,7 +79,7 @@ Display name: Admin
 | `create_tenant_tag` | POST | `/api/v1/tenant/{tenantId}/tag` |  |
 | `delete_tenant_tag` | DELETE | `/api/v1/tenant/{tenantId}/tag/{tagId}` |  |
 | `search_tenant_tags` | GET | `/api/v1/tenant/{tenantId}/tag/search` |  |
-| `find_tenant_tag` | POST | `/api/v1/tenant/{tenantId}/tag/find` |  |
+| `get_tenant_tag_by_name` | POST | `/api/v1/tenant/{tenantId}/tag/find` |  |
 | `list_sla_benchmarks` | GET | `/api/v2/sla/benchmarks` |  |
 | `create_sla_benchmark` | POST | `/api/v2/sla/benchmarks` |  |
 | `get_sla_benchmark` | GET | `/api/v2/sla/benchmarks/{slaBenchmarkId}` |  |
@@ -112,11 +112,11 @@ Display name: Analytics
 | `get_finding_analytics_bootstrap` | POST | `/api/v2/findingAnalytics/bootstrap` |  |
 | `retrieve_analytics_assets` | POST | `/api/v2/clients/analytics/assets/overview` |  |
 | `retrieve_analytics_assets_with_filter` | POST | `/api/v2/clients/analytics/assets` |  |
-| `analytics_trends_opened_closed` | POST | `/api/v2/clients/analytics/trends/opened-closed` |  |
-| `analytics_trends_from_creation_to_close` | POST | `/api/v2/clients/analytics/trends/from-creation-to-close` |  |
-| `analytics_trends_age_of_open_findings` | POST | `/api/v2/clients/analytics/trends/age-of-open-findings` |  |
-| `analytics_trends_slas` | POST | `/api/v2/sla/analytics/mean-time` |  |
-| `analytics_trends_sla_findings` | POST | `/api/v2/sla/analytics/findings` |  |
+| `retrieve_analytics_trends_opened_closed` | POST | `/api/v2/clients/analytics/trends/opened-closed` |  |
+| `retrieve_analytics_trends_from_creation_to_close` | POST | `/api/v2/clients/analytics/trends/from-creation-to-close` |  |
+| `retrieve_analytics_trends_age_of_open_findings` | POST | `/api/v2/clients/analytics/trends/age-of-open-findings` |  |
+| `retrieve_analytics_trends_slas` | POST | `/api/v2/sla/analytics/mean-time` |  |
+| `retrieve_analytics_trends_sla_findings` | POST | `/api/v2/sla/analytics/findings` |  |
 
 ### `assessments`
 
@@ -128,7 +128,7 @@ Display name: Assessments
 | `get_question` | GET | `/api/v2/assessments/questionnaires/{questionnaireId}/questions/{questionId}` |  |
 | `create_question` | POST | `/api/v2/assessments/questionnaires/{questionnaireId}/questions` |  |
 | `update_question` | PUT | `/api/v2/assessments/questionnaires/{questionnaireId}/questions/{questionId}` |  |
-| `change_question_order` | PUT | `/api/v2/assessments/questionnaires/{questionnaireId}/questions/{questionId}/order` |  |
+| `update_question_order` | PUT | `/api/v2/assessments/questionnaires/{questionnaireId}/questions/{questionId}/order` |  |
 | `delete_question` | DELETE | `/api/v2/assessments/questionnaires/{questionnaireId}/questions/{questionId}` |  |
 | `list_answer_types` | POST | `/api/v2/tenant/{tenantId}/client/{clientId}/answertypes` |  |
 | `get_answer_type` | GET | `/api/v2/tenant/{tenantId}/client/{clientId}/answertypes/{answerTypeId}` |  |
@@ -292,7 +292,7 @@ Display name: Integrations
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
 | `get_integration` | GET | `/api/v2/tenant/{tenantId}/integrations/{product}` | `get` |
-| `save_integration` | POST | `/api/v2/tenant/{tenantId}/integrations/{product}` |  |
+| `upsert_integration` | POST | `/api/v2/tenant/{tenantId}/integrations/{product}` |  |
 | `delete_integration` | DELETE | `/api/v2/tenant/{tenantId}/integrations/{product}` | `delete` |
 | `list_tenable_io_tags` | GET | `/api/v2/integrations/tenable-io/tags` |  |
 | `sync_tenable_io_tags` | GET | `/api/v2/integrations/tenable-io/tags/sync` |  |

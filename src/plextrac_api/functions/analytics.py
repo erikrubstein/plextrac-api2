@@ -91,7 +91,7 @@ def retrieve_analytics_assets_with_filter(
     return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def analytics_trends_opened_closed(
+def retrieve_analytics_trends_opened_closed(
     session: AuthSession,
     filters: AnalyticsTrendFilter,
 ) -> AnalyticsResult:
@@ -105,7 +105,7 @@ def analytics_trends_opened_closed(
     return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def analytics_trends_from_creation_to_close(
+def retrieve_analytics_trends_from_creation_to_close(
     session: AuthSession,
     filters: AnalyticsTrendFilter,
 ) -> AnalyticsResult:
@@ -119,7 +119,7 @@ def analytics_trends_from_creation_to_close(
     return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def analytics_trends_age_of_open_findings(
+def retrieve_analytics_trends_age_of_open_findings(
     session: AuthSession,
     filters: AnalyticsTrendFilter,
 ) -> AnalyticsResult:
@@ -133,7 +133,7 @@ def analytics_trends_age_of_open_findings(
     return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def analytics_trends_slas(
+def retrieve_analytics_trends_slas(
     session: AuthSession,
     filters: SlaAnalyticsFilter,
 ) -> AnalyticsResult:
@@ -147,7 +147,7 @@ def analytics_trends_slas(
     return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def analytics_trends_sla_findings(
+def retrieve_analytics_trends_sla_findings(
     session: AuthSession,
     filters: SlaAnalyticsFilter,
 ) -> AnalyticsResult:
