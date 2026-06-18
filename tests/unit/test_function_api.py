@@ -6,6 +6,7 @@ import httpx
 import pytest
 
 from plextrac_api.functions import (
+    admin,
     affected_assets,
     analytics,
     assets,
@@ -32,8 +33,10 @@ from plextrac_api.types import (
     AnalyticsTags,
     ArtifactRelation,
     ArtifactRelationModel,
+    AssetCriticality,
     AssetInput,
     AssetType,
+    AuditLogEventType,
     ClientAssetPageLimit,
     ClientAssetSort,
     ClientAssetSortField,
@@ -51,6 +54,8 @@ from plextrac_api.types import (
     ParserActionSearchType,
     ReportInput,
     ReportStatus,
+    SLABenchmark,
+    SLABenchmarkNotificationSettings,
     SortOrder,
     SubstatusInput,
     SubstatusStatus,
@@ -726,6 +731,162 @@ def test_explicit_users_paginated_list_uses_search_name(monkeypatch):
         "order": "ASCEND",
         "filter": "ada",
     }
+
+
+def test_explicit_admin_updates_provider_configuration(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"status": "success"})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = admin.update_tenant_authentication_provider_configuration(
+        session,
+        tenant_id=1,
+        enabled=True,
+        provider="okta",
+        uri="https://dev.okta.com",
+        provider_client_id="client-id",
+        provider_client_secret="secret",
+        auth_server_id="default",
+    )
+
+    assert result.ok
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v2/tenants/1/providers/plextrac"
+    assert seen["json"] == {
+        "enabled": True,
+        "provider": "okta",
+        "uri": "https://dev.okta.com",
+        "providerClientId": "client-id",
+        "providerClientSecret": "secret",
+        "authServerId": "default",
+    }
+
+
+def test_explicit_admin_lists_security_roles_from_data_wrapper(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        return httpx.Response(
+            200,
+            json={
+                "status": "success",
+                "data": [
+                    {
+                        "id": "role-1",
+                        "key": "ADMIN",
+                        "title": "Administrator",
+                        "permissions": ["ADMINISTRATION.ADMINISTRATION_ACCESS"],
+                    }
+                ],
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    roles = admin.list_security_roles(session, tenant_id=1)
+
+    assert roles[0].role_id == "role-1"
+    assert roles[0].permissions == ["ADMINISTRATION.ADMINISTRATION_ACCESS"]
+    assert seen["method"] == "GET"
+    assert seen["path"] == "/api/v2/tenants/1/security/role"
+
+
+def test_explicit_admin_creates_sla_benchmark(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={
+                "status": "success",
+                "data": {
+                    "id": "sla-1",
+                    "name": "Critical SLA",
+                    "daysToClose": 5,
+                    "findingSeverity": ["Critical"],
+                    "enabled": True,
+                },
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    benchmark = admin.create_sla_benchmark(
+        session,
+        SLABenchmark(
+            name="Critical SLA",
+            days_to_close=5,
+            finding_severity=[FindingSeverity.CRITICAL],
+            asset_criticality=[AssetCriticality.CRITICAL],
+            enabled=True,
+            notification_settings=SLABenchmarkNotificationSettings(
+                hours_before_expiration_notify=12,
+                recipients=["ada@example.com"],
+            ),
+        ),
+    )
+
+    assert benchmark.benchmark_id == "sla-1"
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v2/sla/benchmarks"
+    assert seen["json"] == {
+        "name": "Critical SLA",
+        "daysToClose": 5,
+        "findingSeverity": ["Critical"],
+        "assetCriticality": ["Critical"],
+        "enabled": True,
+        "notificationSettings": {
+            "hoursBeforeExpirationNotify": 12,
+            "recipients": ["ada@example.com"],
+        },
+    }
+
+
+def test_explicit_admin_lists_audit_log_entries(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["params"] = kwargs["params"]
+        return httpx.Response(
+            200,
+            json={
+                "data": [
+                    {
+                        "cuid": "audit-1",
+                        "user_info": "Ada Test (ada@example.com)",
+                        "message": "Successful login",
+                        "event_type": "LoginSuccess",
+                        "timestamp": "2024-08-08T20:45:24.286Z",
+                    }
+                ]
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    entries = admin.list_audit_log_entries(session, limit=5, offset=10)
+
+    assert entries[0].event_type is AuditLogEventType.LOGIN_SUCCESS
+    assert seen["method"] == "GET"
+    assert seen["path"] == "/api/v2/auditlog"
+    assert seen["params"] == {"limit": 5, "offset": 10}
 
 
 def test_explicit_finding_list_uses_latest_paginated_endpoint(monkeypatch):

@@ -17,7 +17,6 @@ OUT_DIR = PACKAGE_DIR / "generated"
 FUNCTIONS_DIR = PACKAGE_DIR / "functions"
 DOCS_DIR = ROOT / "docs"
 GENERATED_FUNCTION_GROUPS = {
-    "admin",
     "assessments",
     "content_library",
     "graph_ql_mutations",
@@ -26,6 +25,7 @@ GENERATED_FUNCTION_GROUPS = {
 }
 HAND_WRITTEN_FUNCTION_GROUPS = {
     "affected_assets",
+    "admin",
     "analytics",
     "assets",
     "clients",
@@ -43,6 +43,21 @@ HAND_WRITTEN_FUNCTION_GROUPS = {
 }
 VERSION_SUFFIX_RE = re.compile(r"^(?P<base>.+)_v(?P<version>\d+)$")
 METHOD_NAME_OVERRIDES = {
+    ("Admin", "add_role_user"): "add_security_role_user",
+    ("Admin", "get_audit_log"): "list_audit_log_entries",
+    ("Admin", "get_available_authentication_providers"): "list_authentication_providers",
+    ("Admin", "get_available_security_roles"): "list_available_security_roles",
+    ("Admin", "get_role_name_availability"): "check_security_role_name_availability",
+    ("Admin", "get_role_users"): "list_security_role_users",
+    ("Admin", "get_saml_provider"): "get_saml_configuration",
+    ("Admin", "get_security_roles"): "list_security_roles",
+    ("Admin", "get_sla_benchmarks"): "list_sla_benchmarks",
+    (
+        "Admin",
+        "get_tenant_provider_authentication_configuration",
+    ): "get_tenant_authentication_provider_configuration",
+    ("Admin", "remove_role_user"): "remove_security_role_user",
+    ("Admin", "update_security_role_permission"): "update_security_role_permissions",
     ("Analytics", "retreive_analytics_findings_aging"): "retrieve_analytics_findings_aging",
     (
         "Affected Assets",

@@ -5,8 +5,8 @@ useful for SDK development and gap tracking, but it is not intended to be the pr
 
 Most groups are still generated wrappers. The `clients`, `reports`, `findings`, `assets`,
 `affected_assets`, `files`, `mailer`, `substatus`, `analytics`, `tenant`, `templates`,
-`integrations`, `parser_actions`, `scheduler`, and `users` groups are hand-polished and show the
-intended long-term SDK shape.
+`integrations`, `parser_actions`, `scheduler`, `users`, and `admin` groups are hand-polished and
+show the intended long-term SDK shape.
 
 The inventory is based on the public PlexTrac Postman collection snapshot.
 
@@ -17,7 +17,7 @@ Total supported endpoint functions in snapshot: **357**
 | API group | Function module | Endpoint functions |
 |---|---|---:|
 | Authentication | `plextrac_api.functions.auth` | manual auth helpers |
-| Admin | `plextrac_api.functions.admin` | 29 |
+| Admin | `plextrac_api.functions.admin` | 29 explicit functions |
 | Affected Assets | `plextrac_api.functions.affected_assets` | 6 explicit functions |
 | Analytics | `plextrac_api.functions.analytics` | 11 explicit functions |
 | Assessments | `plextrac_api.functions.assessments` | 33 |
@@ -61,35 +61,35 @@ Display name: Admin
 
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
-| `get_available_authentication_providers` | GET | `/api/v2/authenticate/providers` |  |
-| `get_tenant_provider_authentication_configuration` | GET | `/api/v2/tenants/{tenantId}/providers/plextrac` |  |
+| `list_authentication_providers` | GET | `/api/v2/authenticate/providers` |  |
+| `get_tenant_authentication_provider_configuration` | GET | `/api/v2/tenants/{tenantId}/providers/plextrac` |  |
 | `update_tenant_authentication_provider_configuration` | POST | `/api/v2/tenants/{tenantId}/providers/plextrac` |  |
 | `update_tenant_user_authentication_method` | PUT | `/api/v2/authenticate/tenants/{tenantId}/users/{userId}/configuration` |  |
-| `get_saml_provider` | GET | `/api/v2/tenants/{tenantId}/saml/plextrac` |  |
+| `get_saml_configuration` | GET | `/api/v2/tenants/{tenantId}/saml/plextrac` |  |
 | `upsert_saml_configuration` | POST | `/api/v2/tenants/{tenantId}/saml/plextrac` |  |
 | `get_user_permissions` | GET | `/api/v2/tenants/{tenantId}/user/{userId}/permissions` |  |
-| `get_role_users` | GET | `/api/v2/tenants/{tenantId}/security/role/{roleKey}/users` |  |
-| `add_role_user` | PUT | `/api/v2/tenants/{tenantId}/security/role/{roleId}/users` |  |
-| `remove_role_user` | DELETE | `/api/v2/tenants/{tenantId}/security/role/{roleId}/users/{userId}` |  |
-| `get_available_security_roles` | GET | `/api/v2/tenants/{tenantId}/security/role/available` |  |
-| `get_security_roles` | GET | `/api/v2/tenants/{tenantId}/security/role` |  |
+| `list_security_role_users` | GET | `/api/v2/tenants/{tenantId}/security/role/{roleKey}/users` |  |
+| `add_security_role_user` | PUT | `/api/v2/tenants/{tenantId}/security/role/{roleId}/users` |  |
+| `remove_security_role_user` | DELETE | `/api/v2/tenants/{tenantId}/security/role/{roleId}/users/{userId}` |  |
+| `list_available_security_roles` | GET | `/api/v2/tenants/{tenantId}/security/role/available` |  |
+| `list_security_roles` | GET | `/api/v2/tenants/{tenantId}/security/role` |  |
 | `get_security_role` | GET | `/api/v2/tenants/{tenantId}/security/role/{roleId}` |  |
-| `get_role_name_availability` | POST | `/api/v2/tenants/{tenantId}/security/role/availability` |  |
+| `check_security_role_name_availability` | POST | `/api/v2/tenants/{tenantId}/security/role/availability` |  |
 | `create_security_role` | POST | `/api/v2/tenants/{tenantId}/security/role` |  |
 | `update_security_role_info` | PUT | `/api/v2/tenants/{tenantId}/security/role/{roleId}/info` |  |
-| `update_security_role_permission` | PUT | `/api/v2/tenants/{tenantId}/security/role/{roleId}/permissions` |  |
+| `update_security_role_permissions` | PUT | `/api/v2/tenants/{tenantId}/security/role/{roleId}/permissions` |  |
 | `delete_security_role` | DELETE | `/api/v2/tenants/{tenantId}/security/role/{roleId}` |  |
 | `list_tenant_tags` | GET | `/api/v1/tenant/{tenantId}/tag` |  |
 | `create_tenant_tag` | POST | `/api/v1/tenant/{tenantId}/tag` |  |
 | `delete_tenant_tag` | DELETE | `/api/v1/tenant/{tenantId}/tag/{tagId}` |  |
 | `search_tenant_tags` | GET | `/api/v1/tenant/{tenantId}/tag/search` |  |
 | `find_tenant_tag` | POST | `/api/v1/tenant/{tenantId}/tag/find` |  |
-| `get_sla_benchmarks` | GET | `/api/v2/sla/benchmarks` |  |
+| `list_sla_benchmarks` | GET | `/api/v2/sla/benchmarks` |  |
 | `create_sla_benchmark` | POST | `/api/v2/sla/benchmarks` |  |
 | `get_sla_benchmark` | GET | `/api/v2/sla/benchmarks/{slaBenchmarkId}` |  |
 | `update_sla_benchmark` | PUT | `/api/v2/sla/benchmarks/{slaBenchmarkId}` |  |
 | `delete_sla_benchmark` | DELETE | `/api/v2/sla/benchmarks/{slaBenchmarkId}` |  |
-| `get_audit_log` | GET | `/api/v2/auditlog` |  |
+| `list_audit_log_entries` | GET | `/api/v2/auditlog` |  |
 
 ### `affected_assets`
 

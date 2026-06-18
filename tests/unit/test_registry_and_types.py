@@ -15,6 +15,8 @@ from plextrac_api.types import (
     AssetCriticality,
     AssetInput,
     AssetType,
+    AuditLogEntry,
+    AuditLogEventType,
     Client,
     ClientAssetFilter,
     ClientAssetFilterField,
@@ -64,6 +66,8 @@ from plextrac_api.types import (
     ReportSort,
     ReportSortField,
     ReportStatus,
+    SLABenchmark,
+    SLABenchmarkNotificationSettings,
     Sort,
     SortOrder,
     Substatus,
@@ -102,6 +106,30 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "get_authenticated_user" in method_names
     assert "get_authenticated_user_v1" not in method_names
     assert "get_authenticated_user_v2" not in method_names
+    assert "list_authentication_providers" in method_names
+    assert "get_available_authentication_providers" not in method_names
+    assert "get_tenant_authentication_provider_configuration" in method_names
+    assert "get_tenant_provider_authentication_configuration" not in method_names
+    assert "get_saml_configuration" in method_names
+    assert "get_saml_provider" not in method_names
+    assert "list_security_role_users" in method_names
+    assert "get_role_users" not in method_names
+    assert "add_security_role_user" in method_names
+    assert "add_role_user" not in method_names
+    assert "remove_security_role_user" in method_names
+    assert "remove_role_user" not in method_names
+    assert "list_available_security_roles" in method_names
+    assert "get_available_security_roles" not in method_names
+    assert "list_security_roles" in method_names
+    assert "get_security_roles" not in method_names
+    assert "check_security_role_name_availability" in method_names
+    assert "get_role_name_availability" not in method_names
+    assert "update_security_role_permissions" in method_names
+    assert "update_security_role_permission" not in method_names
+    assert "list_sla_benchmarks" in method_names
+    assert "get_sla_benchmarks" not in method_names
+    assert "list_audit_log_entries" in method_names
+    assert "get_audit_log" not in method_names
     assert "runbook_engagement_list" in method_names
     assert "list_available_tenant_users" in method_names
     assert "available_tenant_users" not in method_names
@@ -499,6 +527,50 @@ def test_user_type_serializes_documented_fields():
         "pagination": {"offset": 0, "limit": 10},
         "sort": [{"by": "severity", "order": "DESC"}],
     }
+
+
+def test_admin_type_serializes_documented_sla_and_audit_fields():
+    benchmark = SLABenchmark(
+        name="Critical SLA",
+        days_to_close=5,
+        finding_severity=[FindingSeverity.CRITICAL],
+        finding_tags=["nessus_findings"],
+        asset_criticality=[AssetCriticality.CRITICAL],
+        asset_tags=["internet-facing"],
+        enabled=True,
+        notification_settings=SLABenchmarkNotificationSettings(
+            hours_before_expiration_notify=12,
+            recipients=["ada@example.com"],
+            send_daily_notification_to_assigned_user=True,
+        ),
+    )
+
+    assert benchmark.to_api() == {
+        "name": "Critical SLA",
+        "daysToClose": 5,
+        "findingSeverity": ["Critical"],
+        "findingTags": ["nessus_findings"],
+        "assetCriticality": ["Critical"],
+        "assetTags": ["internet-facing"],
+        "enabled": True,
+        "notificationSettings": {
+            "hoursBeforeExpirationNotify": 12,
+            "recipients": ["ada@example.com"],
+            "sendDailyNotificationToAssignedUser": True,
+        },
+    }
+
+    entry = AuditLogEntry.from_api(
+        {
+            "cuid": "audit-1",
+            "user_info": "Ada Test (ada@example.com)",
+            "message": "Successful login",
+            "event_type": "LoginSuccess",
+            "timestamp": "2024-08-08T20:45:24.286Z",
+        }
+    )
+
+    assert entry.event_type is AuditLogEventType.LOGIN_SUCCESS
 
 
 def test_report_request_shape_types_serialize_with_verified_fields():
