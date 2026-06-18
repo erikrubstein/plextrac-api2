@@ -1,25 +1,25 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 from plextrac_api.types.common import JsonDict, clean
 from plextrac_api.types.findings import FindingSeverity
 
 
-class ParserActionType(str, Enum):
+class ParserActionType(StrEnum):
     DEFAULT = "DEFAULT"
     LINK = "LINK"
     IGNORE = "IGNORE"
 
 
-class ParserActionSearchType(str, Enum):
+class ParserActionSearchType(StrEnum):
     DEFAULT = "DEFAULT"
     LINK = "LINK"
     IGNORE = "IGNORE"
 
 
-class ParserPluginSource(str, Enum):
+class ParserPluginSource(StrEnum):
     ACUNETIX = "acunetix"
     BURP = "burp"
     BURP_HTML = "burphtml"

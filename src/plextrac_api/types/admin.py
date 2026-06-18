@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 from plextrac_api.types.assets import AssetCriticality
 from plextrac_api.types.common import AuthenticationProviderName, JsonDict, clean
 from plextrac_api.types.findings import FindingSeverity
 
 
-class TenantTagScope(str, Enum):
+class TenantTagScope(StrEnum):
     TENANT = "tenant"
 
 
-class AuditLogEventType(str, Enum):
+class AuditLogEventType(StrEnum):
     LOGIN_SUCCESS = "LoginSuccess"
     LOGIN_FAIL = "LoginFail"
     LOGIN_LOCKOUT = "LoginLockout"

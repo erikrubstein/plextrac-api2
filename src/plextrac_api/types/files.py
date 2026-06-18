@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 from plextrac_api.types.common import JsonDict, clean
 
 
-class ArtifactRelationModel(str, Enum):
+class ArtifactRelationModel(StrEnum):
     CLIENT = "client"
     REPORT = "report"
     ASSESSMENT_QUESTION = "assessment_question"

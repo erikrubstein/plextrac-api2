@@ -16,7 +16,9 @@ COLLECTION_PATH = Path("/tmp/plextrac_postman.json")
 PACKAGE_DIR = ROOT / "src" / "plextrac_api"
 OUT_DIR = PACKAGE_DIR / "generated"
 FUNCTIONS_DIR = PACKAGE_DIR / "functions"
-DOCS_DIR = ROOT / "docs"
+AGENTS_PATH = ROOT / "AGENTS.md"
+ENDPOINT_COVERAGE_BEGIN = "<!-- BEGIN GENERATED ENDPOINT COVERAGE -->"
+ENDPOINT_COVERAGE_END = "<!-- END GENERATED ENDPOINT COVERAGE -->"
 GENERATED_FUNCTION_GROUPS: set[str] = set()
 TRANSPORT_ONLY_GROUPS = {
     "graph_ql_mutations",
@@ -376,8 +378,7 @@ def main() -> None:
         if attr_name in GENERATED_FUNCTION_GROUPS:
             (FUNCTIONS_DIR / f"{attr_name}.py").write_text(render_functions(attr_name, group_data))
 
-    DOCS_DIR.mkdir(parents=True, exist_ok=True)
-    (DOCS_DIR / "endpoint-coverage.md").write_text(render_coverage(coverage_rows, groups))
+    update_agents_endpoint_coverage(render_coverage(coverage_rows, groups))
 
 
 def walk(node: dict, path: list[str]):
@@ -668,9 +669,9 @@ def render_functions(attr_name: str, group_data: dict) -> str:
 def render_coverage(rows: list[tuple[str, str, int]], groups: dict) -> str:
     total = sum(count for _, _, count in rows)
     lines = [
-        "# Endpoint Coverage Snapshot",
+        "## Endpoint Coverage Snapshot",
         "",
-        "This file is an inventory of the currently known PlexTrac API groups and endpoint "
+        "This generated section inventories the currently known PlexTrac API groups and endpoint "
         "wrappers. It is useful for SDK development and gap tracking, but it is not intended to "
         "be the primary user guide.",
         "",
@@ -713,6 +714,36 @@ def render_coverage(rows: list[tuple[str, str, int]], groups: dict) -> str:
             )
         lines.append("")
     return "\n".join(lines)
+
+
+def update_agents_endpoint_coverage(coverage: str) -> None:
+    if not AGENTS_PATH.exists():
+        AGENTS_PATH.write_text(
+            "\n".join(
+                [
+                    "# AGENTS.md",
+                    "",
+                    ENDPOINT_COVERAGE_BEGIN,
+                    coverage,
+                    ENDPOINT_COVERAGE_END,
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        return
+
+    text = AGENTS_PATH.read_text(encoding="utf-8")
+    start = text.index(ENDPOINT_COVERAGE_BEGIN)
+    end = text.index(ENDPOINT_COVERAGE_END, start) + len(ENDPOINT_COVERAGE_END)
+    replacement = "\n".join(
+        [
+            ENDPOINT_COVERAGE_BEGIN,
+            coverage,
+            ENDPOINT_COVERAGE_END,
+        ]
+    )
+    AGENTS_PATH.write_text(f"{text[:start]}{replacement}{text[end:]}", encoding="utf-8")
 
 
 def coverage_module_label(attr_name: str) -> str:

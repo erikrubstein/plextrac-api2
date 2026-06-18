@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, StrEnum
 
 from plextrac_api.types.common import CustomField, JsonDict, SortOrder, UserRole, clean
 from plextrac_api.types.findings import Finding, FindingSeverity, FindingStatus, FindingVisibility
@@ -14,18 +14,18 @@ class ClientPageLimit(IntEnum):
     ONE_HUNDRED = 100
 
 
-class ClientSortField(str, Enum):
+class ClientSortField(StrEnum):
     NAME = "name"
     ASSET = "asset"
 
 
-class ClientFilterField(str, Enum):
+class ClientFilterField(StrEnum):
     NAME = "name"
     ASSET = "asset"
     TAGS = "tags"
 
 
-class ClientFindingSortField(str, Enum):
+class ClientFindingSortField(StrEnum):
     ASSIGNED_TO = "assignedTo"
     DATE_FROM = "dateFrom"
     DATE_TO = "dateTo"
@@ -36,7 +36,7 @@ class ClientFindingSortField(str, Enum):
     VISIBILITY = "visibility"
 
 
-class ClientFindingFilterField(str, Enum):
+class ClientFindingFilterField(StrEnum):
     ASSIGNED_TO = "assignedTo"
     COMMON_IDENTIFIERS = "commonIdentifiers"
     DATE_FROM = "dateFrom"

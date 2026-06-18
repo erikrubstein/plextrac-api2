@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 from plextrac_api.types.common import JsonDict
 
 
-class WebhookEventType(str, Enum):
+class WebhookEventType(StrEnum):
     REPORT_FINDING_CREATED_OR_EDITED = "report_finding_created_or_edited"
     REPORT_CREATED_OR_EDITED = "report_created_or_edited"
     REPORT_PUBLISHED = "ReportPublished"
@@ -17,7 +17,7 @@ class WebhookEventType(str, Enum):
     UNKNOWN = "unknown"
 
 
-class WebhookSignatureAlgorithm(str, Enum):
+class WebhookSignatureAlgorithm(StrEnum):
     SHA256 = "sha256"
 
 

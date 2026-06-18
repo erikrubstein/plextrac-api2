@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 from plextrac_api.types.common import CustomField, JsonDict, SortOrder, clean
 
 
-class ReportStatus(str, Enum):
+class ReportStatus(StrEnum):
     DRAFT = "Draft"
     READY_FOR_REVIEW = "Ready For Review"
     IN_REVIEW = "In Review"
@@ -14,12 +14,12 @@ class ReportStatus(str, Enum):
     PUBLISHED = "Published"
 
 
-class ReportSortField(str, Enum):
+class ReportSortField(StrEnum):
     NAME = "name"
     STATUS = "status"
 
 
-class ReportFilterField(str, Enum):
+class ReportFilterField(StrEnum):
     NAME = "name"
     REVIEWERS = "reviewers"
     OPERATORS = "operators"

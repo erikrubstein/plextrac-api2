@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 from plextrac_api.types.common import JsonDict
 
 
-class EmailTemplateKind(str, Enum):
+class EmailTemplateKind(StrEnum):
     FORGOTTEN_PASSWORD = "FORGOTTEN_PASSWORD"
 
 

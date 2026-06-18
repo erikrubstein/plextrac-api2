@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, StrEnum
 
 from plextrac_api.types.assets import AffectedAsset
 from plextrac_api.types.common import JsonDict, SortOrder, clean
 
 
-class FindingSeverity(str, Enum):
+class FindingSeverity(StrEnum):
     INFORMATIONAL = "Informational"
     LOW = "Low"
     MEDIUM = "Medium"
@@ -15,18 +15,18 @@ class FindingSeverity(str, Enum):
     CRITICAL = "Critical"
 
 
-class FindingStatus(str, Enum):
+class FindingStatus(StrEnum):
     OPEN = "Open"
     IN_PROCESS = "In Process"
     CLOSED = "Closed"
 
 
-class FindingVisibility(str, Enum):
+class FindingVisibility(StrEnum):
     DRAFT = "draft"
     PUBLISHED = "published"
 
 
-class FindingImportSource(str, Enum):
+class FindingImportSource(StrEnum):
     BURP = "burp"
     BURP_HTML = "burphtml"
     HORIZON = "horizon"
@@ -36,7 +36,7 @@ class FindingImportSource(str, Enum):
     VERACODE = "veracode"
 
 
-class FindingSortField(str, Enum):
+class FindingSortField(StrEnum):
     ASSIGNED_TO = "assignedTo"
     CLIENT_ID = "clientId"
     CREATED_AT = "createdAt"
@@ -56,7 +56,7 @@ class FindingSortField(str, Enum):
     CWE_ID = "cwe_id"
 
 
-class FindingFilterField(str, Enum):
+class FindingFilterField(StrEnum):
     FINDING_TAGS = "findingTags"
     SEARCH_TERM = "searchTerm"
     CREATED_AT = "createdAt"

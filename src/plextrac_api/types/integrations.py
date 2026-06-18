@@ -1,23 +1,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 from plextrac_api.types.common import JsonDict, clean
 
 
-class JiraSyncFrequency(str, Enum):
+class JiraSyncFrequency(StrEnum):
     HALF_HOUR = "Half_Hour"
     HOURLY = "Hourly"
     DAILY = "Daily"
 
 
-class JiraProjectMappingType(str, Enum):
+class JiraProjectMappingType(StrEnum):
     DEFAULT = "Default"
     CUSTOM = "Custom"
 
 
-class IntegrationConfigurationType(str, Enum):
+class IntegrationConfigurationType(StrEnum):
     COBALT = "Colbalt"
     HACKER_ONE = "HackerOne"
     MSV = "MSV"

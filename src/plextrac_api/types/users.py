@@ -1,30 +1,30 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 from plextrac_api.types.common import AuthenticationProviderName, JsonDict, clean
 from plextrac_api.types.findings import Finding, FindingFilter, FindingPagination, FindingSort
 
 
-class DefaultUserRole(str, Enum):
+class DefaultUserRole(StrEnum):
     ADMIN = "ADMIN"
     STANDARD_USER = "STD_USER"
     ANALYST = "ANALYST"
 
 
-class UserSortField(str, Enum):
+class UserSortField(StrEnum):
     FIRST_NAME = "firstName"
     LAST_NAME = "lastName"
     EMAIL = "email"
 
 
-class UserSortOrder(str, Enum):
+class UserSortOrder(StrEnum):
     ASCENDING = "ASCEND"
     DESCENDING = "DESEND"
 
 
-class UserNotificationReadFilter(str, Enum):
+class UserNotificationReadFilter(StrEnum):
     UNREAD = "unread"
     READ = "read"
     ALL = "all"

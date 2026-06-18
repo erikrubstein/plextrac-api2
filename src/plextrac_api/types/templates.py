@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import cast
 
 from plextrac_api.types.common import CustomField, JsonDict, clean
 
 
-class ExportTemplateType(str, Enum):
+class ExportTemplateType(StrEnum):
     CUSTOM = "custom"
 
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import ItemsView, KeysView, ValuesView
 from dataclasses import dataclass
-from enum import Enum, IntEnum
+from enum import IntEnum, StrEnum
 
 from plextrac_api.types.common import (
     JsonDict,
@@ -31,7 +31,7 @@ class ClientAssetPageLimit(IntEnum):
     ONE_HUNDRED = 100
 
 
-class TenantAssetSortField(str, Enum):
+class TenantAssetSortField(StrEnum):
     SEARCH_TERM = "searchTerm"
     CLIENT_ID = "client_id"
     ASSET_CRITICALITY = "assetCriticality"
@@ -42,7 +42,7 @@ class TenantAssetSortField(str, Enum):
     DATA_OWNER = "data_owner"
 
 
-class TenantAssetFilterField(str, Enum):
+class TenantAssetFilterField(StrEnum):
     SEARCH_TERM = "searchTerm"
     CLIENT_ID = "client_id"
     ASSET_CRITICALITY = "assetCriticality"
@@ -53,24 +53,24 @@ class TenantAssetFilterField(str, Enum):
     DATA_OWNER = "data_owner"
 
 
-class ClientAssetSortField(str, Enum):
+class ClientAssetSortField(StrEnum):
     ASSET = "asset"
     TAGS = "tags"
 
 
-class ClientAssetFilterField(str, Enum):
+class ClientAssetFilterField(StrEnum):
     ASSET = "asset"
     TAGS = "tags"
 
 
-class AssetImportSource(str, Enum):
+class AssetImportSource(StrEnum):
     NMAP_XML = "nmap-xml"
     NMAP_CSV = "nmap-csv"
     LEGACY_NMAP = "nmap"
     LEGACY_CSV = "csv"
 
 
-class AssetType(str, Enum):
+class AssetType(StrEnum):
     SERVER = "Server"
     WORKSTATION = "Workstation"
     NETWORK_DEVICE = "Network Device"
@@ -78,7 +78,7 @@ class AssetType(str, Enum):
     GENERAL = "General"
 
 
-class AssetCriticality(str, Enum):
+class AssetCriticality(StrEnum):
     CRITICAL = "Critical"
     HIGH = "High"
     MEDIUM = "Medium"
@@ -86,12 +86,12 @@ class AssetCriticality(str, Enum):
     INFORMATION = "Information"
 
 
-class AffectedAssetImportSource(str, Enum):
+class AffectedAssetImportSource(StrEnum):
     CSV = "csv"
     XML = "xml"
 
 
-class AffectedAssetStatus(str, Enum):
+class AffectedAssetStatus(StrEnum):
     OPEN = "Open"
     IN_PROCESS = "In Process"
     CLOSED = "Closed"

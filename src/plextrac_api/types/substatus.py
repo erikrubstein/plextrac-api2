@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 from plextrac_api.types.common import JsonDict, clean
 
 
-class SubstatusStatus(str, Enum):
+class SubstatusStatus(StrEnum):
     OPEN = "Open"
     IN_PROCESS = "In Process"
     CLOSED = "Closed"

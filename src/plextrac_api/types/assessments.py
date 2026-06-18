@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import cast
 
 from plextrac_api.types.common import CustomField, JsonDict, clean
@@ -9,12 +9,12 @@ from plextrac_api.types.findings import FindingSeverity
 from plextrac_api.types.users import UserName
 
 
-class AssessmentSortOrder(str, Enum):
+class AssessmentSortOrder(StrEnum):
     ASCENDING = "ascend"
     DESCENDING = "descend"
 
 
-class TenantAssessmentSort(str, Enum):
+class TenantAssessmentSort(StrEnum):
     ALL_DESCENDING = "ALL_DESCEND"
 
 

@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 JsonDict = dict[str, Any]
 
 
-class SortOrder(str, Enum):
+class SortOrder(StrEnum):
     ASCENDING = "ASC"
     DESCENDING = "DESC"
 
 
-class AuthenticationProviderName(str, Enum):
+class AuthenticationProviderName(StrEnum):
     PLEXTRAC = "plextrac"
     OKTA = "okta"
     GOOGLE = "google"
