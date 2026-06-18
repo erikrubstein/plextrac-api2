@@ -20,6 +20,7 @@ from plextrac_api.functions import (
     substatus,
     templates,
     tenant,
+    users,
 )
 from plextrac_api.functions.auth import session_from_token
 from plextrac_api.functions.common import PlexTracAuthError, PlexTracNotFoundError
@@ -54,6 +55,8 @@ from plextrac_api.types import (
     SubstatusInput,
     SubstatusStatus,
     TemplateField,
+    UserSortField,
+    UserSortOrder,
 )
 
 
@@ -686,6 +689,42 @@ def test_explicit_scheduler_search_uses_search_type(monkeypatch):
     assert seen["json"] == {
         "filters": {"status": "APPROVED"},
         "pagination": {"offset": 0, "limit": 10},
+    }
+
+
+def test_explicit_users_paginated_list_uses_search_name(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["params"] = kwargs["params"]
+        return httpx.Response(
+            200,
+            json={"data": [{"id": "user-1", "email": "ada@example.com"}], "total": 1},
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    page = users.list_tenant_users_paginated(
+        session,
+        tenant_id=1,
+        sort_by=UserSortField.EMAIL,
+        order=UserSortOrder.ASCENDING,
+        search="ada",
+    )
+
+    assert page.total_count == 1
+    assert page.users[0].email == "ada@example.com"
+    assert seen["method"] == "GET"
+    assert seen["path"] == "/api/v2/tenants/1/users"
+    assert seen["params"] == {
+        "offset": 0,
+        "limit": 10,
+        "sortBy": "email",
+        "order": "ASCEND",
+        "filter": "ada",
     }
 
 

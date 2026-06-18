@@ -29,6 +29,7 @@ from plextrac_api.types import (
     ClientPagination,
     ClientSort,
     ClientSortField,
+    DefaultUserRole,
     EmailTemplate,
     EmailTemplateKind,
     EngagementScheduleEventSearch,
@@ -75,6 +76,8 @@ from plextrac_api.types import (
     TenantAssetSort,
     TenantAssetSortField,
     TenantImageUploadResult,
+    TenantUserInput,
+    UserFindingSearch,
 )
 
 
@@ -172,6 +175,20 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "find_many_engagement_schedule_events" not in method_names
     assert "get_engagement_schedule_event" in method_names
     assert "get_engagement_schedule_event_by_id" not in method_names
+    assert "list_tenant_users_paginated" in method_names
+    assert "get_tenants_users" not in method_names
+    assert "bulk_create_users" in method_names
+    assert "bulk_create_user" not in method_names
+    assert "disable_tenant_user_mfa_token" in method_names
+    assert "disable_other_user_mfa_token" not in method_names
+    assert "set_user_disabled" in method_names
+    assert "enable_disable_user" not in method_names
+    assert "list_user_notifications" in method_names
+    assert "get_user_notifications" not in method_names
+    assert "mark_user_notifications_read" in method_names
+    assert "set_user_notifications_read" not in method_names
+    assert "search_user_findings" in method_names
+    assert "get_user_findings" not in method_names
     assert all(not name.endswith(("_v1", "_v2", "_v3")) for name in method_names)
 
 
@@ -457,6 +474,30 @@ def test_scheduler_type_serializes_search_payload():
     ).to_api() == {
         "filters": {"status": "APPROVED"},
         "pagination": {"offset": 0, "limit": 10},
+    }
+
+
+def test_user_type_serializes_documented_fields():
+    assert TenantUserInput(
+        email="ada@example.com",
+        role=DefaultUserRole.ANALYST,
+        first_name="Ada",
+        last_name="Lovelace",
+        default_group=True,
+    ).to_api() == {
+        "email": "ada@example.com",
+        "role": "ANALYST",
+        "name": {"first": "Ada", "last": "Lovelace"},
+        "default_group": True,
+    }
+    assert UserFindingSearch(
+        filters=[FindingFilter(by=FindingFilterField.STATUS, value=[FindingStatus.OPEN])],
+        pagination=FindingPagination(limit=FindingPageLimit.TEN),
+        sort=[FindingSort(by=FindingSortField.SEVERITY, order=SortOrder.DESCENDING)],
+    ).to_api() == {
+        "filters": [{"by": "status", "value": ["Open"]}],
+        "pagination": {"offset": 0, "limit": 10},
+        "sort": [{"by": "severity", "order": "DESC"}],
     }
 
 

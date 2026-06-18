@@ -5,7 +5,8 @@ useful for SDK development and gap tracking, but it is not intended to be the pr
 
 Most groups are still generated wrappers. The `clients`, `reports`, `findings`, `assets`,
 `affected_assets`, `files`, `mailer`, `substatus`, `analytics`, `tenant`, `templates`,
-`integrations`, `parser_actions`, and `scheduler` groups are hand-polished and show the intended long-term SDK shape.
+`integrations`, `parser_actions`, `scheduler`, and `users` groups are hand-polished and show the
+intended long-term SDK shape.
 
 The inventory is based on the public PlexTrac Postman collection snapshot.
 
@@ -35,7 +36,7 @@ Total supported endpoint functions in snapshot: **357**
 | Substatus | `plextrac_api.functions.substatus` | 4 explicit functions |
 | Templates | `plextrac_api.functions.templates` | 14 explicit functions |
 | Tenant | `plextrac_api.functions.tenant` | 13 explicit functions |
-| Users | `plextrac_api.functions.users` | 17 |
+| Users | `plextrac_api.functions.users` | 16 explicit functions |
 | Graph QL Queries | `plextrac_api.functions.graph_ql_queries` | 1 |
 | Graph QL Mutations | `plextrac_api.functions.graph_ql_mutations` | 2 |
 | Webhooks | `plextrac_api.functions.webhooks` | manual receiver helper |
@@ -515,9 +516,9 @@ Display name: Users
 |---|---|---|---|
 | `get_authenticated_user` | GET | `/api/v2/whoami` |  |
 | `list_tenant_users` | GET | `/api/v1/tenant/{tenantId}/user/list` |  |
-| `get_tenants_users` | GET | `/api/v2/tenants/{tenantId}/users` |  |
-| `create_user_deprecated` | POST | `/api/v1/tenant/{tenantId}/user/create` |  |
-| `bulk_create_user` | POST | `/api/v1/tenant/{tenantId}/user/create/bulk` |  |
+| `list_tenant_users_paginated` | GET | `/api/v2/tenants/{tenantId}/users` |  |
+| `create_user_deprecated` | POST | `/api/v1/tenant/{tenantId}/user/create` | deprecated; not exposed in polished module |
+| `bulk_create_users` | POST | `/api/v1/tenant/{tenantId}/user/create/bulk` |  |
 | `update_user` | PUT | `/api/v1/user/update` | `update` |
 | `delete_user` | DELETE | `/api/v2/user/delete` | `delete` |
 | `change_password` | PUT | `/api/v1/user/changepass` |  |
@@ -525,11 +526,11 @@ Display name: Users
 | `reset_user_password` | PUT | `/api/v1/tenant/{tenantId}/user/resetpass` |  |
 | `set_mfa_token` | PUT | `/api/v1/user/mfa/token` |  |
 | `disable_user_mfa_token` | PUT | `/api/v1/user/mfa/token/disable` |  |
-| `disable_other_user_mfa_token` | PUT | `/api/v1/tenant/{tenantId}/user/mfa/disable` |  |
-| `enable_disable_user` | POST | `/api/v1/tenant/{tenantId}/user/toggledisabled` |  |
-| `get_user_notifications` | GET | `/api/v1/user/notifications` |  |
-| `set_user_notifications_read` | PUT | `/api/v1/user/notifications` |  |
-| `get_user_findings` | POST | `/api/v2/user/findings` |  |
+| `disable_tenant_user_mfa_token` | PUT | `/api/v1/tenant/{tenantId}/user/mfa/disable` |  |
+| `set_user_disabled` | POST | `/api/v1/tenant/{tenantId}/user/toggledisabled` |  |
+| `list_user_notifications` | GET | `/api/v1/user/notifications` |  |
+| `mark_user_notifications_read` | PUT | `/api/v1/user/notifications` |  |
+| `search_user_findings` | POST | `/api/v2/user/findings` |  |
 
 ### `graph_ql_queries`
 

@@ -1,107 +1,241 @@
-"""Generated PlexTrac endpoint functions.
-
-Do not edit by hand. Run scripts/generate_endpoints.py to refresh.
-"""
-
 from __future__ import annotations
 
-from typing import Any
-
-from plextrac_api.functions.common import endpoint_request
+from plextrac_api.functions.common import rest_request
 from plextrac_api.types.auth import AuthSession
+from plextrac_api.types.common import OperationResult
+from plextrac_api.types.users import (
+    AuthenticatedUser,
+    CurrentUserUpdate,
+    TenantUser,
+    TenantUserInput,
+    TenantUserPage,
+    UserFindingSearch,
+    UserFindingSearchResult,
+    UserNotification,
+    UserNotificationReadFilter,
+    UserSortField,
+    UserSortOrder,
+)
 
 
-def get_authenticated_user(session: AuthSession, **kwargs: Any) -> Any:
-    """GET /api/v2/whoami\n\nPlexTrac endpoint: Get Authenticated User v2"""
-    return endpoint_request(session, "users", "get_authenticated_user", **kwargs)
+def get_authenticated_user(
+    session: AuthSession,
+) -> AuthenticatedUser:
+    """Get the currently authenticated user."""
+    data = rest_request(session, "GET", "/api/v2/whoami")
+    if not isinstance(data, dict):
+        raise ValueError("PlexTrac authenticated user response was not a JSON object.")
+    return AuthenticatedUser.from_api(data)
 
 
-def list_tenant_users(session: AuthSession, **kwargs: Any) -> Any:
-    """GET /api/v1/tenant/{tenantId}/user/list\n\nPlexTrac endpoint: List Tenant Users"""
-    return endpoint_request(session, "users", "list_tenant_users", **kwargs)
+def list_tenant_users(
+    session: AuthSession,
+    tenant_id: int | str,
+) -> list[TenantUser]:
+    """List tenant users using the legacy unpaginated endpoint."""
+    data = rest_request(session, "GET", f"/api/v1/tenant/{tenant_id}/user/list")
+    return [TenantUser.from_api(item) for item in data if isinstance(item, dict)] if isinstance(data, list) else []
 
 
-def get_tenants_users(session: AuthSession, **kwargs: Any) -> Any:
-    """GET /api/v2/tenants/{tenantId}/users\n\nPlexTrac endpoint: Get Tenants Users"""
-    return endpoint_request(session, "users", "get_tenants_users", **kwargs)
+def list_tenant_users_paginated(
+    session: AuthSession,
+    tenant_id: int | str,
+    *,
+    offset: int = 0,
+    limit: int = 10,
+    sort_by: UserSortField = UserSortField.FIRST_NAME,
+    order: UserSortOrder = UserSortOrder.DESCENDING,
+    search: str | None = None,
+) -> TenantUserPage:
+    """List tenant users using the paginated endpoint."""
+    params = {
+        "offset": offset,
+        "limit": limit,
+        "sortBy": sort_by.value,
+        "order": order.value,
+        "filter": search,
+    }
+    data = rest_request(
+        session,
+        "GET",
+        f"/api/v2/tenants/{tenant_id}/users",
+        params={key: value for key, value in params.items() if value is not None},
+    )
+    if not isinstance(data, dict):
+        raise ValueError("PlexTrac tenant users response was not a JSON object.")
+    return TenantUserPage.from_api(data)
 
 
-def create_user_deprecated(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v1/tenant/{tenantId}/user/create\n\nPlexTrac endpoint: Create User (DEPRECATED)"""
-    return endpoint_request(session, "users", "create_user_deprecated", **kwargs)
+def bulk_create_users(
+    session: AuthSession,
+    tenant_id: int | str,
+    users: list[TenantUserInput],
+) -> list[TenantUser]:
+    """Bulk create tenant users."""
+    data = rest_request(
+        session,
+        "POST",
+        f"/api/v1/tenant/{tenant_id}/user/create/bulk",
+        json=[user.to_api() for user in users],
+    )
+    return [TenantUser.from_api(item) for item in data if isinstance(item, dict)] if isinstance(data, list) else []
 
 
-def bulk_create_user(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v1/tenant/{tenantId}/user/create/bulk\n\nPlexTrac endpoint: Bulk Create User"""
-    return endpoint_request(session, "users", "bulk_create_user", **kwargs)
+def update_user(
+    session: AuthSession,
+    update: CurrentUserUpdate,
+) -> AuthenticatedUser:
+    """Update the current user's profile information."""
+    data = rest_request(session, "PUT", "/api/v1/user/update", json=update.to_api())
+    if not isinstance(data, dict):
+        raise ValueError("PlexTrac user update response was not a JSON object.")
+    return AuthenticatedUser.from_api(data)
 
 
-def update_user(session: AuthSession, **kwargs: Any) -> Any:
-    """PUT /api/v1/user/update\n\nPlexTrac endpoint: Update User"""
-    return endpoint_request(session, "users", "update_user", **kwargs)
+def delete_user(
+    session: AuthSession,
+    *,
+    email: str,
+) -> OperationResult:
+    """Delete a user by email."""
+    data = rest_request(session, "DELETE", "/api/v2/user/delete", json={"email": email})
+    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def update(session: AuthSession, **kwargs: Any) -> Any:
-    """Alias for `update_user`."""
-    return update_user(session, **kwargs)
+def change_password(
+    session: AuthSession,
+    *,
+    current_password: str,
+    new_password: str,
+) -> OperationResult:
+    """Change the current user's password."""
+    data = rest_request(
+        session,
+        "PUT",
+        "/api/v1/user/changepass",
+        json={"currentPassword": current_password, "newPassword": new_password},
+    )
+    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def delete_user(session: AuthSession, **kwargs: Any) -> Any:
-    """DELETE /api/v2/user/delete\n\nPlexTrac endpoint: Delete User"""
-    return endpoint_request(session, "users", "delete_user", **kwargs)
+def forgot_password(
+    session: AuthSession,
+    *,
+    email: str,
+) -> OperationResult:
+    """Send a password recovery email."""
+    data = rest_request(
+        session,
+        "POST",
+        "/api/v1/user/forgotpass",
+        json={"email": email},
+        authenticated=False,
+    )
+    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def delete(session: AuthSession, **kwargs: Any) -> Any:
-    """Alias for `delete_user`."""
-    return delete_user(session, **kwargs)
+def reset_user_password(
+    session: AuthSession,
+    tenant_id: int | str,
+    *,
+    email: str,
+) -> OperationResult:
+    """Send a tenant user a password reset email."""
+    data = rest_request(
+        session,
+        "PUT",
+        f"/api/v1/tenant/{tenant_id}/user/resetpass",
+        json={"email": email},
+    )
+    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def change_password(session: AuthSession, **kwargs: Any) -> Any:
-    """PUT /api/v1/user/changepass\n\nPlexTrac endpoint: Change Password"""
-    return endpoint_request(session, "users", "change_password", **kwargs)
+def set_mfa_token(
+    session: AuthSession,
+) -> OperationResult:
+    """Set the current user's MFA token."""
+    data = rest_request(session, "PUT", "/api/v1/user/mfa/token")
+    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def forgot_password(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v1/user/forgotpass\n\nPlexTrac endpoint: Forgot Password"""
-    return endpoint_request(session, "users", "forgot_password", **kwargs)
+def disable_user_mfa_token(
+    session: AuthSession,
+) -> OperationResult:
+    """Disable the current user's MFA token."""
+    data = rest_request(session, "PUT", "/api/v1/user/mfa/token/disable")
+    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def reset_user_password(session: AuthSession, **kwargs: Any) -> Any:
-    """PUT /api/v1/tenant/{tenantId}/user/resetpass\n\nPlexTrac endpoint: Reset User Password"""
-    return endpoint_request(session, "users", "reset_user_password", **kwargs)
+def disable_tenant_user_mfa_token(
+    session: AuthSession,
+    tenant_id: int | str,
+    *,
+    email: str,
+) -> OperationResult:
+    """Disable MFA for another tenant user."""
+    data = rest_request(
+        session,
+        "PUT",
+        f"/api/v1/tenant/{tenant_id}/user/mfa/disable",
+        json={"email": email},
+    )
+    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def set_mfa_token(session: AuthSession, **kwargs: Any) -> Any:
-    """PUT /api/v1/user/mfa/token\n\nPlexTrac endpoint: Set MFA Token"""
-    return endpoint_request(session, "users", "set_mfa_token", **kwargs)
+def set_user_disabled(
+    session: AuthSession,
+    tenant_id: int | str,
+    *,
+    email: str,
+    disabled: bool,
+) -> OperationResult:
+    """Enable or disable a tenant user."""
+    data = rest_request(
+        session,
+        "POST",
+        f"/api/v1/tenant/{tenant_id}/user/toggledisabled",
+        json={"email": email, "disabled": disabled},
+    )
+    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def disable_user_mfa_token(session: AuthSession, **kwargs: Any) -> Any:
-    """PUT /api/v1/user/mfa/token/disable\n\nPlexTrac endpoint: Disable User MFA Token"""
-    return endpoint_request(session, "users", "disable_user_mfa_token", **kwargs)
+def list_user_notifications(
+    session: AuthSession,
+    *,
+    limit: int = 10,
+    skip: int = 0,
+    read: UserNotificationReadFilter = UserNotificationReadFilter.UNREAD,
+) -> list[UserNotification]:
+    """List notifications for the current user."""
+    data = rest_request(
+        session,
+        "GET",
+        "/api/v1/user/notifications",
+        params={"limit": limit, "skip": skip, "read": read.value},
+    )
+    return [UserNotification.from_api(item) for item in data if isinstance(item, dict)] if isinstance(data, list) else []
 
 
-def disable_other_user_mfa_token(session: AuthSession, **kwargs: Any) -> Any:
-    """PUT /api/v1/tenant/{tenantId}/user/mfa/disable\n\nPlexTrac endpoint: Disable Other User MFA Token"""
-    return endpoint_request(session, "users", "disable_other_user_mfa_token", **kwargs)
+def mark_user_notifications_read(
+    session: AuthSession,
+    notification_ids: list[int | str],
+) -> OperationResult:
+    """Mark user notifications as read."""
+    data = rest_request(
+        session,
+        "PUT",
+        "/api/v1/user/notifications",
+        json={"notificationIds": notification_ids},
+    )
+    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def enable_disable_user(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v1/tenant/{tenantId}/user/toggledisabled\n\nPlexTrac endpoint: Enable/Disable User"""
-    return endpoint_request(session, "users", "enable_disable_user", **kwargs)
-
-
-def get_user_notifications(session: AuthSession, **kwargs: Any) -> Any:
-    """GET /api/v1/user/notifications\n\nPlexTrac endpoint: Get User Notifications"""
-    return endpoint_request(session, "users", "get_user_notifications", **kwargs)
-
-
-def set_user_notifications_read(session: AuthSession, **kwargs: Any) -> Any:
-    """PUT /api/v1/user/notifications\n\nPlexTrac endpoint: Set User Notifications Read"""
-    return endpoint_request(session, "users", "set_user_notifications_read", **kwargs)
-
-
-def get_user_findings(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v2/user/findings\n\nPlexTrac endpoint: Get User Findings"""
-    return endpoint_request(session, "users", "get_user_findings", **kwargs)
-
+def search_user_findings(
+    session: AuthSession,
+    search: UserFindingSearch,
+) -> UserFindingSearchResult:
+    """List findings assigned to the current user."""
+    data = rest_request(session, "POST", "/api/v2/user/findings", json=search.to_api())
+    if not isinstance(data, dict):
+        raise ValueError("PlexTrac user findings response was not a JSON object.")
+    return UserFindingSearchResult.from_api(data)

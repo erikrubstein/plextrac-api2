@@ -23,7 +23,6 @@ GENERATED_FUNCTION_GROUPS = {
     "graph_ql_mutations",
     "graph_ql_queries",
     "runbooks",
-    "users",
 }
 HAND_WRITTEN_FUNCTION_GROUPS = {
     "affected_assets",
@@ -40,6 +39,7 @@ HAND_WRITTEN_FUNCTION_GROUPS = {
     "substatus",
     "templates",
     "tenant",
+    "users",
 }
 VERSION_SUFFIX_RE = re.compile(r"^(?P<base>.+)_v(?P<version>\d+)$")
 METHOD_NAME_OVERRIDES = {
@@ -99,6 +99,13 @@ METHOD_NAME_OVERRIDES = {
     ("Tenant", "delete_tenant_logo_dark"): "delete_tenant_dark_logo",
     ("Tenant", "root_request"): "get_root_info",
     ("Tenant", "tenant_analytics"): "get_tenant_analytics",
+    ("Users", "bulk_create_user"): "bulk_create_users",
+    ("Users", "disable_other_user_mfa_token"): "disable_tenant_user_mfa_token",
+    ("Users", "enable_disable_user"): "set_user_disabled",
+    ("Users", "get_user_findings"): "search_user_findings",
+    ("Users", "get_user_notifications"): "list_user_notifications",
+    ("Users", "get_tenants_users"): "list_tenant_users_paginated",
+    ("Users", "set_user_notifications_read"): "mark_user_notifications_read",
 }
 
 
