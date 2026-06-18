@@ -6,10 +6,14 @@ from plextrac_api.types import (
     AnalyticsFilter,
     AnalyticsResult,
     AnalyticsTags,
+    AnswerOption,
     Artifact,
     ArtifactRelation,
     ArtifactRelationModel,
     ArtifactUploadResult,
+    AssessmentAnswer,
+    AssessmentAnswerField,
+    AssessmentSortOrder,
     Asset,
     AssetCreateResult,
     AssetCriticality,
@@ -35,6 +39,7 @@ from plextrac_api.types import (
     EmailTemplate,
     EmailTemplateKind,
     EngagementScheduleEventSearch,
+    ExportTemplateType,
     Filter,
     Finding,
     FindingCreateResult,
@@ -59,6 +64,8 @@ from plextrac_api.types import (
     ParserActionInput,
     ParserActionType,
     ParserPluginSource,
+    QuestionAnswerType,
+    QuestionInput,
     Report,
     ReportCreateResult,
     ReportFilter,
@@ -75,6 +82,7 @@ from plextrac_api.types import (
     SubstatusStatus,
     TemplateField,
     Tenant,
+    TenantAssessmentSort,
     TenantAssetFilter,
     TenantAssetFilterField,
     TenantAssetSort,
@@ -130,6 +138,19 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "get_sla_benchmarks" not in method_names
     assert "list_audit_log_entries" in method_names
     assert "get_audit_log" not in method_names
+    assert "list_client_assessments" in method_names
+    assert "list_client_assessments_filtered" not in method_names
+    assert "list_client_assessments_legacy" in method_names
+    assert "get_client_assessment_details" in method_names
+    assert "get_client_assessment_with_questions_and_answers" not in method_names
+    assert "list_assessment_questions" in method_names
+    assert "get_assessment_questions" not in method_names
+    assert "list_assessment_answers" in method_names
+    assert "get_assessment_answers" not in method_names
+    assert "list_assessment_reviewers" in method_names
+    assert "get_assessment_reviewers" not in method_names
+    assert "copy_assessment_questionnaire" in method_names
+    assert "copy_asessment_questionnaire" not in method_names
     assert "runbook_engagement_list" in method_names
     assert "list_available_tenant_users" in method_names
     assert "available_tenant_users" not in method_names
@@ -436,6 +457,8 @@ def test_tenant_type_parses_documented_fields():
 
 
 def test_template_type_parses_and_serializes_documented_fields():
+    assert ExportTemplateType.CUSTOM.value == "custom"
+
     parsed = FindingTemplate.from_api(
         {
             "doc_id": "template-1",
@@ -573,6 +596,64 @@ def test_admin_type_serializes_documented_sla_and_audit_fields():
     assert entry.event_type is AuditLogEventType.LOGIN_SUCCESS
 
 
+def test_assessment_type_serializes_question_and_answer_payloads():
+    question = QuestionInput(
+        title="New Question",
+        text="Description of new question.",
+        severity=FindingSeverity.HIGH,
+        answer_type=[
+            QuestionAnswerType(
+                key="answer_type_1",
+                label="Response",
+                value="freeForm",
+                required=False,
+                multi_choice_answers=[AnswerOption(label="Yes", value="Yes")],
+            )
+        ],
+    )
+
+    assert question.to_api() == {
+        "answer_type": [
+            {
+                "key": "answer_type_1",
+                "label": "Response",
+                "value": "freeForm",
+                "required": False,
+                "multi_choice_answers": [{"label": "Yes", "value": "Yes"}],
+            }
+        ],
+        "severity": "High",
+        "text": "Description of new question.",
+        "title": "New Question",
+    }
+
+    answer = AssessmentAnswer(
+        question_id="12.6",
+        answer=[
+            AssessmentAnswerField(
+                key="answer_type_1",
+                label="Response",
+                value=["Operational"],
+                required=False,
+            )
+        ],
+        status="completed",
+    )
+
+    assert answer.to_api() == {
+        "qid": "12.6",
+        "answer": [
+            {
+                "key": "answer_type_1",
+                "label": "Response",
+                "value": ["Operational"],
+                "required": False,
+            }
+        ],
+        "status": "completed",
+    }
+
+
 def test_report_request_shape_types_serialize_with_verified_fields():
     assert ReportSort(
         by=ReportSortField.STATUS,
@@ -585,6 +666,12 @@ def test_report_request_shape_types_serialize_with_verified_fields():
         "by": "status",
         "value": ["Published"],
     }
+
+
+def test_assessment_sort_order_uses_assessment_wire_values():
+    assert AssessmentSortOrder.ASCENDING.value == "ascend"
+    assert AssessmentSortOrder.DESCENDING.value == "descend"
+    assert TenantAssessmentSort.ALL_DESCENDING.value == "ALL_DESCEND"
 
 
 def test_finding_request_shape_types_serialize_with_verified_fields():

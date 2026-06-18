@@ -5,8 +5,8 @@ useful for SDK development and gap tracking, but it is not intended to be the pr
 
 Most groups are still generated wrappers. The `clients`, `reports`, `findings`, `assets`,
 `affected_assets`, `files`, `mailer`, `substatus`, `analytics`, `tenant`, `templates`,
-`integrations`, `parser_actions`, `scheduler`, `users`, and `admin` groups are hand-polished and
-show the intended long-term SDK shape.
+`integrations`, `parser_actions`, `scheduler`, `users`, `admin`, and `assessments` groups are
+hand-polished and show the intended long-term SDK shape.
 
 The inventory is based on the public PlexTrac Postman collection snapshot.
 
@@ -20,7 +20,7 @@ Total supported endpoint functions in snapshot: **357**
 | Admin | `plextrac_api.functions.admin` | 29 explicit functions |
 | Affected Assets | `plextrac_api.functions.affected_assets` | 6 explicit functions |
 | Analytics | `plextrac_api.functions.analytics` | 11 explicit functions |
-| Assessments | `plextrac_api.functions.assessments` | 33 |
+| Assessments | `plextrac_api.functions.assessments` | 32 explicit functions |
 | Assets | `plextrac_api.functions.assets` | 9 explicit functions |
 | Content Library | `plextrac_api.functions.content_library` | 41 |
 | Clients | `plextrac_api.functions.clients` | 14 explicit functions |
@@ -147,20 +147,20 @@ Display name: Assessments
 | `export_questionnaire` | GET | `/api/v2/assessments/questionnaires/{questionnaireId}/export` |  |
 | `import_questionnaire` | POST | `/api/v2/import/questionnaire` |  |
 | `list_tenant_assessments` | GET | `/api/v2/tenants/{tenantId}/assessments` |  |
-| `list_client_assessments` | GET | `/api/v1/tenant/{tenantId}/client/{clientId}/assessments` |  |
-| `list_client_assessments_filtered` | GET | `/api/v2/tenants/{tenantId}/clients/{clientId}/assessments` |  |
-| `get_client_assessment_with_questions_and_answers` | GET | `/api/v1/tenant/{tenantId}/client/{clientId}/assessment/{assessmentId}` |  |
+| `list_client_assessments_legacy` | GET | `/api/v1/tenant/{tenantId}/client/{clientId}/assessments` | legacy; not exposed in polished module |
+| `list_client_assessments` | GET | `/api/v2/tenants/{tenantId}/clients/{clientId}/assessments` |  |
+| `get_client_assessment_details` | GET | `/api/v1/tenant/{tenantId}/client/{clientId}/assessment/{assessmentId}` |  |
 | `get_client_assessment` | GET | `/api/v2/tenants/{tenantId}/clients/{clientId}/assessments/{assessmentId}` |  |
 | `get_assessment_by_cuid` | GET | `/api/v2/assessments/{assessmentCuid}` |  |
-| `get_assessment_questions` | GET | `/api/v2/tenants/{tenantId}/clients/{clientId}/assessments/{assessmentId}/questions` |  |
-| `get_assessment_answers` | GET | `/api/v2/tenants/{tenantId}/clients/{clientId}/assessments/{assessmentId}/answers` |  |
+| `list_assessment_questions` | GET | `/api/v2/tenants/{tenantId}/clients/{clientId}/assessments/{assessmentId}/questions` |  |
+| `list_assessment_answers` | GET | `/api/v2/tenants/{tenantId}/clients/{clientId}/assessments/{assessmentId}/answers` |  |
 | `update_assessment_answers` | PUT | `/api/v2/tenants/{tenantId}/clients/{clientId}/assessments/{assessmentId}/answers` |  |
-| `get_assessment_reviewers` | GET | `/api/v2/tenants/{tenantId}/clients/{clientId}/assessments/{assessmentId}/reviewers` |  |
+| `list_assessment_reviewers` | GET | `/api/v2/tenants/{tenantId}/clients/{clientId}/assessments/{assessmentId}/reviewers` |  |
 | `create_client_assessment` | POST | `/api/v1/tenant/{tenantId}/client/{clientId}/assessment` |  |
 | `update_client_assessment` | PUT | `/api/v1/tenant/{tenantId}/client/{clientId}/assessment/{assessmentId}` |  |
 | `delete_client_assessment` | DELETE | `/api/v1/tenant/{tenantId}/client/{clientId}/assessment/{assessmentId}` |  |
 | `create_report_from_assessment_questionnaire` | POST | `/api/v1/tenant/{tenantId}/client/{clientId}/assessment/{assessmentId}/report` |  |
-| `copy_asessment_questionnaire` | POST | `/api/v2/tenants/{tenantId}/clients/{clientId}/assessments/{assessmentId}/copy` |  |
+| `copy_assessment_questionnaire` | POST | `/api/v2/tenants/{tenantId}/clients/{clientId}/assessments/{assessmentId}/copy` |  |
 
 ### `assets`
 

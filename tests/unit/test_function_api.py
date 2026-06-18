@@ -9,6 +9,7 @@ from plextrac_api.functions import (
     admin,
     affected_assets,
     analytics,
+    assessments,
     assets,
     clients,
     files,
@@ -33,6 +34,9 @@ from plextrac_api.types import (
     AnalyticsTags,
     ArtifactRelation,
     ArtifactRelationModel,
+    AssessmentAnswer,
+    AssessmentAnswerField,
+    AssessmentSortOrder,
     AssetCriticality,
     AssetInput,
     AssetType,
@@ -43,6 +47,7 @@ from plextrac_api.types import (
     ClientInput,
     EmailTemplateKind,
     EngagementScheduleEventSearch,
+    ExportTemplateType,
     FindingField,
     FindingInput,
     FindingSeverity,
@@ -52,6 +57,8 @@ from plextrac_api.types import (
     JiraConnectionInput,
     JiraSyncFrequency,
     ParserActionSearchType,
+    QuestionAnswerType,
+    QuestionInput,
     ReportInput,
     ReportStatus,
     SLABenchmark,
@@ -591,7 +598,7 @@ def test_explicit_template_import_uses_named_template_type(monkeypatch, tmp_path
         tenant_id=1,
         file=template_path,
         name="Export Template",
-        template_type="custom",
+        template_type=ExportTemplateType.CUSTOM,
     )
 
     assert result.template_id == "tpl-1"
@@ -887,6 +894,167 @@ def test_explicit_admin_lists_audit_log_entries(monkeypatch):
     assert seen["method"] == "GET"
     assert seen["path"] == "/api/v2/auditlog"
     assert seen["params"] == {"limit": 5, "offset": 10}
+
+
+def test_explicit_assessment_create_question_uses_question_type(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={
+                "status": "success",
+                "data": {
+                    "qid": "q-1",
+                    "title": "New Question",
+                    "text": "Question text",
+                    "severity": "High",
+                },
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    question = assessments.create_question(
+        session,
+        questionnaire_id=123,
+        question=QuestionInput(
+            title="New Question",
+            text="Question text",
+            severity=FindingSeverity.HIGH,
+            answer_type=[
+                QuestionAnswerType(
+                    key="answer_type_1",
+                    label="Response",
+                    value="freeForm",
+                    required=False,
+                )
+            ],
+        ),
+    )
+
+    assert question.question_id == "q-1"
+    assert question.severity is FindingSeverity.HIGH
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v2/assessments/questionnaires/123/questions"
+    assert seen["json"] == {
+        "answer_type": [
+            {
+                "key": "answer_type_1",
+                "label": "Response",
+                "value": "freeForm",
+                "required": False,
+            }
+        ],
+        "severity": "High",
+        "text": "Question text",
+        "title": "New Question",
+    }
+
+
+def test_explicit_assessment_list_client_assessments_uses_latest_endpoint(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["params"] = kwargs["params"]
+        return httpx.Response(
+            200,
+            json={
+                "assessments": [
+                    {
+                        "assess_id": 3151,
+                        "assessment_title": "CIS Control 12",
+                        "client_id": 4155,
+                    }
+                ]
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    results = assessments.list_client_assessments(session, tenant_id=1, client_id=2)
+
+    assert results[0].assessment_id == 3151
+    assert seen["method"] == "GET"
+    assert seen["path"] == "/api/v2/tenants/1/clients/2/assessments"
+    assert seen["params"] == {"limit": 10, "offset": 0, "order": "ascend", "sort": 0}
+
+    assessments.list_client_assessments(
+        session,
+        tenant_id=1,
+        client_id=2,
+        order=AssessmentSortOrder.DESCENDING,
+    )
+
+    assert seen["params"] == {"limit": 10, "offset": 0, "order": "descend", "sort": 0}
+
+
+def test_explicit_assessment_update_answers_serializes_answers(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={"assess_id": 3151, "assessment_title": "CIS Control 12"},
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = assessments.update_assessment_answers(
+        session,
+        tenant_id=1,
+        client_id=2,
+        assessment_id=3,
+        answers=[
+            AssessmentAnswer(
+                question_id="12.6",
+                title="CIS 12.6",
+                answer=[
+                    AssessmentAnswerField(
+                        key="answer_type_1",
+                        label="Response",
+                        value=["Operational"],
+                        required=False,
+                    )
+                ],
+                note="adding a note",
+                status="completed",
+            )
+        ],
+    )
+
+    assert result.assessment_id == 3151
+    assert seen["method"] == "PUT"
+    assert seen["path"] == "/api/v2/tenants/1/clients/2/assessments/3/answers"
+    assert seen["json"] == {
+        "answers": [
+            {
+                "qid": "12.6",
+                "title": "CIS 12.6",
+                "answer": [
+                    {
+                        "key": "answer_type_1",
+                        "label": "Response",
+                        "value": ["Operational"],
+                        "required": False,
+                    }
+                ],
+                "note": "adding a note",
+                "status": "completed",
+            }
+        ]
+    }
 
 
 def test_explicit_finding_list_uses_latest_paginated_endpoint(monkeypatch):

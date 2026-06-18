@@ -175,8 +175,8 @@ Generated functions should be considered scaffolding. As a group is polished, re
 generated-style wrappers with explicit signatures and typed returns.
 
 The `clients`, `reports`, `findings`, `assets`, `affected_assets`, `files`, `mailer`, `substatus`,
-`analytics`, `tenant`, `templates`, `integrations`, `parser_actions`, `scheduler`, `users`, and
-`admin` groups are the current models for polished groups:
+`analytics`, `tenant`, `templates`, `integrations`, `parser_actions`, `scheduler`, `users`,
+`admin`, and `assessments` groups are the current models for polished groups:
 
 - explicit function arguments
 - reusable input dataclasses only when shared across functions

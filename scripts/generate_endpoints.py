@@ -17,7 +17,6 @@ OUT_DIR = PACKAGE_DIR / "generated"
 FUNCTIONS_DIR = PACKAGE_DIR / "functions"
 DOCS_DIR = ROOT / "docs"
 GENERATED_FUNCTION_GROUPS = {
-    "assessments",
     "content_library",
     "graph_ql_mutations",
     "graph_ql_queries",
@@ -27,6 +26,7 @@ HAND_WRITTEN_FUNCTION_GROUPS = {
     "affected_assets",
     "admin",
     "analytics",
+    "assessments",
     "assets",
     "clients",
     "files",
@@ -59,6 +59,16 @@ METHOD_NAME_OVERRIDES = {
     ("Admin", "remove_role_user"): "remove_security_role_user",
     ("Admin", "update_security_role_permission"): "update_security_role_permissions",
     ("Analytics", "retreive_analytics_findings_aging"): "retrieve_analytics_findings_aging",
+    ("Assessments", "copy_asessment_questionnaire"): "copy_assessment_questionnaire",
+    ("Assessments", "get_assessment_answers"): "list_assessment_answers",
+    ("Assessments", "get_assessment_questions"): "list_assessment_questions",
+    ("Assessments", "get_assessment_reviewers"): "list_assessment_reviewers",
+    (
+        "Assessments",
+        "get_client_assessment_with_questions_and_answers",
+    ): "get_client_assessment_details",
+    ("Assessments", "list_client_assessments"): "list_client_assessments_legacy",
+    ("Assessments", "list_client_assessments_filtered"): "list_client_assessments",
     (
         "Affected Assets",
         "bulk_create_affected_asset_status",

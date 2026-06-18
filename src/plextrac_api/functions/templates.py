@@ -8,6 +8,7 @@ from plextrac_api.types.auth import AuthSession
 from plextrac_api.types.common import OperationResult
 from plextrac_api.types.templates import (
     ExportTemplate,
+    ExportTemplateType,
     FindingTemplate,
     FindingTemplateInput,
     ReportTemplate,
@@ -187,7 +188,7 @@ def import_export_template(
     file: str | Path | BinaryIO,
     *,
     name: str,
-    template_type: str = "custom",
+    template_type: ExportTemplateType = ExportTemplateType.CUSTOM,
     filename: str | None = None,
     content_type: str | None = None,
 ) -> TemplateOperationResult:
@@ -196,7 +197,7 @@ def import_export_template(
         session,
         f"/api/v1/tenant/{tenant_id}/template/import",
         file,
-        params={"name": name, "type": template_type},
+        params={"name": name, "type": template_type.value},
         filename=filename,
         content_type=content_type,
     )

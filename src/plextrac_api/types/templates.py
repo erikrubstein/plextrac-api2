@@ -1,8 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
+from typing import cast
 
 from plextrac_api.types.common import CustomField, JsonDict, clean
+
+
+class ExportTemplateType(str, Enum):
+    CUSTOM = "custom"
 
 
 @dataclass(slots=True)
@@ -72,7 +78,7 @@ class ReportTemplate:
 
     @classmethod
     def from_api(cls, data: JsonDict) -> ReportTemplate:
-        payload = data.get("data") if isinstance(data.get("data"), dict) else data
+        payload = _nested_payload(data)
         custom_fields = payload.get("custom_fields")
         report_custom_fields = payload.get("report_custom_fields")
         return cls(
@@ -134,7 +140,7 @@ class FindingTemplate:
 
     @classmethod
     def from_api(cls, data: JsonDict) -> FindingTemplate:
-        payload = data.get("data") if isinstance(data.get("data"), dict) else data
+        payload = _nested_payload(data)
         fields = payload.get("fields")
         return cls(
             template_id=payload.get("doc_id") or payload.get("id"),
@@ -196,3 +202,8 @@ class TemplateOperationResult:
             name=data.get("name"),
             raw=dict(data),
         )
+
+
+def _nested_payload(data: JsonDict) -> JsonDict:
+    payload = data.get("data")
+    return cast(JsonDict, payload) if isinstance(payload, dict) else data
