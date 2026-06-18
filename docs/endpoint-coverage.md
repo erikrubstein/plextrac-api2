@@ -27,7 +27,7 @@ Total supported endpoint functions in snapshot: **357**
 | Parser Actions | `plextrac_api.functions.parser_actions` | 8 explicit functions |
 | QA Workflow | _not generated_ | 0 |
 | Reports | `plextrac_api.functions.reports` | 17 explicit functions |
-| Runbooks | `plextrac_api.functions.runbooks` | 63 |
+| Runbooks | `plextrac_api.functions.runbooks` | 63 explicit functions |
 | Scheduler | `plextrac_api.functions.scheduler` | 10 explicit functions |
 | Substatus | `plextrac_api.functions.substatus` | 4 explicit functions |
 | Templates | `plextrac_api.functions.templates` | 14 explicit functions |
@@ -377,67 +377,67 @@ Display name: Runbooks
 
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
-| `runbook_engagement_procedure_operator_list` | POST | `/graphql` |  |
-| `runbook_engagement_procedure_operators_update` | POST | `/graphql` |  |
-| `runbook_engagement_procedure_asset_list` | POST | `/graphql` |  |
-| `runbook_engagement_procedure_assets_add` | POST | `/graphql` |  |
-| `runbook_engagement_procedure_asset_create` | POST | `/graphql` |  |
-| `runbook_engagement_procedure_asset_delete` | POST | `/graphql` |  |
-| `runbook_engagement_procedure_asset_update` | POST | `/graphql` |  |
-| `runbook_engagement_procedure_logs` | POST | `/graphql` |  |
-| `runbook_engagement_procedure_log_create` | POST | `/graphql` |  |
-| `runbook_engagement_procedure_log_update` | POST | `/graphql` |  |
-| `runbook_engagement_procedure_log_delete` | POST | `/graphql` |  |
-| `runbook_engagement_procedure_attachment_list` | POST | `/graphql` |  |
-| `upload_attachment_to_engagement_procedure` | POST | `/api/v2/runbooks/engagement-procedures/{engagementProcedureId}/attachments/upload` |  |
-| `runbook_engagement_procedure_attachments_update` | POST | `/graphql` |  |
-| `runbook_engagement_procedure_attachment_delete` | POST | `/graphql` |  |
-| `runbook_engagement_procedure_ids` | POST | `/graphql` |  |
-| `runbook_engagement_procedure_list` | POST | `/graphql` |  |
-| `runbook_engagement_procedure_detail` | POST | `/graphql` |  |
-| `runbook_engagement_procedure_update` | POST | `/graphql` |  |
-| `runbook_engagement_procedure_delete` | POST | `/graphql` |  |
-| `runbook_engagement_list` | POST | `/graphql` |  |
-| `runbook_engagement_detail` | POST | `/graphql` |  |
-| `runbook_engagement_create` | POST | `/graphql` |  |
-| `runbook_engagement_update` | POST | `/graphql` |  |
-| `runbook_engagement_delete` | POST | `/graphql` |  |
-| `runbook_engagement_finish` | POST | `/graphql` |  |
-| `runbook_test_plan_list` | POST | `/graphql` |  |
-| `runbook_test_plan_detail` | POST | `/graphql` |  |
-| `runbook_test_plan_create` | POST | `/graphql` |  |
-| `runbook_test_plan_update` | POST | `/graphql` |  |
-| `runbook_test_plan_delete` | POST | `/graphql` |  |
-| `runbook_repository_available_user_list` | POST | `/graphql` |  |
-| `runbook_repository_users` | POST | `/graphql` |  |
-| `runbook_repository_users_add` | POST | `/graphql` |  |
-| `runbook_repository_user_update` | POST | `/graphql` |  |
-| `runbook_repository_user_remove` | POST | `/graphql` |  |
-| `runbook_repository_list` | POST | `/graphql` |  |
-| `runbook_repository_detail` | POST | `/graphql` |  |
-| `runbook_repository_create` | POST | `/graphql` |  |
-| `runbook_repository_update` | POST | `/graphql` |  |
-| `runbook_repository_delete` | POST | `/graphql` |  |
-| `runbook_methodology_list` | POST | `/graphql` |  |
-| `runbook_methodology_detail` | POST | `/graphql` |  |
-| `runbook_methodology_create` | POST | `/graphql` |  |
-| `runbook_methodology_update` | POST | `/graphql` |  |
-| `runbook_methodology_delete` | POST | `/graphql` |  |
-| `runbook_tactic_list` | POST | `/graphql` |  |
-| `runbook_tactic_detail` | POST | `/graphql` |  |
-| `runbook_tactic_create` | POST | `/graphql` |  |
-| `runbook_tactic_update` | POST | `/graphql` |  |
-| `runbook_tactic_delete` | POST | `/graphql` |  |
-| `runbook_technique_list` | POST | `/graphql` |  |
-| `runbook_technique_detail` | POST | `/graphql` |  |
-| `runbook_technique_create` | POST | `/graphql` |  |
-| `runbook_technique_update` | POST | `/graphql` |  |
-| `runbook_technique_delete` | POST | `/graphql` |  |
-| `runbook_procedure_list` | POST | `/graphql` |  |
-| `runbook_procedure_detail` | POST | `/graphql` |  |
-| `runbook_procedure_create` | POST | `/graphql` |  |
-| `runbook_procedure_update` | POST | `/graphql` |  |
-| `runbook_procedure_delete` | POST | `/graphql` |  |
+| `list_runbook_engagement_procedure_operators` | POST | `/graphql` |  |
+| `update_runbook_engagement_procedure_operators` | POST | `/graphql` |  |
+| `list_runbook_engagement_procedure_assets` | POST | `/graphql` |  |
+| `add_runbook_engagement_procedure_assets` | POST | `/graphql` |  |
+| `create_runbook_engagement_procedure_asset` | POST | `/graphql` |  |
+| `delete_runbook_engagement_procedure_asset` | POST | `/graphql` |  |
+| `update_runbook_engagement_procedure_asset` | POST | `/graphql` |  |
+| `list_runbook_engagement_procedure_logs` | POST | `/graphql` |  |
+| `create_runbook_engagement_procedure_log` | POST | `/graphql` |  |
+| `update_runbook_engagement_procedure_log` | POST | `/graphql` |  |
+| `delete_runbook_engagement_procedure_log` | POST | `/graphql` |  |
+| `list_runbook_engagement_procedure_attachments` | POST | `/graphql` |  |
+| `upload_runbook_engagement_procedure_attachment` | POST | `/api/v2/runbooks/engagement-procedures/{engagementProcedureId}/attachments/upload` |  |
+| `update_runbook_engagement_procedure_attachments` | POST | `/graphql` |  |
+| `delete_runbook_engagement_procedure_attachment` | POST | `/graphql` |  |
+| `list_runbook_engagement_procedure_ids` | POST | `/graphql` |  |
+| `list_runbook_engagement_procedures` | POST | `/graphql` |  |
+| `get_runbook_engagement_procedure` | POST | `/graphql` |  |
+| `update_runbook_engagement_procedure` | POST | `/graphql` |  |
+| `delete_runbook_engagement_procedure` | POST | `/graphql` |  |
+| `list_runbook_engagements` | POST | `/graphql` |  |
+| `get_runbook_engagement` | POST | `/graphql` |  |
+| `create_runbook_engagement` | POST | `/graphql` |  |
+| `update_runbook_engagement` | POST | `/graphql` |  |
+| `delete_runbook_engagement` | POST | `/graphql` |  |
+| `finish_runbook_engagement` | POST | `/graphql` |  |
+| `list_runbook_test_plans` | POST | `/graphql` |  |
+| `get_runbook_test_plan` | POST | `/graphql` |  |
+| `create_runbook_test_plan` | POST | `/graphql` |  |
+| `update_runbook_test_plan` | POST | `/graphql` |  |
+| `delete_runbook_test_plan` | POST | `/graphql` |  |
+| `list_available_runbook_repository_users` | POST | `/graphql` |  |
+| `list_runbook_repository_users` | POST | `/graphql` |  |
+| `add_runbook_repository_users` | POST | `/graphql` |  |
+| `update_runbook_repository_user` | POST | `/graphql` |  |
+| `remove_runbook_repository_user` | POST | `/graphql` |  |
+| `list_runbook_repositories` | POST | `/graphql` |  |
+| `get_runbook_repository` | POST | `/graphql` |  |
+| `create_runbook_repository` | POST | `/graphql` |  |
+| `update_runbook_repository` | POST | `/graphql` |  |
+| `delete_runbook_repository` | POST | `/graphql` |  |
+| `list_runbook_methodologies` | POST | `/graphql` |  |
+| `get_runbook_methodology` | POST | `/graphql` |  |
+| `create_runbook_methodology` | POST | `/graphql` |  |
+| `update_runbook_methodology` | POST | `/graphql` |  |
+| `delete_runbook_methodology` | POST | `/graphql` |  |
+| `list_runbook_tactics` | POST | `/graphql` |  |
+| `get_runbook_tactic` | POST | `/graphql` |  |
+| `create_runbook_tactic` | POST | `/graphql` |  |
+| `update_runbook_tactic` | POST | `/graphql` |  |
+| `delete_runbook_tactic` | POST | `/graphql` |  |
+| `list_runbook_techniques` | POST | `/graphql` |  |
+| `get_runbook_technique` | POST | `/graphql` |  |
+| `create_runbook_technique` | POST | `/graphql` |  |
+| `update_runbook_technique` | POST | `/graphql` |  |
+| `delete_runbook_technique` | POST | `/graphql` |  |
+| `list_runbook_procedures` | POST | `/graphql` |  |
+| `get_runbook_procedure` | POST | `/graphql` |  |
+| `create_runbook_procedure` | POST | `/graphql` |  |
+| `update_runbook_procedure` | POST | `/graphql` |  |
+| `delete_runbook_procedure` | POST | `/graphql` |  |
 | `export_runbook` | GET | `/api/v1/export/runbook/{runbookId}` | `export` |
 | `import_runbook` | POST | `/api/v1/import/runbook` |  |
 

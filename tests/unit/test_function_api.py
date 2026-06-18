@@ -19,6 +19,7 @@ from plextrac_api.functions import (
     mailer,
     parser_actions,
     reports,
+    runbooks,
     scheduler,
     substatus,
     templates,
@@ -64,6 +65,8 @@ from plextrac_api.types import (
     QuestionInput,
     ReportInput,
     ReportStatus,
+    RunbookListArgs,
+    RunbookRecordInput,
     SLABenchmark,
     SLABenchmarkNotificationSettings,
     SortOrder,
@@ -224,6 +227,109 @@ def test_explicit_content_library_repository_users_and_import_use_typed_shapes(
     assert seen["method"] == "POST"
     assert seen["path"] == "/api/v2/writeups/import/csv"
     assert seen["files"]["file"][0] == "writeups.csv"
+
+
+def test_explicit_create_runbook_repository_uses_graphql_variables(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={
+                "data": {
+                    "runbookRepositoryCreateV2": {
+                        "id": "repo-1",
+                        "name": "Purple Team",
+                        "shortName": "PT",
+                    }
+                }
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = runbooks.create_runbook_repository(
+        session,
+        RunbookRecordInput(
+            name="Purple Team",
+            short_name="PT",
+            description="Shared procedures",
+        ),
+    )
+
+    assert result.record_id == "repo-1"
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/graphql"
+    assert seen["json"]["operationName"] == "RunbookRepositoryCreateV2"
+    assert seen["json"]["variables"] == {
+        "data": {
+            "name": "Purple Team",
+            "shortName": "PT",
+            "description": "Shared procedures",
+        }
+    }
+
+
+def test_explicit_list_runbook_repositories_parses_graphql_items(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={
+                "data": {
+                    "runbookRepositoryListV2": {
+                        "items": [{"id": "repo-1", "name": "Default"}]
+                    }
+                }
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    results = runbooks.list_runbook_repositories(
+        session,
+        RunbookListArgs(limit=10, offset=5, search="default"),
+    )
+
+    assert results[0].record_id == "repo-1"
+    assert seen["json"]["operationName"] == "RunbookRepositoryListV2"
+    assert seen["json"]["variables"] == {"args": {"limit": 10, "offset": 5, "search": "default"}}
+
+
+def test_explicit_runbook_attachment_upload_uses_rest_endpoint(monkeypatch, tmp_path):
+    seen = {}
+    upload_path = tmp_path / "evidence.txt"
+    upload_path.write_text("proof")
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["files"] = kwargs["files"]
+        return httpx.Response(
+            200,
+            json={"id": "attachment-1", "filename": "evidence.txt", "status": "success"},
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = runbooks.upload_runbook_engagement_procedure_attachment(
+        session,
+        engagement_procedure_id="procedure-1",
+        file=upload_path,
+    )
+
+    assert result.ok
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v2/runbooks/engagement-procedures/procedure-1/attachments/upload"
+    assert seen["files"]["file"][0] == "evidence.txt"
 
 
 def test_explicit_report_export_uses_snake_case_query_options(monkeypatch):

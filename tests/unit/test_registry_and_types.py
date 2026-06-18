@@ -78,6 +78,14 @@ from plextrac_api.types import (
     ReportSort,
     ReportSortField,
     ReportStatus,
+    RunbookListArgs,
+    RunbookMutationResult,
+    RunbookProcedureLog,
+    RunbookProcedureLogInput,
+    RunbookRecordInput,
+    RunbookRepository,
+    RunbookTeam,
+    RunbookUploadResult,
     SLABenchmark,
     SLABenchmarkNotificationSettings,
     Sort,
@@ -162,7 +170,16 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "get_assessment_reviewers" not in method_names
     assert "copy_assessment_questionnaire" in method_names
     assert "copy_asessment_questionnaire" not in method_names
-    assert "runbook_engagement_list" in method_names
+    assert "list_runbook_engagements" in method_names
+    assert "runbook_engagement_list" not in method_names
+    assert "get_runbook_engagement" in method_names
+    assert "runbook_engagement_detail" not in method_names
+    assert "create_runbook_repository" in method_names
+    assert "runbook_repository_create" not in method_names
+    assert "list_available_runbook_repository_users" in method_names
+    assert "list_available_list_runbook_repository_users" not in method_names
+    assert "add_runbook_repository_users" in method_names
+    assert "list_add_runbook_repository_users" not in method_names
     assert "list_available_tenant_users" in method_names
     assert "available_tenant_users" not in method_names
     assert "assign_users_to_client" in method_names
@@ -559,6 +576,53 @@ def test_content_library_types_parse_and_serialize_documented_fields():
     assert narrative.sections[0].section_id == "section-1"
     assert user.email == "ada@example.com"
     assert WriteupDeleteResult.from_api({"message": "success", "doc_id": "template_1"}).ok
+
+
+def test_runbook_types_parse_and_serialize_graphql_shapes():
+    assert RunbookTeam.RED.value == "RED"
+    assert RunbookListArgs(limit=10, offset=5, search="repo").to_api() == {
+        "limit": 10,
+        "offset": 5,
+        "search": "repo",
+    }
+    assert RunbookRecordInput(
+        name="Purple Team",
+        short_name="PT",
+        description="Shared procedures",
+        repository_id="repo-1",
+    ).to_api() == {
+        "name": "Purple Team",
+        "shortName": "PT",
+        "description": "Shared procedures",
+        "repositoryId": "repo-1",
+    }
+    assert RunbookProcedureLogInput(
+        text="Started",
+        start_date="2026-06-18T10:00:00Z",
+        team=RunbookTeam.RED,
+    ).to_api() == {
+        "text": "Started",
+        "startDate": "2026-06-18T10:00:00Z",
+        "team": "RED",
+    }
+
+    repository = RunbookRepository.from_api(
+        {
+            "id": "repo-1",
+            "name": "Purple Team",
+            "shortName": "PT",
+            "tags": [{"id": "tag-1", "tag": "attack"}],
+        }
+    )
+    log = RunbookProcedureLog.from_api(
+        {"id": "log-1", "engagementProcedureId": "procedure-1", "text": "Started"}
+    )
+
+    assert repository.record_id == "repo-1"
+    assert repository.tags[0].tag == "attack"
+    assert log.engagement_procedure_id == "procedure-1"
+    assert RunbookMutationResult.from_api({"id": "repo-1"}).ok
+    assert RunbookUploadResult.from_api({"id": "attachment-1"}).ok
 
 
 def test_integration_type_serializes_documented_enums():

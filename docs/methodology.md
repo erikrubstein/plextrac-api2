@@ -176,7 +176,8 @@ generated-style wrappers with explicit signatures and typed returns.
 
 The `clients`, `reports`, `findings`, `assets`, `affected_assets`, `files`, `mailer`, `substatus`,
 `analytics`, `tenant`, `templates`, `integrations`, `parser_actions`, `scheduler`, `users`,
-`admin`, `assessments`, and `content_library` groups are the current models for polished groups:
+`admin`, `assessments`, `content_library`, and `runbooks` groups are the current models for
+polished groups:
 
 - explicit function arguments
 - reusable input dataclasses only when shared across functions
