@@ -18,6 +18,8 @@ def create_session(
     mfa_code: str | None = None,
     session_path: str | Path | None = None,
 ) -> AuthSession:
+    """Log in with PlexTrac credentials and return an authenticated session."""
+
     payload: JsonDict = {"username": username, "password": password}
     if mfa_code:
         payload["code"] = mfa_code
@@ -48,6 +50,8 @@ def session_from_token(
     *,
     refresh_token: str | None = None,
 ) -> AuthSession:
+    """Create a session from an existing PlexTrac bearer token."""
+
     return AuthSession.from_token(base_url=base_url, token=token, refresh_token=refresh_token)
 
 
@@ -57,17 +61,24 @@ def save_session(
     *,
     include_password: bool = False,
 ) -> None:
+    """Persist session details for reuse, excluding the password unless requested."""
+
     session_path = Path(path)
     session_path.parent.mkdir(parents=True, exist_ok=True)
     session_path.write_text(
         json.dumps(session.to_dict(include_password=include_password), indent=2),
         encoding="utf-8",
     )
+    try:
+        session_path.chmod(0o600)
+    except OSError:
+        pass
 
 
 def load_session(path: str | Path) -> AuthSession:
+    """Load a saved PlexTrac session from disk."""
+
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise ValueError("Saved session file must contain a JSON object.")
     return AuthSession.from_dict(data)
-

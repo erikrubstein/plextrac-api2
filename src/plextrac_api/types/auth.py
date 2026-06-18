@@ -7,9 +7,13 @@ from dataclasses import dataclass
 
 from plextrac_api.types.common import JsonDict
 
+REFRESH_WITHIN_SECONDS = 300
+
 
 @dataclass(slots=True)
 class AuthSession:
+    """Authenticated PlexTrac session state shared by all API function groups."""
+
     base_url: str
     token: str
     refresh_token: str | None = None
@@ -47,7 +51,7 @@ class AuthSession:
             base_url=base_url.rstrip("/"),
             token=token,
             refresh_token=refresh_token,
-            expires_at=jwt_expiration(token),
+            expires_at=_jwt_expiration(token),
             username=username,
             password=password,
         )
@@ -64,7 +68,7 @@ class AuthSession:
             base_url=base_url.rstrip("/"),
             token=token,
             refresh_token=refresh_token,
-            expires_at=jwt_expiration(token),
+            expires_at=_jwt_expiration(token),
         )
 
     @classmethod
@@ -96,13 +100,13 @@ class AuthSession:
             data["password"] = self.password
         return {key: value for key, value in data.items() if value is not None}
 
-    def is_expiring(self, *, within_seconds: int = 60) -> bool:
+    def is_expiring(self, *, within_seconds: int = REFRESH_WITHIN_SECONDS) -> bool:
         if self.expires_at is None:
             return False
         return time.time() >= self.expires_at - within_seconds
 
 
-def jwt_expiration(token: str | None) -> float | None:
+def _jwt_expiration(token: str | None) -> float | None:
     if not token or token.count(".") < 2:
         return None
     try:

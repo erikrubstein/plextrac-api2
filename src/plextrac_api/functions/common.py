@@ -8,7 +8,7 @@ from typing import Any
 import httpx
 
 from plextrac_api.generated.endpoints import GROUPS
-from plextrac_api.types.auth import AuthSession, jwt_expiration
+from plextrac_api.types.auth import REFRESH_WITHIN_SECONDS, AuthSession, _jwt_expiration
 from plextrac_api.types.common import JsonDict
 
 
@@ -37,8 +37,6 @@ class PlexTracRateLimitError(PlexTracError):
 
 
 PLACEHOLDER_RE = re.compile(r"(\{\{?)([A-Za-z0-9_]+)(\}?\})")
-REFRESH_WITHIN_SECONDS = 300
-
 
 def build_auth_headers(session: AuthSession | None = None) -> dict[str, str]:
     headers = {"Accept": "application/json", "User-Agent": "plextrac-api/0.1.0"}
@@ -202,7 +200,7 @@ def refresh_session(session: AuthSession) -> AuthSession:
     if not token:
         raise PlexTracAuthError("Refresh response did not include a token.")
     session.token = token
-    session.expires_at = jwt_expiration(token)
+    session.expires_at = _jwt_expiration(token)
     if refresh_token:
         session.refresh_token = refresh_token
     return session
