@@ -26,4 +26,7 @@ If the token is already expired, the SDK raises an authentication error and call
 new session. A `401` response is not treated as the normal refresh trigger when the JWT expiration
 is known, because PlexTrac requires refresh before expiration.
 
+Use `save_session` and `load_session` when a short-lived local cache is useful. Saved sessions omit
+the password by default and are written with owner-only file permissions.
+
 For MFA or custom login flows, obtain a token outside the SDK and pass it as `token`.

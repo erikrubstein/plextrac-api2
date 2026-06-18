@@ -137,8 +137,8 @@ Examples:
 - `ReportReplaceResult` is preferred over `OperationResult` for report text replacement because the
   response includes a meaningful `data` boolean.
 
-Generated endpoint functions are allowed to use `**kwargs` and `Any` temporarily. They exist to
-preserve broad coverage while individual groups are polished.
+Generated endpoint metadata may include unpolished operation names and raw request shapes. Public
+function modules should still expose explicit signatures and typed returns.
 
 ## Formatting Policy
 
@@ -165,15 +165,16 @@ Rules:
 - Do not use docstrings to restate every parameter when type hints already make the signature clear.
 - Mention version or transport details only when they are important to the user's decision.
 
-## Generated vs Polished Functions
+## Generated Metadata vs Polished Functions
 
-The SDK currently has two layers:
+The SDK keeps generated metadata and hand-written public wrappers separate:
 
-- Generated endpoint functions provide broad coverage from the PlexTrac Postman collection.
-- Hand-written functions provide the desired long-term interface for high-value groups.
+- Generated endpoint metadata preserves coverage from the PlexTrac Postman collection.
+- Hand-written function modules provide the public Python interface.
 
-Generated functions should be considered scaffolding. As a group is polished, replace ambiguous
-generated-style wrappers with explicit signatures and typed returns.
+Generated metadata should be considered inventory, not the final SDK surface. When endpoint names
+are intentionally polished, add generator overrides so regeneration does not drift from the public
+function names.
 
 The `clients`, `reports`, `findings`, `assets`, `affected_assets`, `files`, `mailer`, `substatus`,
 `analytics`, `tenant`, `templates`, `integrations`, `parser_actions`, `scheduler`, `users`,

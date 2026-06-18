@@ -202,11 +202,11 @@ Display name: Content Library
 | `create_writeup` | POST | `/api/v1/template/create` |  |
 | `update_writeup` | PUT | `/api/v1/template/{writeupId}` |  |
 | `delete_writeup` | DELETE | `/api/v1/template/{writeupId}` |  |
-| `add_writeup_to_report` | PUT | `/api/v1/copy/{writeupId}` | `deprecated; not exposed in polished module` |
+| `add_writeup_to_report` | PUT | `/api/v1/copy/{writeupId}` | deprecated; not exposed in polished module |
 | `bulk_add_writeups_to_report` | POST | `/api/v2/writeups/bulk/addToReport` |  |
 | `list_writeups_from_repository` | POST | `/api/v2/repositories/{repositoryId}/getWriteups` |  |
 | `add_writeups_to_repository` | POST | `/api/v2/repositories/{repositoryId}/addWriteups` |  |
-| `copy_finding_to_writeups_repository` | POST | `/api/v2/repositories/copyFlawToWriteupsRepository` | `deprecated; use create_writeup instead` |
+| `copy_finding_to_writeups_repository` | POST | `/api/v2/repositories/copyFlawToWriteupsRepository` | deprecated; use `create_writeup` instead |
 | `import_writeups_to_repository` | POST | `/api/v2/writeups/import/{source}` |  |
 | `remove_writeups_from_repository` | POST | `/api/v2/repositories/{repositoryId}/removeWriteup` |  |
 | `bulk_copy_writeups` | POST | `/api/v2/writeups/bulk/copy` |  |

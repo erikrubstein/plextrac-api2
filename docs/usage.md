@@ -1,10 +1,7 @@
 # Usage Notes
 
-This SDK is still being polished group by group. Treat `clients`, `reports`, `findings`, and
-`assets` as the current examples of the intended public API shape.
-
-Generated function modules remain available for broad endpoint coverage, but they are scaffolding:
-their signatures and return values may be less explicit until that group is polished.
+The SDK exposes PlexTrac through grouped function modules and explicit dataclasses. Functions that
+call PlexTrac accept an `AuthSession` as their first argument.
 
 ## Authentication
 
@@ -134,7 +131,8 @@ created = findings.create_finding(
 
 ## Raw REST Escape Hatch
 
-Use `rest_request` for unsupported workflows or while a group is still generated-only.
+Use `rest_request` for unsupported workflows, newly documented endpoints that have not been added
+yet, or payload fields PlexTrac supports but this SDK has not modeled.
 
 ```python
 from plextrac_api.functions.common import rest_request

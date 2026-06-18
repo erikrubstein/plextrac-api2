@@ -54,6 +54,7 @@ METHOD_NAME_OVERRIDES = {
     ("Admin", "get_saml_provider"): "get_saml_configuration",
     ("Admin", "get_security_roles"): "list_security_roles",
     ("Admin", "get_sla_benchmarks"): "list_sla_benchmarks",
+    ("Admin", "find_tenant_tag"): "get_tenant_tag_by_name",
     (
         "Admin",
         "get_tenant_provider_authentication_configuration",
@@ -61,7 +62,22 @@ METHOD_NAME_OVERRIDES = {
     ("Admin", "remove_role_user"): "remove_security_role_user",
     ("Admin", "update_security_role_permission"): "update_security_role_permissions",
     ("Analytics", "retreive_analytics_findings_aging"): "retrieve_analytics_findings_aging",
+    (
+        "Analytics",
+        "analytics_trends_age_of_open_findings",
+    ): "retrieve_analytics_trends_age_of_open_findings",
+    (
+        "Analytics",
+        "analytics_trends_from_creation_to_close",
+    ): "retrieve_analytics_trends_from_creation_to_close",
+    (
+        "Analytics",
+        "analytics_trends_opened_closed",
+    ): "retrieve_analytics_trends_opened_closed",
+    ("Analytics", "analytics_trends_sla_findings"): "retrieve_analytics_trends_sla_findings",
+    ("Analytics", "analytics_trends_slas"): "retrieve_analytics_trends_slas",
     ("Assessments", "copy_asessment_questionnaire"): "copy_assessment_questionnaire",
+    ("Assessments", "change_question_order"): "update_question_order",
     ("Assessments", "get_assessment_answers"): "list_assessment_answers",
     ("Assessments", "get_assessment_questions"): "list_assessment_questions",
     ("Assessments", "get_assessment_reviewers"): "list_assessment_reviewers",
@@ -272,6 +288,7 @@ METHOD_NAME_OVERRIDES = {
     ("Integrations", "get_configurations"): "list_configurations",
     ("Integrations", "get_issue_mapping_types"): "list_jira_issue_mappings",
     ("Integrations", "reset_issue_mapping_types"): "reset_jira_issue_mappings",
+    ("Integrations", "save_integration"): "upsert_integration",
     ("Integrations", "tenable_io_get_tags"): "list_tenable_io_tags",
     ("Integrations", "tenable_io_sync_tags"): "sync_tenable_io_tags",
     ("Mailer", "get_mailer_templates"): "list_mailer_templates",
@@ -318,19 +335,19 @@ NOT_EXPOSED_NOTES = {
     (
         "content_library",
         "copy_finding_to_writeups_repository",
-    ): "deprecated; use create_writeup instead",
+    ): "deprecated; use `create_writeup` instead",
     (
         "graph_ql_mutations",
         "finding_update",
-    ): "transport-only; use findings.update_finding or raw execute_graphql",
+    ): "transport-only; use `findings.update_finding` or raw `execute_graphql`",
     (
         "graph_ql_mutations",
         "narrative_update",
-    ): "transport-only; use reports.update_report or raw execute_graphql",
+    ): "transport-only; use `reports.update_report` or raw `execute_graphql`",
     (
         "graph_ql_queries",
         "client_asset",
-    ): "transport-only; use assets.get_asset or raw execute_graphql",
+    ): "transport-only; use `assets.get_asset` or raw `execute_graphql`",
 }
 
 
@@ -685,11 +702,11 @@ def render_coverage(rows: list[tuple[str, str, int]], groups: dict) -> str:
         lines.append("| Method | HTTP | Path | Aliases |")
         lines.append("|---|---|---|---|")
         for endpoint in data["endpoints"]:
-            notes = list(endpoint["aliases"])
+            notes = [f"`{alias}`" for alias in endpoint["aliases"]]
             not_exposed_note = NOT_EXPOSED_NOTES.get((attr_name, endpoint["method_name"]))
             if not_exposed_note:
                 notes.append(not_exposed_note)
-            aliases = ", ".join(f"`{alias}`" for alias in notes) or ""
+            aliases = ", ".join(notes) or ""
             lines.append(
                 f"| `{endpoint['method_name']}` | {endpoint['method']} | "
                 f"`{endpoint['path']}` | {aliases} |"
