@@ -1,137 +1,298 @@
-"""Generated PlexTrac endpoint functions.
-
-Do not edit by hand. Run scripts/generate_endpoints.py to refresh.
-"""
-
 from __future__ import annotations
 
-from typing import Any
-
-from plextrac_api.functions.common import endpoint_request
+from plextrac_api.functions.common import rest_request
 from plextrac_api.types.auth import AuthSession
+from plextrac_api.types.common import JsonDict, OperationResult
+from plextrac_api.types.integrations import (
+    IntegrationConfiguration,
+    IntegrationConfigurationInput,
+    IntegrationSettings,
+    JiraConnection,
+    JiraConnectionInput,
+    JiraIssueMapping,
+    JiraIssueMappingInput,
+    JiraIssueTypeMappingInput,
+    JiraProject,
+    JiraProjectMappingType,
+    JiraTicketCreateResult,
+    TenableTag,
+)
 
 
-def get_integration(session: AuthSession, **kwargs: Any) -> Any:
-    """GET /api/v2/tenant/{tenantId}/integrations/{product}\n\nPlexTrac endpoint: Get Integration"""
-    return endpoint_request(session, "integrations", "get_integration", **kwargs)
+def get_integration(
+    session: AuthSession,
+    tenant_id: int | str,
+    product: str,
+) -> IntegrationSettings:
+    """Get one tenant integration configuration."""
+    data = rest_request(session, "GET", f"/api/v2/tenant/{tenant_id}/integrations/{product}")
+    if not isinstance(data, dict):
+        raise ValueError("PlexTrac integration response was not a JSON object.")
+    return IntegrationSettings.from_api(product, data)
 
 
-def get(session: AuthSession, **kwargs: Any) -> Any:
-    """Alias for `get_integration`."""
-    return get_integration(session, **kwargs)
+def save_integration(
+    session: AuthSession,
+    tenant_id: int | str,
+    product: str,
+    settings: JsonDict,
+) -> IntegrationSettings:
+    """Save one tenant integration configuration."""
+    data = rest_request(
+        session,
+        "POST",
+        f"/api/v2/tenant/{tenant_id}/integrations/{product}",
+        json=dict(settings),
+    )
+    if not isinstance(data, dict):
+        raise ValueError("PlexTrac integration response was not a JSON object.")
+    return IntegrationSettings.from_api(product, data)
 
 
-def save_integration(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v2/tenant/{tenantId}/integrations/{product}\n\nPlexTrac endpoint: Save Integration"""
-    return endpoint_request(session, "integrations", "save_integration", **kwargs)
+def delete_integration(
+    session: AuthSession,
+    tenant_id: int | str,
+    product: str,
+) -> OperationResult:
+    """Delete one tenant integration configuration."""
+    data = rest_request(session, "DELETE", f"/api/v2/tenant/{tenant_id}/integrations/{product}")
+    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def delete_integration(session: AuthSession, **kwargs: Any) -> Any:
-    """DELETE /api/v2/tenant/{tenantId}/integrations/{product}\n\nPlexTrac endpoint: Delete Integration"""
-    return endpoint_request(session, "integrations", "delete_integration", **kwargs)
+def list_tenable_io_tags(
+    session: AuthSession,
+) -> list[TenableTag]:
+    """List Tenable.io tags."""
+    data = rest_request(session, "GET", "/api/v2/integrations/tenable-io/tags")
+    return [TenableTag.from_api(item) for item in data if isinstance(item, dict)] if isinstance(data, list) else []
 
 
-def delete(session: AuthSession, **kwargs: Any) -> Any:
-    """Alias for `delete_integration`."""
-    return delete_integration(session, **kwargs)
+def sync_tenable_io_tags(
+    session: AuthSession,
+) -> OperationResult:
+    """Trigger a Tenable.io tag sync."""
+    data = rest_request(session, "GET", "/api/v2/integrations/tenable-io/tags/sync")
+    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def tenable_io_get_tags(session: AuthSession, **kwargs: Any) -> Any:
-    """GET /api/v2/integrations/tenable-io/tags\n\nPlexTrac endpoint: TenableIO Get Tags"""
-    return endpoint_request(session, "integrations", "tenable_io_get_tags", **kwargs)
+def list_jira_projects(
+    session: AuthSession,
+) -> list[JiraProject]:
+    """List Jira projects available to the legacy Jira integration."""
+    data = rest_request(session, "GET", "/api/v1/jira/projects")
+    return [JiraProject.from_api(item) for item in data if isinstance(item, dict)] if isinstance(data, list) else []
 
 
-def tenable_io_sync_tags(session: AuthSession, **kwargs: Any) -> Any:
-    """GET /api/v2/integrations/tenable-io/tags/sync\n\nPlexTrac endpoint: TenableIO Sync Tags"""
-    return endpoint_request(session, "integrations", "tenable_io_sync_tags", **kwargs)
+def create_jira_connection(
+    session: AuthSession,
+    connection: JiraConnectionInput,
+) -> JiraConnection:
+    """Create a Jira connection."""
+    data = rest_request(session, "POST", "/api/v2/jira/connect", json=connection.to_api())
+    if not isinstance(data, dict):
+        raise ValueError("PlexTrac Jira connection response was not a JSON object.")
+    return JiraConnection.from_api(data)
 
 
-def list_jira_projects(session: AuthSession, **kwargs: Any) -> Any:
-    """GET /api/v1/jira/projects\n\nPlexTrac endpoint: List Jira Projects"""
-    return endpoint_request(session, "integrations", "list_jira_projects", **kwargs)
+def update_jira_connection(
+    session: AuthSession,
+    integration_id: int | str,
+    connection: JiraConnectionInput,
+) -> JiraConnection:
+    """Update a Jira connection."""
+    data = rest_request(
+        session,
+        "PUT",
+        f"/api/v2/jira/connect/{integration_id}",
+        json=connection.to_api(),
+    )
+    if not isinstance(data, dict):
+        raise ValueError("PlexTrac Jira connection response was not a JSON object.")
+    return JiraConnection.from_api(data)
 
 
-def create_and_link_jira_ticket_to_finding(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/createAndLinkJiraTicket\n\nPlexTrac endpoint: Create and Link Jira Ticket to Finding"""
-    return endpoint_request(session, "integrations", "create_and_link_jira_ticket_to_finding", **kwargs)
+def delete_jira_connection(
+    session: AuthSession,
+    integration_id: int | str,
+) -> OperationResult:
+    """Delete a Jira connection."""
+    data = rest_request(session, "DELETE", f"/api/v2/jira/connect/{integration_id}")
+    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def bulk_create_and_link_jira_tickets_to_findings(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v2/client/{clientId}/report/{reportId}/findings/createJiraTickets\n\nPlexTrac endpoint: Bulk Create and Link Jira Tickets to Findings"""
-    return endpoint_request(session, "integrations", "bulk_create_and_link_jira_tickets_to_findings", **kwargs)
+def set_jira_projects(
+    session: AuthSession,
+    integration_id: int | str,
+    *,
+    mapping_type: JiraProjectMappingType,
+    projects: list[JiraProject],
+) -> OperationResult:
+    """Set Jira projects available to a Jira connection."""
+    data = rest_request(
+        session,
+        "POST",
+        f"/api/v2/jira/projects/{integration_id}",
+        json={"mappingType": mapping_type.value, "projects": [project.to_api() for project in projects]},
+    )
+    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def create_jira_connection(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v2/jira/connect\n\nPlexTrac endpoint: Create Jira Connection"""
-    return endpoint_request(session, "integrations", "create_jira_connection", **kwargs)
+def get_jira_projects(
+    session: AuthSession,
+    integration_id: int | str,
+) -> list[JiraProject]:
+    """List Jira projects for a Jira connection."""
+    data = rest_request(session, "GET", f"/api/v2/jira/integration/projects/{integration_id}")
+    return [JiraProject.from_api(item) for item in data if isinstance(item, dict)] if isinstance(data, list) else []
 
 
-def update_jira_connection(session: AuthSession, **kwargs: Any) -> Any:
-    """PUT /api/v2/jira/connect/{integrationId}\n\nPlexTrac endpoint: Update Jira Connection"""
-    return endpoint_request(session, "integrations", "update_jira_connection", **kwargs)
+def list_jira_issue_mappings(
+    session: AuthSession,
+    integration_id: int | str,
+    jira_project_id: int | str,
+    jira_issue_type_id: int | str,
+) -> list[JiraIssueMapping]:
+    """List Jira issue mapping fields for a project issue type."""
+    data = rest_request(
+        session,
+        "GET",
+        f"/api/v2/jira/integration/{integration_id}/projects/{jira_project_id}/issues/{jira_issue_type_id}/mappings",
+    )
+    return [JiraIssueMapping.from_api(item) for item in data if isinstance(item, dict)] if isinstance(data, list) else []
 
 
-def delete_jira_connection(session: AuthSession, **kwargs: Any) -> Any:
-    """DELETE /api/v2/jira/connect/{integrationId}\n\nPlexTrac endpoint: Delete Jira Connection"""
-    return endpoint_request(session, "integrations", "delete_jira_connection", **kwargs)
+def reset_jira_issue_mappings(
+    session: AuthSession,
+    integration_id: int | str,
+    jira_project_id: int | str,
+    jira_issue_type_id: int | str,
+) -> OperationResult:
+    """Reset Jira issue mapping fields for a project issue type."""
+    data = rest_request(
+        session,
+        "POST",
+        f"/api/v2/jira/integration/{integration_id}/projects/{jira_project_id}/issues/{jira_issue_type_id}/mappings/reset",
+    )
+    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def set_jira_projects(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v2/jira/projects/{integrationId}\n\nPlexTrac endpoint: Set Jira Projects"""
-    return endpoint_request(session, "integrations", "set_jira_projects", **kwargs)
+def bulk_update_jira_issue_type_mappings(
+    session: AuthSession,
+    integration_id: int | str,
+    mappings: list[JiraIssueTypeMappingInput],
+) -> OperationResult:
+    """Bulk update Jira issue type mappings."""
+    data = rest_request(
+        session,
+        "PUT",
+        f"/api/v2/jira/integration/{integration_id}/issues/bulk/mappings",
+        json=[mapping.to_api() for mapping in mappings],
+    )
+    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def get_jira_projects(session: AuthSession, **kwargs: Any) -> Any:
-    """GET /api/v2/jira/integration/projects/{integrationId}\n\nPlexTrac endpoint: Get Jira Projects"""
-    return endpoint_request(session, "integrations", "get_jira_projects", **kwargs)
+def create_jira_tickets_from_findings(
+    session: AuthSession,
+    integration_id: int | str,
+    finding_ids: list[int | str],
+    *,
+    client_id: int | str | None = None,
+    report_id: int | str | None = None,
+    project_id: int | str | None = None,
+    issue_type_id: int | str | None = None,
+    mappings: list[JiraIssueMappingInput] | None = None,
+) -> JiraTicketCreateResult:
+    """Create Jira tickets from PlexTrac findings."""
+    payload = {
+        "findingIds": finding_ids,
+        "clientId": client_id,
+        "reportId": report_id,
+        "projectId": project_id,
+        "issueTypeId": issue_type_id,
+        "mappings": [mapping.to_api() for mapping in mappings] if mappings is not None else None,
+    }
+    data = rest_request(
+        session,
+        "POST",
+        f"/api/v2/jira/integration/{integration_id}/issues/create",
+        json={key: value for key, value in payload.items() if value is not None},
+    )
+    return JiraTicketCreateResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def get_issue_mapping_types(session: AuthSession, **kwargs: Any) -> Any:
-    """GET /api/v2/jira/integration/{integrationId}/projects/{jiraProjectId}/issues/{jiraIssueTypeId}/mappings\n\nPlexTrac endpoint: Get Issue Mapping Types"""
-    return endpoint_request(session, "integrations", "get_issue_mapping_types", **kwargs)
+def unlink_jira_ticket_from_findings(
+    session: AuthSession,
+    integration_id: int | str,
+    client_id: int | str,
+    report_id: int | str,
+    finding_id: int | str,
+) -> OperationResult:
+    """Unlink a Jira ticket from a finding."""
+    data = rest_request(
+        session,
+        "DELETE",
+        f"/api/v2/jira/integration/unlink/client/{client_id}/report/{report_id}/finding/{finding_id}",
+        params={"integrationId": integration_id},
+    )
+    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def reset_issue_mapping_types(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v2/jira/integration/{integrationId}/projects/{jiraProjectId}/issues/{jiraIssueTypeId}/mappings/reset\n\nPlexTrac endpoint: Reset Issue Mapping Types"""
-    return endpoint_request(session, "integrations", "reset_issue_mapping_types", **kwargs)
+def list_configurations(
+    session: AuthSession,
+) -> list[IntegrationConfiguration]:
+    """List integration configurations."""
+    data = rest_request(session, "GET", "/api/v2/integrations/configurations")
+    return [IntegrationConfiguration.from_api(item) for item in data if isinstance(item, dict)] if isinstance(data, list) else []
 
 
-def bulk_update_issue_type_mappings(session: AuthSession, **kwargs: Any) -> Any:
-    """PUT /api/v2/jira/integration/{integrationId}/issues/bulk/mappings\n\nPlexTrac endpoint: Bulk Update Issue Type Mappings"""
-    return endpoint_request(session, "integrations", "bulk_update_issue_type_mappings", **kwargs)
+def create_configuration(
+    session: AuthSession,
+    configuration: IntegrationConfigurationInput,
+) -> IntegrationConfiguration:
+    """Create an integration configuration."""
+    data = rest_request(
+        session,
+        "POST",
+        "/api/v2/integrations/configurations",
+        json=configuration.to_api(),
+    )
+    if not isinstance(data, dict):
+        raise ValueError("PlexTrac integration configuration response was not a JSON object.")
+    return IntegrationConfiguration.from_api(data)
 
 
-def create_jira_ticket_from_findings(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v2/jira/integration/{integrationId}/issues/create\n\nPlexTrac endpoint: Create Jira Ticket From Findings"""
-    return endpoint_request(session, "integrations", "create_jira_ticket_from_findings", **kwargs)
+def get_configuration(
+    session: AuthSession,
+    config_id: int | str,
+) -> IntegrationConfiguration:
+    """Get one integration configuration."""
+    data = rest_request(session, "GET", f"/api/v2/integrations/configurations/{config_id}")
+    if not isinstance(data, dict):
+        raise ValueError("PlexTrac integration configuration response was not a JSON object.")
+    return IntegrationConfiguration.from_api(data)
 
 
-def unlink_jira_ticket_from_findings(session: AuthSession, **kwargs: Any) -> Any:
-    """DELETE /api/v2/jira/integration/unlink/client/{clientId}/report/{reportId}/finding/{findingId}\n\nPlexTrac endpoint: Unlink Jira Ticket From Findings"""
-    return endpoint_request(session, "integrations", "unlink_jira_ticket_from_findings", **kwargs)
+def update_configuration(
+    session: AuthSession,
+    config_id: int | str,
+    configuration: IntegrationConfigurationInput,
+) -> IntegrationConfiguration:
+    """Update an integration configuration."""
+    data = rest_request(
+        session,
+        "PUT",
+        f"/api/v2/integrations/configurations/{config_id}",
+        json=configuration.to_api(),
+    )
+    if not isinstance(data, dict):
+        raise ValueError("PlexTrac integration configuration response was not a JSON object.")
+    return IntegrationConfiguration.from_api(data)
 
 
-def get_configurations(session: AuthSession, **kwargs: Any) -> Any:
-    """GET /api/v2/integrations/configurations\n\nPlexTrac endpoint: Get Configurations"""
-    return endpoint_request(session, "integrations", "get_configurations", **kwargs)
-
-
-def create_configurations(session: AuthSession, **kwargs: Any) -> Any:
-    """POST /api/v2/integrations/configurations\n\nPlexTrac endpoint: Create Configurations"""
-    return endpoint_request(session, "integrations", "create_configurations", **kwargs)
-
-
-def get_configuration(session: AuthSession, **kwargs: Any) -> Any:
-    """GET /api/v2/integrations/configurations/{configId}\n\nPlexTrac endpoint: Get Configuration"""
-    return endpoint_request(session, "integrations", "get_configuration", **kwargs)
-
-
-def update_configuration(session: AuthSession, **kwargs: Any) -> Any:
-    """PUT /api/v2/integrations/configurations/{configId}\n\nPlexTrac endpoint: Update Configuration"""
-    return endpoint_request(session, "integrations", "update_configuration", **kwargs)
-
-
-def delete_configuration(session: AuthSession, **kwargs: Any) -> Any:
-    """DELETE /api/v2/integrations/configurations/{configId}\n\nPlexTrac endpoint: Delete Configuration"""
-    return endpoint_request(session, "integrations", "delete_configuration", **kwargs)
-
+def delete_configuration(
+    session: AuthSession,
+    config_id: int | str,
+) -> OperationResult:
+    """Delete an integration configuration."""
+    data = rest_request(session, "DELETE", f"/api/v2/integrations/configurations/{config_id}")
+    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})

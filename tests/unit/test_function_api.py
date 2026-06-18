@@ -12,6 +12,7 @@ from plextrac_api.functions import (
     clients,
     files,
     findings,
+    integrations,
     mailer,
     reports,
     substatus,
@@ -37,6 +38,8 @@ from plextrac_api.types import (
     EmailTemplateKind,
     FindingField,
     FindingInput,
+    JiraConnectionInput,
+    JiraSyncFrequency,
     FindingSeverity,
     FindingStatus,
     FindingTemplateInput,
@@ -592,6 +595,43 @@ def test_explicit_finding_list_uses_latest_paginated_endpoint(monkeypatch):
     def fake_send(session, method, path, **kwargs):
         seen["method"] = method
         seen["path"] = path
+def test_explicit_integration_create_jira_connection_uses_enum(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={"integrationId": "jira-1", "syncFrequency": "Hourly"},
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = integrations.create_jira_connection(
+        session,
+        JiraConnectionInput(
+            url="https://jira.example.com",
+            username="api@example.com",
+            api_token="secret",
+            sync_frequency=JiraSyncFrequency.HOURLY,
+        ),
+    )
+
+    assert result.integration_id == "jira-1"
+    assert result.sync_frequency is JiraSyncFrequency.HOURLY
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v2/jira/connect"
+    assert seen["json"] == {
+        "url": "https://jira.example.com",
+        "username": "api@example.com",
+        "apiToken": "secret",
+        "syncFrequency": "Hourly",
+    }
+
+
         seen["json"] = kwargs["json"]
         return httpx.Response(
             200,

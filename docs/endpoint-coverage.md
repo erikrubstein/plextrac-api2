@@ -4,8 +4,8 @@ This file is an inventory of the currently known PlexTrac API groups and endpoin
 useful for SDK development and gap tracking, but it is not intended to be the primary user guide.
 
 Most groups are still generated wrappers. The `clients`, `reports`, `findings`, `assets`,
-`affected_assets`, `files`, `mailer`, `substatus`, `analytics`, `tenant`, and `templates` groups
-are hand-polished and show the intended long-term SDK shape.
+`affected_assets`, `files`, `mailer`, `substatus`, `analytics`, `tenant`, `templates`, and
+`integrations` groups are hand-polished and show the intended long-term SDK shape.
 
 The inventory is based on the public PlexTrac Postman collection snapshot.
 
@@ -25,7 +25,7 @@ Total supported endpoint functions in snapshot: **357**
 | Clients | `plextrac_api.functions.clients` | 14 explicit functions |
 | Files | `plextrac_api.functions.files` | 6 explicit functions |
 | Findings | `plextrac_api.functions.findings` | 16 explicit functions |
-| Integrations | `plextrac_api.functions.integrations` | 23 |
+| Integrations | `plextrac_api.functions.integrations` | 21 explicit functions |
 | Mailer | `plextrac_api.functions.mailer` | 3 explicit functions |
 | Parser Actions | `plextrac_api.functions.parser_actions` | 8 |
 | QA Workflow | _not generated_ | 0 |
@@ -291,23 +291,23 @@ Display name: Integrations
 | `get_integration` | GET | `/api/v2/tenant/{tenantId}/integrations/{product}` | `get` |
 | `save_integration` | POST | `/api/v2/tenant/{tenantId}/integrations/{product}` |  |
 | `delete_integration` | DELETE | `/api/v2/tenant/{tenantId}/integrations/{product}` | `delete` |
-| `tenable_io_get_tags` | GET | `/api/v2/integrations/tenable-io/tags` |  |
-| `tenable_io_sync_tags` | GET | `/api/v2/integrations/tenable-io/tags/sync` |  |
+| `list_tenable_io_tags` | GET | `/api/v2/integrations/tenable-io/tags` |  |
+| `sync_tenable_io_tags` | GET | `/api/v2/integrations/tenable-io/tags/sync` |  |
 | `list_jira_projects` | GET | `/api/v1/jira/projects` |  |
-| `create_and_link_jira_ticket_to_finding` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/createAndLinkJiraTicket` |  |
-| `bulk_create_and_link_jira_tickets_to_findings` | POST | `/api/v2/client/{clientId}/report/{reportId}/findings/createJiraTickets` |  |
+| `create_and_link_jira_ticket_to_finding` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/createAndLinkJiraTicket` | deprecated; not exposed in polished module |
+| `bulk_create_and_link_jira_tickets_to_findings` | POST | `/api/v2/client/{clientId}/report/{reportId}/findings/createJiraTickets` | deprecated; not exposed in polished module |
 | `create_jira_connection` | POST | `/api/v2/jira/connect` |  |
 | `update_jira_connection` | PUT | `/api/v2/jira/connect/{integrationId}` |  |
 | `delete_jira_connection` | DELETE | `/api/v2/jira/connect/{integrationId}` |  |
 | `set_jira_projects` | POST | `/api/v2/jira/projects/{integrationId}` |  |
 | `get_jira_projects` | GET | `/api/v2/jira/integration/projects/{integrationId}` |  |
-| `get_issue_mapping_types` | GET | `/api/v2/jira/integration/{integrationId}/projects/{jiraProjectId}/issues/{jiraIssueTypeId}/mappings` |  |
-| `reset_issue_mapping_types` | POST | `/api/v2/jira/integration/{integrationId}/projects/{jiraProjectId}/issues/{jiraIssueTypeId}/mappings/reset` |  |
-| `bulk_update_issue_type_mappings` | PUT | `/api/v2/jira/integration/{integrationId}/issues/bulk/mappings` |  |
-| `create_jira_ticket_from_findings` | POST | `/api/v2/jira/integration/{integrationId}/issues/create` |  |
+| `list_jira_issue_mappings` | GET | `/api/v2/jira/integration/{integrationId}/projects/{jiraProjectId}/issues/{jiraIssueTypeId}/mappings` |  |
+| `reset_jira_issue_mappings` | POST | `/api/v2/jira/integration/{integrationId}/projects/{jiraProjectId}/issues/{jiraIssueTypeId}/mappings/reset` |  |
+| `bulk_update_jira_issue_type_mappings` | PUT | `/api/v2/jira/integration/{integrationId}/issues/bulk/mappings` |  |
+| `create_jira_tickets_from_findings` | POST | `/api/v2/jira/integration/{integrationId}/issues/create` |  |
 | `unlink_jira_ticket_from_findings` | DELETE | `/api/v2/jira/integration/unlink/client/{clientId}/report/{reportId}/finding/{findingId}` |  |
-| `get_configurations` | GET | `/api/v2/integrations/configurations` |  |
-| `create_configurations` | POST | `/api/v2/integrations/configurations` |  |
+| `list_configurations` | GET | `/api/v2/integrations/configurations` |  |
+| `create_configuration` | POST | `/api/v2/integrations/configurations` |  |
 | `get_configuration` | GET | `/api/v2/integrations/configurations/{configId}` |  |
 | `update_configuration` | PUT | `/api/v2/integrations/configurations/{configId}` |  |
 | `delete_configuration` | DELETE | `/api/v2/integrations/configurations/{configId}` |  |

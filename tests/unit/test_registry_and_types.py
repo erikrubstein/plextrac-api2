@@ -47,6 +47,10 @@ from plextrac_api.types import (
     FindingTemplateInput,
     FindingVisibility,
     OperationResult,
+    IntegrationConfigurationInput,
+    IntegrationConfigurationType,
+    JiraConnectionInput,
+    JiraSyncFrequency,
     Pagination,
     Report,
     ReportCreateResult,
@@ -146,6 +150,22 @@ def test_client_type_parses_documented_fields():
         {
             "client_id": 1,
             "cuid": "client-cuid",
+    assert "list_configurations" in method_names
+    assert "get_configurations" not in method_names
+    assert "create_configuration" in method_names
+    assert "create_configurations" not in method_names
+    assert "list_tenable_io_tags" in method_names
+    assert "tenable_io_get_tags" not in method_names
+    assert "sync_tenable_io_tags" in method_names
+    assert "tenable_io_sync_tags" not in method_names
+    assert "list_jira_issue_mappings" in method_names
+    assert "get_issue_mapping_types" not in method_names
+    assert "reset_jira_issue_mappings" in method_names
+    assert "reset_issue_mapping_types" not in method_names
+    assert "bulk_update_jira_issue_type_mappings" in method_names
+    assert "bulk_update_issue_type_mappings" not in method_names
+    assert "create_jira_tickets_from_findings" in method_names
+    assert "create_jira_ticket_from_findings" not in method_names
             "tenant_id": 2,
             "name": "Example",
             "poc": "Alice",
@@ -386,6 +406,31 @@ def test_report_request_shape_types_serialize_with_verified_fields():
         value=[ReportStatus.PUBLISHED.value],
     ).to_api() == {
         "by": "status",
+def test_integration_type_serializes_documented_enums():
+    assert JiraConnectionInput(
+        url="https://jira.example.com",
+        username="api@example.com",
+        api_token="secret",
+        sync_frequency=JiraSyncFrequency.DAILY,
+    ).to_api() == {
+        "url": "https://jira.example.com",
+        "username": "api@example.com",
+        "apiToken": "secret",
+        "syncFrequency": "Daily",
+    }
+    assert IntegrationConfigurationInput(
+        integration_type=IntegrationConfigurationType.SNYK,
+        api_key="secret",
+        api_username="api-user",
+        org_id="org-1",
+    ).to_api() == {
+        "integrationType": "Snyk",
+        "apiKey": "secret",
+        "apiUserName": "api-user",
+        "orgId": "org-1",
+    }
+
+
         "value": ["Published"],
     }
 
