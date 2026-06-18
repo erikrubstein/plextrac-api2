@@ -16,6 +16,7 @@ from plextrac_api.functions import (
     mailer,
     parser_actions,
     reports,
+    scheduler,
     substatus,
     templates,
     tenant,
@@ -37,15 +38,16 @@ from plextrac_api.types import (
     ClientAssetSortField,
     ClientInput,
     EmailTemplateKind,
+    EngagementScheduleEventSearch,
     FindingField,
     FindingInput,
-    JiraConnectionInput,
-    ParserActionSearchType,
-    JiraSyncFrequency,
     FindingSeverity,
     FindingStatus,
     FindingTemplateInput,
     FindingVisibility,
+    JiraConnectionInput,
+    JiraSyncFrequency,
+    ParserActionSearchType,
     ReportInput,
     ReportStatus,
     SortOrder,
@@ -591,12 +593,6 @@ def test_explicit_template_import_uses_named_template_type(monkeypatch, tmp_path
     assert seen["files"]["file"][0] == "export.docx"
 
 
-def test_explicit_finding_list_uses_latest_paginated_endpoint(monkeypatch):
-    seen = {}
-
-    def fake_send(session, method, path, **kwargs):
-        seen["method"] = method
-        seen["path"] = path
 def test_explicit_integration_create_jira_connection_uses_enum(monkeypatch):
     seen = {}
 
@@ -634,8 +630,6 @@ def test_explicit_integration_create_jira_connection_uses_enum(monkeypatch):
     }
 
 
-        seen["json"] = kwargs["json"]
-        return httpx.Response(
 def test_explicit_parser_action_list_uses_named_action_type(monkeypatch):
     seen = {}
 
@@ -662,6 +656,47 @@ def test_explicit_parser_action_list_uses_named_action_type(monkeypatch):
     assert seen["params"] == {"limit": 985, "skip": 0, "type": "IGNORE", "query": "sql"}
 
 
+def test_explicit_scheduler_search_uses_search_type(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={"data": [{"cuid": "event-1", "name": "Assessment"}], "total": 1},
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    page = scheduler.search_engagement_schedule_events(
+        session,
+        EngagementScheduleEventSearch(
+            filters={"status": "APPROVED"},
+            pagination={"offset": 0, "limit": 10},
+        ),
+    )
+
+    assert page.total_count == 1
+    assert page.events[0].cuid == "event-1"
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v2/engagement-schedule-events/search"
+    assert seen["json"] == {
+        "filters": {"status": "APPROVED"},
+        "pagination": {"offset": 0, "limit": 10},
+    }
+
+
+def test_explicit_finding_list_uses_latest_paginated_endpoint(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
             200,
             json={"data": [{"flaw_id": 99, "title": "Example", "severity": "Low"}], "total": 1},
         )

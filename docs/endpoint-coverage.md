@@ -5,7 +5,7 @@ useful for SDK development and gap tracking, but it is not intended to be the pr
 
 Most groups are still generated wrappers. The `clients`, `reports`, `findings`, `assets`,
 `affected_assets`, `files`, `mailer`, `substatus`, `analytics`, `tenant`, `templates`,
-`integrations`, and `parser_actions` groups are hand-polished and show the intended long-term SDK shape.
+`integrations`, `parser_actions`, and `scheduler` groups are hand-polished and show the intended long-term SDK shape.
 
 The inventory is based on the public PlexTrac Postman collection snapshot.
 
@@ -31,7 +31,7 @@ Total supported endpoint functions in snapshot: **357**
 | QA Workflow | _not generated_ | 0 |
 | Reports | `plextrac_api.functions.reports` | 17 explicit functions |
 | Runbooks | `plextrac_api.functions.runbooks` | 63 |
-| Scheduler | `plextrac_api.functions.scheduler` | 10 |
+| Scheduler | `plextrac_api.functions.scheduler` | 10 explicit functions |
 | Substatus | `plextrac_api.functions.substatus` | 4 explicit functions |
 | Templates | `plextrac_api.functions.templates` | 14 explicit functions |
 | Tenant | `plextrac_api.functions.tenant` | 13 explicit functions |
@@ -444,13 +444,13 @@ Display name: Scheduler
 
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
-| `create_engagement_schedule_event_artifact` | POST | `/api/v2/engagement-schedule-artifacts` |  |
-| `get_engagement_schedule_event_artifacts` | GET | `/api/v2/engagement-schedule-events/{engagementScheduleEventCuid}/engagement-schedule-artifacts` |  |
+| `upload_engagement_schedule_event_artifact` | POST | `/api/v2/engagement-schedule-artifacts` |  |
+| `list_engagement_schedule_event_artifacts` | GET | `/api/v2/engagement-schedule-events/{engagementScheduleEventCuid}/engagement-schedule-artifacts` |  |
 | `update_engagement_schedule_event_artifact` | PATCH | `/api/v2/engagement-schedule-artifacts/{engagementScheduleArtifactCuid}` |  |
 | `delete_engagement_schedule_event_artifact` | DELETE | `/api/v2/engagement-schedule-artifacts/{engagementScheduleArtifactCuid}` |  |
 | `download_engagement_schedule_event_artifact` | GET | `/api/v2/engagement-schedule-events/{engagementScheduleEventCuid}/engagement-schedule-artifacts/{engagementScheduleArtifactCuid}` |  |
-| `find_many_engagement_schedule_events` | POST | `/api/v2/engagement-schedule-events/search` |  |
-| `get_engagement_schedule_event_by_id` | GET | `/api/v2/engagement-schedule-events/{engagementScheduleEventCuid}` |  |
+| `search_engagement_schedule_events` | POST | `/api/v2/engagement-schedule-events/search` |  |
+| `get_engagement_schedule_event` | GET | `/api/v2/engagement-schedule-events/{engagementScheduleEventCuid}` |  |
 | `create_engagement_schedule_event` | POST | `/api/v2/engagement-schedule-events` |  |
 | `approve_engagement_schedule_event` | POST | `/api/v2/engagement-schedule-events/{engagementScheduleEventCuid}/approve` |  |
 | `update_engagement_schedule_event` | PATCH | `/api/v2/engagement-schedule-events/{engagementScheduleEventCuid}` |  |

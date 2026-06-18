@@ -94,6 +94,8 @@ from plextrac_api.types.findings import (
     FindingStatusUpdate,
     FindingVisibility,
     Identifier,
+    PresignedUpload,
+)
 from plextrac_api.types.integrations import (
     IntegrationConfiguration,
     IntegrationConfigurationInput,
@@ -110,6 +112,7 @@ from plextrac_api.types.integrations import (
     JiraTicketCreateResult,
     TenableTag,
 )
+from plextrac_api.types.mailer import EmailTemplate, EmailTemplateKind
 from plextrac_api.types.parser_actions import (
     Parser,
     ParserAction,
@@ -119,9 +122,6 @@ from plextrac_api.types.parser_actions import (
     ParserPluginImportResult,
     ParserPluginSource,
 )
-    PresignedUpload,
-)
-from plextrac_api.types.mailer import EmailTemplate, EmailTemplateKind
 from plextrac_api.types.reports import (
     Narrative,
     Report,
@@ -137,6 +137,14 @@ from plextrac_api.types.reports import (
     ReportSortField,
     ReportStatus,
     ReportSummary,
+)
+from plextrac_api.types.scheduler import (
+    EngagementScheduleArtifact,
+    EngagementScheduleArtifactUploadResult,
+    EngagementScheduleEvent,
+    EngagementScheduleEventInput,
+    EngagementScheduleEventPage,
+    EngagementScheduleEventSearch,
 )
 from plextrac_api.types.substatus import Substatus, SubstatusInput, SubstatusStatus
 from plextrac_api.types.templates import (
@@ -206,6 +214,12 @@ __all__ = [
     "CodeSample",
     "CommonIdentifiers",
     "CustomField",
+    "EngagementScheduleArtifact",
+    "EngagementScheduleArtifactUploadResult",
+    "EngagementScheduleEvent",
+    "EngagementScheduleEventInput",
+    "EngagementScheduleEventPage",
+    "EngagementScheduleEventSearch",
     "Evidence",
     "EmailTemplate",
     "EmailTemplateKind",
@@ -223,13 +237,6 @@ __all__ = [
     "FindingInput",
     "FindingPage",
     "FindingPageLimit",
-    "Parser",
-    "ParserAction",
-    "ParserActionInput",
-    "ParserActionSearchType",
-    "ParserActionType",
-    "ParserPluginImportResult",
-    "ParserPluginSource",
     "FindingPagination",
     "FindingSeverity",
     "FindingSort",
@@ -239,6 +246,8 @@ __all__ = [
     "FindingTemplate",
     "FindingTemplateInput",
     "FindingVisibility",
+    "Filter",
+    "Identifier",
     "IntegrationConfiguration",
     "IntegrationConfigurationInput",
     "IntegrationConfigurationType",
@@ -252,8 +261,6 @@ __all__ = [
     "JiraProjectMappingType",
     "JiraSyncFrequency",
     "JiraTicketCreateResult",
-    "Filter",
-    "Identifier",
     "JsonDict",
     "Narrative",
     "NotificationSettings",
@@ -261,6 +268,13 @@ __all__ = [
     "OperationResult",
     "Port",
     "Pagination",
+    "Parser",
+    "ParserAction",
+    "ParserActionInput",
+    "ParserActionSearchType",
+    "ParserActionType",
+    "ParserPluginImportResult",
+    "ParserPluginSource",
     "PresignedUpload",
     "Report",
     "ReportCreateResult",
@@ -297,8 +311,8 @@ __all__ = [
     "TenantAnalytics",
     "TenantPointOfContact",
     "TenantRiskCounts",
-    "TenableTag",
     "TenantSettings",
+    "TenableTag",
     "UserRole",
     "VulnerableParameter",
 ]

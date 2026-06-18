@@ -23,7 +23,6 @@ GENERATED_FUNCTION_GROUPS = {
     "graph_ql_mutations",
     "graph_ql_queries",
     "runbooks",
-    "scheduler",
     "users",
 }
 HAND_WRITTEN_FUNCTION_GROUPS = {
@@ -35,8 +34,9 @@ HAND_WRITTEN_FUNCTION_GROUPS = {
     "findings",
     "integrations",
     "mailer",
-    "reports",
     "parser_actions",
+    "reports",
+    "scheduler",
     "substatus",
     "templates",
     "tenant",
@@ -79,6 +79,16 @@ METHOD_NAME_OVERRIDES = {
     ("Reports", "import_ptrac_report"): "import_report_from_ptrac",
     ("Reports", "search_replace_in_report_occurrences"): "count_report_search_occurrences",
     ("Reports", "search_replace_in_report_replace"): "replace_report_text",
+    (
+        "Scheduler",
+        "create_engagement_schedule_event_artifact",
+    ): "upload_engagement_schedule_event_artifact",
+    ("Scheduler", "find_many_engagement_schedule_events"): "search_engagement_schedule_events",
+    (
+        "Scheduler",
+        "get_engagement_schedule_event_artifacts",
+    ): "list_engagement_schedule_event_artifacts",
+    ("Scheduler", "get_engagement_schedule_event_by_id"): "get_engagement_schedule_event",
     ("Substatus", "list_substatus"): "list_substatuses",
     ("Templates", "get_export_template"): "download_export_template",
     ("Templates", "get_findings_template"): "get_finding_template",

@@ -31,6 +31,7 @@ from plextrac_api.types import (
     ClientSortField,
     EmailTemplate,
     EmailTemplateKind,
+    EngagementScheduleEventSearch,
     Filter,
     Finding,
     FindingCreateResult,
@@ -46,11 +47,11 @@ from plextrac_api.types import (
     FindingTemplate,
     FindingTemplateInput,
     FindingVisibility,
-    OperationResult,
     IntegrationConfigurationInput,
     IntegrationConfigurationType,
     JiraConnectionInput,
     JiraSyncFrequency,
+    OperationResult,
     Pagination,
     ParserActionInput,
     ParserActionType,
@@ -145,14 +146,6 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "get_findings_template" not in method_names
     assert "download_export_template" in method_names
     assert "get_export_template" not in method_names
-    assert all(not name.endswith(("_v1", "_v2", "_v3")) for name in method_names)
-
-
-def test_client_type_parses_documented_fields():
-    client = Client.from_api(
-        {
-            "client_id": 1,
-            "cuid": "client-cuid",
     assert "list_configurations" in method_names
     assert "get_configurations" not in method_names
     assert "create_configuration" in method_names
@@ -164,15 +157,29 @@ def test_client_type_parses_documented_fields():
     assert "list_jira_issue_mappings" in method_names
     assert "get_issue_mapping_types" not in method_names
     assert "reset_jira_issue_mappings" in method_names
-    assert "list_tenant_parser_actions" in method_names
-    assert "get_tenant_parser_actions" not in method_names
-    assert "set_parser_plugin_actions_enabled" in method_names
-    assert "enable_disable_parser_plugin_actions" not in method_names
     assert "reset_issue_mapping_types" not in method_names
     assert "bulk_update_jira_issue_type_mappings" in method_names
     assert "bulk_update_issue_type_mappings" not in method_names
     assert "create_jira_tickets_from_findings" in method_names
     assert "create_jira_ticket_from_findings" not in method_names
+    assert "list_tenant_parser_actions" in method_names
+    assert "get_tenant_parser_actions" not in method_names
+    assert "set_parser_plugin_actions_enabled" in method_names
+    assert "enable_disable_parser_plugin_actions" not in method_names
+    assert "upload_engagement_schedule_event_artifact" in method_names
+    assert "create_engagement_schedule_event_artifact" not in method_names
+    assert "search_engagement_schedule_events" in method_names
+    assert "find_many_engagement_schedule_events" not in method_names
+    assert "get_engagement_schedule_event" in method_names
+    assert "get_engagement_schedule_event_by_id" not in method_names
+    assert all(not name.endswith(("_v1", "_v2", "_v3")) for name in method_names)
+
+
+def test_client_type_parses_documented_fields():
+    client = Client.from_api(
+        {
+            "client_id": 1,
+            "cuid": "client-cuid",
             "tenant_id": 2,
             "name": "Example",
             "poc": "Alice",
@@ -403,16 +410,6 @@ def test_template_type_parses_and_serializes_documented_fields():
     }
 
 
-def test_report_request_shape_types_serialize_with_verified_fields():
-    assert ReportSort(
-        by=ReportSortField.STATUS,
-        order=SortOrder.DESCENDING,
-    ).to_api() == {"by": "status", "order": "DESC"}
-    assert ReportFilter(
-        by=ReportFilterField.STATUS,
-        value=[ReportStatus.PUBLISHED.value],
-    ).to_api() == {
-        "by": "status",
 def test_integration_type_serializes_documented_enums():
     assert JiraConnectionInput(
         url="https://jira.example.com",
@@ -429,6 +426,15 @@ def test_integration_type_serializes_documented_enums():
         integration_type=IntegrationConfigurationType.SNYK,
         api_key="secret",
         api_username="api-user",
+        org_id="org-1",
+    ).to_api() == {
+        "integrationType": "Snyk",
+        "apiKey": "secret",
+        "apiUserName": "api-user",
+        "orgId": "org-1",
+    }
+
+
 def test_parser_action_type_serializes_documented_enums():
     assert ParserActionInput(
         id="sql-1",
@@ -444,15 +450,26 @@ def test_parser_action_type_serializes_documented_enums():
     assert ParserPluginSource.OWASP_ZAP.value == "owaspzap"
 
 
-        org_id="org-1",
+def test_scheduler_type_serializes_search_payload():
+    assert EngagementScheduleEventSearch(
+        filters={"status": "APPROVED"},
+        pagination={"offset": 0, "limit": 10},
     ).to_api() == {
-        "integrationType": "Snyk",
-        "apiKey": "secret",
-        "apiUserName": "api-user",
-        "orgId": "org-1",
+        "filters": {"status": "APPROVED"},
+        "pagination": {"offset": 0, "limit": 10},
     }
 
 
+def test_report_request_shape_types_serialize_with_verified_fields():
+    assert ReportSort(
+        by=ReportSortField.STATUS,
+        order=SortOrder.DESCENDING,
+    ).to_api() == {"by": "status", "order": "DESC"}
+    assert ReportFilter(
+        by=ReportFilterField.STATUS,
+        value=[ReportStatus.PUBLISHED.value],
+    ).to_api() == {
+        "by": "status",
         "value": ["Published"],
     }
 
