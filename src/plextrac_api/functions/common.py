@@ -39,7 +39,7 @@ class PlexTracRateLimitError(PlexTracError):
 PLACEHOLDER_RE = re.compile(r"(\{\{?)([A-Za-z0-9_]+)(\}?\})")
 
 def build_auth_headers(session: AuthSession | None = None) -> dict[str, str]:
-    headers = {"Accept": "application/json", "User-Agent": "plextrac-api/0.1.0"}
+    headers = {"Accept": "application/json", "User-Agent": "plextrac-api2/0.1.0"}
     if session is not None:
         headers["Authorization"] = f"Bearer {session.token}"
     return headers

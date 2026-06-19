@@ -29,6 +29,7 @@ class ClientAssetPageLimit(IntEnum):
     TWENTY_FIVE = 25
     FIFTY = 50
     ONE_HUNDRED = 100
+    ONE_THOUSAND = 1000
 
 
 class TenantAssetSortField(StrEnum):

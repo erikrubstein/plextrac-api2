@@ -1,4 +1,4 @@
-# plextrac-api
+# plextrac-api2
 
 Unofficial Python API for PlexTrac. It provides a typed, function-oriented API for clients,
 reports, findings, assets, assessments, content libraries, integrations, runbooks, users, tenant
@@ -54,7 +54,7 @@ pip install -e ".[dev]"
 From GitHub:
 
 ```bash
-pip install "git+https://github.com/erikrubstein/plextrac-api.git"
+pip install "git+https://github.com/erikrubstein/plextrac-api2.git"
 ```
 
 ## Getting Started

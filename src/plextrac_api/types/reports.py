@@ -1,9 +1,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import StrEnum
+from enum import IntEnum, StrEnum
 
 from plextrac_api.types.common import CustomField, JsonDict, SortOrder, clean
+
+
+class ReportPageLimit(IntEnum):
+    FIVE = 5
+    TEN = 10
+    TWENTY_FIVE = 25
+    FIFTY = 50
+    ONE_HUNDRED = 100
+    ONE_THOUSAND = 1000
 
 
 class ReportStatus(StrEnum):
@@ -26,6 +35,15 @@ class ReportFilterField(StrEnum):
     CLIENTS = "clients"
     STATUS = "status"
     CUIDS = "cuids"
+
+
+@dataclass(slots=True)
+class ReportPagination:
+    offset: int = 0
+    limit: ReportPageLimit = ReportPageLimit.TWENTY_FIVE
+
+    def to_api(self) -> JsonDict:
+        return {"offset": self.offset, "limit": int(self.limit)}
 
 
 @dataclass(slots=True)

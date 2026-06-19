@@ -36,6 +36,8 @@ from plextrac_api.types import (
     ClientFilterField,
     ClientFindingFilter,
     ClientFindingFilterField,
+    ClientFindingPageLimit,
+    ClientFindingPagination,
     ClientPageLimit,
     ClientPagination,
     ClientSort,
@@ -81,6 +83,8 @@ from plextrac_api.types import (
     ReportCreateResult,
     ReportFilter,
     ReportFilterField,
+    ReportPageLimit,
+    ReportPagination,
     ReportSort,
     ReportSortField,
     ReportStatus,
@@ -357,6 +361,18 @@ def test_client_request_shape_types_serialize_with_verified_fields():
     assert ClientPagination(limit=ClientPageLimit.FIFTY, offset=25).to_api() == {
         "offset": 25,
         "limit": 50,
+    }
+    assert ClientPagination(limit=ClientPageLimit.TEN).to_api() == {
+        "offset": 0,
+        "limit": 10,
+    }
+    assert ClientPagination(limit=ClientPageLimit.ONE_THOUSAND).to_api() == {
+        "offset": 0,
+        "limit": 1000,
+    }
+    assert ClientFindingPagination(limit=ClientFindingPageLimit.ALL).to_api() == {
+        "offset": 0,
+        "limit": 99999,
     }
     assert ClientSort(by=ClientSortField.NAME, order=SortOrder.DESCENDING).to_api() == {
         "by": "name",
@@ -857,6 +873,10 @@ def test_assessment_type_serializes_question_and_answer_payloads():
 
 
 def test_report_request_shape_types_serialize_with_verified_fields():
+    assert ReportPagination(limit=ReportPageLimit.ONE_THOUSAND).to_api() == {
+        "offset": 0,
+        "limit": 1000,
+    }
     assert ReportSort(
         by=ReportSortField.STATUS,
         order=SortOrder.DESCENDING,

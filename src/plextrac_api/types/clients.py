@@ -9,9 +9,19 @@ from plextrac_api.types.findings import Finding, FindingSeverity, FindingStatus,
 
 class ClientPageLimit(IntEnum):
     FIVE = 5
+    TEN = 10
     TWENTY_FIVE = 25
     FIFTY = 50
     ONE_HUNDRED = 100
+    ONE_THOUSAND = 1000
+
+
+class ClientFindingPageLimit(IntEnum):
+    ONE = 1
+    TEN = 10
+    FIFTY = 50
+    ONE_HUNDRED = 100
+    ALL = 99999
 
 
 class ClientSortField(StrEnum):
@@ -67,6 +77,15 @@ ClientFindingFilterValue = (
 class ClientPagination:
     offset: int = 0
     limit: ClientPageLimit = ClientPageLimit.TWENTY_FIVE
+
+    def to_api(self) -> JsonDict:
+        return {"offset": self.offset, "limit": int(self.limit)}
+
+
+@dataclass(slots=True)
+class ClientFindingPagination:
+    offset: int = 0
+    limit: ClientFindingPageLimit = ClientFindingPageLimit.TEN
 
     def to_api(self) -> JsonDict:
         return {"offset": self.offset, "limit": int(self.limit)}

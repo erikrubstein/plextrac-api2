@@ -12,6 +12,7 @@ from plextrac_api.types.clients import (
     ClientFilter,
     ClientFindingFilter,
     ClientFindingPage,
+    ClientFindingPagination,
     ClientFindingSort,
     ClientInput,
     ClientPage,
@@ -190,13 +191,13 @@ def list_client_findings(
     session: AuthSession,
     client_id: int | str,
     *,
-    pagination: ClientPagination | None = None,
+    pagination: ClientFindingPagination | None = None,
     sort: list[ClientFindingSort] | None = None,
     filters: list[ClientFindingFilter] | None = None,
 ) -> ClientFindingPage:
     """List findings for a client with pagination, sorting, and filters."""
     payload: JsonDict = {
-        "pagination": (pagination or ClientPagination()).to_api(),
+        "pagination": (pagination or ClientFindingPagination()).to_api(),
         "sort": [item.to_api() for item in sort] if sort is not None else None,
         "filters": [item.to_api() for item in filters] if filters is not None else None,
     }

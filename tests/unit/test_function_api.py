@@ -48,6 +48,8 @@ from plextrac_api.types import (
     ClientAssetPageLimit,
     ClientAssetSort,
     ClientAssetSortField,
+    ClientFindingPageLimit,
+    ClientFindingPagination,
     ClientInput,
     ContentLibraryUserInput,
     EmailTemplateKind,
@@ -66,6 +68,8 @@ from plextrac_api.types import (
     QuestionAnswerType,
     QuestionInput,
     ReportInput,
+    ReportPageLimit,
+    ReportPagination,
     ReportStatus,
     RunbookAssetInput,
     RunbookListArgs,
@@ -105,6 +109,52 @@ def test_explicit_client_function_interpolates_path_params(monkeypatch):
     assert seen["method"] == "GET"
     assert seen["path"] == "/api/v1/client/123"
     assert seen["headers"]["Authorization"] == "Bearer test-token"
+
+
+def test_list_clients_and_client_findings_use_distinct_default_pagination(monkeypatch):
+    seen = []
+
+    def fake_send(session, method, path, **kwargs):
+        seen.append({"method": method, "path": path, "json": kwargs["json"]})
+        return httpx.Response(200, json={"data": []})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    clients.list_clients(session)
+    clients.list_client_findings(session, client_id="123")
+
+    assert seen == [
+        {
+            "method": "POST",
+            "path": "/api/v2/clients",
+            "json": {"pagination": {"offset": 0, "limit": 25}},
+        },
+        {
+            "method": "POST",
+            "path": "/api/v2/client/123/findings",
+            "json": {"pagination": {"offset": 0, "limit": 10}},
+        },
+    ]
+
+
+def test_list_client_findings_accepts_all_client_finding_page_limit(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"data": []})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    clients.list_client_findings(
+        session,
+        client_id="123",
+        pagination=ClientFindingPagination(limit=ClientFindingPageLimit.ALL),
+    )
+
+    assert seen["json"] == {"pagination": {"offset": 0, "limit": 99999}}
 
 
 def test_explicit_content_library_create_section_serializes_input(monkeypatch):
@@ -507,6 +557,14 @@ def test_explicit_client_asset_list_uses_assets_group_v2_endpoint(monkeypatch):
         "sort": [{"by": "asset", "order": "ASC"}],
     }
 
+    assets.list_client_assets(
+        session,
+        client_id="client-1",
+        limit=ClientAssetPageLimit.ONE_THOUSAND,
+    )
+
+    assert seen["json"] == {"pagination": {"offset": 0, "limit": 1000}}
+
 
 def test_explicit_report_create_uses_reusable_input(monkeypatch):
     seen = {}
@@ -530,6 +588,28 @@ def test_explicit_report_create_uses_reusable_input(monkeypatch):
     assert seen["method"] == "POST"
     assert seen["path"] == "/api/v1/client/client-1/report/create"
     assert seen["json"] == {"name": "Example Report", "status": "Draft"}
+
+
+def test_explicit_report_list_uses_live_pagination_limits(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"data": [], "total": 0})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    reports.list_reports(
+        session,
+        pagination=ReportPagination(limit=ReportPageLimit.ONE_THOUSAND),
+    )
+
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v2/reports"
+    assert seen["json"] == {"pagination": {"offset": 0, "limit": 1000}}
 
 
 def test_explicit_report_replace_returns_replace_result(monkeypatch):

@@ -8,7 +8,6 @@ from plextrac_api.types.auth import AuthSession
 from plextrac_api.types.common import (
     JsonDict,
     OperationResult,
-    Pagination,
 )
 from plextrac_api.types.reports import (
     Report,
@@ -17,6 +16,7 @@ from plextrac_api.types.reports import (
     ReportFilter,
     ReportInput,
     ReportPage,
+    ReportPagination,
     ReportReplaceResult,
     ReportSearchOccurrenceResult,
     ReportSort,
@@ -62,13 +62,13 @@ def list_client_reports(
 def list_reports(
     session: AuthSession,
     *,
-    pagination: Pagination | None = None,
+    pagination: ReportPagination | None = None,
     sort: list[ReportSort] | None = None,
     filters: list[ReportFilter] | None = None,
 ) -> ReportPage:
     """List tenant reports with pagination, sorting, and filters."""
     payload: JsonDict = {
-        "pagination": (pagination or Pagination()).to_api(),
+        "pagination": (pagination or ReportPagination()).to_api(),
         "sort": [item.to_api() for item in sort] if sort is not None else None,
         "filters": [item.to_api() for item in filters] if filters is not None else None,
     }
