@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import Literal
 
 from plextrac_api.types.assets import AssetCriticality
@@ -8,6 +9,48 @@ from plextrac_api.types.common import JsonDict, clean
 from plextrac_api.types.findings import FindingSeverity, FindingStatus
 
 AnalyticsRecordKind = Literal["generic", "client", "report", "finding", "asset"]
+
+
+class SlaAssetCriticality(StrEnum):
+    CRITICAL = "Critical"
+    HIGH = "High"
+    MEDIUM = "Medium"
+    LOW = "Low"
+    INFORMATIONAL = "Informational"
+    UNSPECIFIED = "Unspecified"
+
+
+class FindingAnalyticsBootstrapOrderField(StrEnum):
+    REPORT_TAGS = "reportTags"
+    CLIENTS = "clients"
+    FINDING_TAGS = "findingTags"
+    REPORTS = "reports"
+    ASSET_TAGS = "assetTags"
+    ASSIGNEES = "assignees"
+    ASSET_PORTS = "assetPorts"
+    OPERATING_SYSTEM = "operatingSystem"
+    DATA_OWNER = "dataOwner"
+    SYSTEM_OWNER = "systemOwner"
+    PHYSICAL_LOCATION = "physicalLocation"
+    CVE_IDS = "cveIDs"
+    CWE_IDS = "cweIDs"
+
+
+DEFAULT_FINDING_ANALYTICS_BOOTSTRAP_ORDER = [
+    FindingAnalyticsBootstrapOrderField.REPORT_TAGS,
+    FindingAnalyticsBootstrapOrderField.CLIENTS,
+    FindingAnalyticsBootstrapOrderField.FINDING_TAGS,
+    FindingAnalyticsBootstrapOrderField.REPORTS,
+    FindingAnalyticsBootstrapOrderField.ASSET_TAGS,
+    FindingAnalyticsBootstrapOrderField.ASSIGNEES,
+    FindingAnalyticsBootstrapOrderField.ASSET_PORTS,
+    FindingAnalyticsBootstrapOrderField.OPERATING_SYSTEM,
+    FindingAnalyticsBootstrapOrderField.DATA_OWNER,
+    FindingAnalyticsBootstrapOrderField.SYSTEM_OWNER,
+    FindingAnalyticsBootstrapOrderField.PHYSICAL_LOCATION,
+    FindingAnalyticsBootstrapOrderField.CVE_IDS,
+    FindingAnalyticsBootstrapOrderField.CWE_IDS,
+]
 
 
 @dataclass(slots=True)
@@ -84,18 +127,21 @@ class FindingAnalyticsBootstrapFilter:
     report_ids: list[int] | None = None
     report_tags: list[str] | None = None
     finding_tags: list[str] | None = None
-    order: list[str] | None = None
+    order: list[FindingAnalyticsBootstrapOrderField] | None = None
 
     def to_api(self) -> JsonDict:
         return clean(
             {
-                "clients": self.client_ids,
-                "clientTags": self.client_tags,
-                "assetTags": self.asset_tags,
-                "reports": self.report_ids,
-                "reportTags": self.report_tags,
-                "findingTags": self.finding_tags,
-                "order": self.order,
+                "clients": self.client_ids or [],
+                "clientTags": self.client_tags or [],
+                "assetTags": self.asset_tags or [],
+                "reports": self.report_ids or [],
+                "reportTags": self.report_tags or [],
+                "findingTags": self.finding_tags or [],
+                "order": [
+                    item.value
+                    for item in (self.order or DEFAULT_FINDING_ANALYTICS_BOOTSTRAP_ORDER)
+                ],
             }
         )
 
@@ -161,7 +207,7 @@ class SlaAnalyticsFilter:
     client_tags: list[str] | None = None
     report_tags: list[str] | None = None
     finding_tags: list[str] | None = None
-    asset_criticality: list[AssetCriticality] | None = None
+    asset_criticality: list[SlaAssetCriticality] | None = None
     asset_tags: list[str] | None = None
     finding_tags_is_union: bool | None = None
     asset_tags_is_union: bool | None = None
@@ -169,22 +215,26 @@ class SlaAnalyticsFilter:
     def to_api(self) -> JsonDict:
         return clean(
             {
-                "clients": self.client_ids,
+                "clients": self.client_ids or [],
                 "dateFrom": self.date_from,
                 "dateTo": self.date_to,
-                "reports": self.report_ids,
-                "findingSeverities": [item.value for item in self.finding_severities]
-                if self.finding_severities is not None
-                else None,
-                "clientTags": self.client_tags,
-                "reportTags": self.report_tags,
-                "findingTags": self.finding_tags,
-                "assetCriticality": [item.value for item in self.asset_criticality]
-                if self.asset_criticality is not None
-                else None,
-                "assetTags": self.asset_tags,
-                "findingTagsIsUnion": self.finding_tags_is_union,
-                "assetTagsIsUnion": self.asset_tags_is_union,
+                "reports": self.report_ids or [],
+                "findingSeverities": [
+                    item.value for item in (self.finding_severities or list(FindingSeverity))
+                ],
+                "clientTags": self.client_tags or [],
+                "reportTags": self.report_tags or [],
+                "findingTags": self.finding_tags or [],
+                "assetCriticality": [
+                    item.value for item in (self.asset_criticality or list(SlaAssetCriticality))
+                ],
+                "assetTags": self.asset_tags or [],
+                "findingTagsIsUnion": self.finding_tags_is_union
+                if self.finding_tags_is_union is not None
+                else True,
+                "assetTagsIsUnion": self.asset_tags_is_union
+                if self.asset_tags_is_union is not None
+                else True,
             }
         )
 
@@ -222,6 +272,16 @@ class AnalyticsRecord:
         record_kind: AnalyticsRecordKind = "generic",
     ) -> AnalyticsRecord:
         raw_id = _first(data, "id")
+        generic_name = _string(data, "name")
+        finding_title = _string(data, "finding_title", "findingTitle", "title")
+        if record_kind == "finding" and finding_title is None:
+            finding_title = generic_name
+        report_name = _string(data, "report_name", "reportName")
+        if record_kind == "report" and report_name is None:
+            report_name = generic_name
+        asset_name = _string(data, "asset_name", "assetName", "asset")
+        if record_kind == "asset" and asset_name is None:
+            asset_name = generic_name
         return cls(
             client_id=_first(data, "client_id", "clientId")
             or (raw_id if record_kind == "client" else None),
@@ -232,9 +292,9 @@ class AnalyticsRecord:
             asset_id=_first(data, "asset_id", "assetId")
             or (raw_id if record_kind == "asset" else None),
             client_name=_string(data, "client_name", "clientName"),
-            report_name=_string(data, "report_name", "reportName"),
-            finding_title=_string(data, "finding_title", "findingTitle", "title", "name"),
-            asset_name=_string(data, "asset_name", "assetName", "asset"),
+            report_name=report_name,
+            finding_title=finding_title,
+            asset_name=asset_name,
             asset_type=_string(data, "asset_type", "assetType", "type"),
             severity=_finding_severity(_first(data, "severity")),
             status=_finding_status(_first(data, "status")),
@@ -364,6 +424,8 @@ def _first_int(data: object, keys: tuple[str, ...]) -> int | None:
 def _finding_severity(value: object) -> FindingSeverity | None:
     if isinstance(value, FindingSeverity):
         return value
+    if isinstance(value, dict):
+        return _finding_severity(value.get("name") or value.get("severity") or value.get("value"))
     if isinstance(value, str):
         for severity in FindingSeverity:
             if value.lower() == severity.value.lower():

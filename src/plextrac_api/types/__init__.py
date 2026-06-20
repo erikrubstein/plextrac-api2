@@ -28,7 +28,9 @@ from plextrac_api.types.analytics import (
     AnalyticsTrendFilter,
     AssetAnalyticsFilter,
     FindingAnalyticsBootstrapFilter,
+    FindingAnalyticsBootstrapOrderField,
     SlaAnalyticsFilter,
+    SlaAssetCriticality,
 )
 from plextrac_api.types.assessments import (
     AnswerOption,
@@ -382,6 +384,7 @@ __all__ = [
     "ExportTemplateType",
     "Finding",
     "FindingAnalyticsBootstrapFilter",
+    "FindingAnalyticsBootstrapOrderField",
     "FindingCreateResult",
     "FindingEvidenceUpdate",
     "FindingField",
@@ -496,6 +499,7 @@ __all__ = [
     "SecurityRolePermissionSection",
     "SecurityRoleResult",
     "SecurityRoleUser",
+    "SlaAssetCriticality",
     "SlaAnalyticsFilter",
     "SLABenchmark",
     "SLABenchmarkNotificationSettings",
