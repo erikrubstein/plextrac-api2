@@ -36,6 +36,9 @@ Important package areas:
 - Keep public polished functions explicit: no public `**kwargs`, `Any`, or `JsonDict` returns.
 - Add or reuse dataclasses/enums instead of exposing ambiguous dictionaries or strings when the
   value set or structure is documented.
+- Prefer semantic public dataclass field names over raw PlexTrac keys. Map raw keys explicitly in
+  `from_api()` and `to_api()`; for example, parse analytics `clientName`, `reportName`, and
+  context-specific `id` values into `client_name`, `report_name`, `finding_id`, or `asset_id`.
 - Keep shared types in `types.common` only when they are truly cross-cutting; otherwise use the
   matching `types.<group>` module.
 - Add generator overrides for intentional endpoint/function naming fixes.

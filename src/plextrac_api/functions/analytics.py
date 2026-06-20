@@ -27,7 +27,10 @@ def retrieve_analytics_findings(
 ) -> AnalyticsResult:
     """Retrieve paginated analytics finding rows."""
     data = rest_request(session, "POST", "/api/v1/clients/analytics/findings", json=filters.to_api())
-    return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
+    return AnalyticsResult.from_api(
+        data if isinstance(data, (dict, list)) else {"data": data},
+        record_kind="finding",
+    )
 
 
 def retrieve_analytics_findings_aging(
@@ -41,7 +44,10 @@ def retrieve_analytics_findings_aging(
         "/api/v1/clients/analytics/findings/aging",
         json=filters.to_api(),
     )
-    return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
+    return AnalyticsResult.from_api(
+        data if isinstance(data, (dict, list)) else {"data": data},
+        record_kind="finding",
+    )
 
 
 def get_finding_analytics_bootstrap(
@@ -69,7 +75,10 @@ def retrieve_analytics_assets(
         "/api/v2/clients/analytics/assets/overview",
         json=filters.to_api(),
     )
-    return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
+    return AnalyticsResult.from_api(
+        data if isinstance(data, (dict, list)) else {"data": data},
+        record_kind="asset",
+    )
 
 
 def retrieve_analytics_assets_with_filter(
@@ -88,7 +97,10 @@ def retrieve_analytics_assets_with_filter(
         params={key: value for key, value in params.items() if value is not None},
         json=filters.to_api(),
     )
-    return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
+    return AnalyticsResult.from_api(
+        data if isinstance(data, (dict, list)) else {"data": data},
+        record_kind="asset",
+    )
 
 
 def retrieve_analytics_trends_opened_closed(

@@ -269,6 +269,11 @@ wrapper. All authenticated API functions take `session` as their first argument.
 
 ### Analytics
 
+Analytics filters use semantic Python field names such as `client_ids`, `report_ids`, and
+`asset_ids`, while response rows are exposed through `AnalyticsResult.records` with fields such as
+`client_name`, `report_name`, `finding_id`, and `asset_id`. The original PlexTrac response remains
+available on `AnalyticsResult.data` and `AnalyticsResult.raw`.
+
 - `retrieve_analytics`
 - `retrieve_analytics_findings`
 - `retrieve_analytics_findings_aging`

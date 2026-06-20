@@ -6,8 +6,10 @@ from plextrac_api.types import (
     AffectedAssetStatusMap,
     AffectedAssetStatusUpdate,
     AnalyticsFilter,
+    AnalyticsRecord,
     AnalyticsResult,
     AnalyticsTags,
+    AnalyticsTrendFilter,
     AnswerOption,
     Artifact,
     ArtifactRelation,
@@ -17,6 +19,7 @@ from plextrac_api.types import (
     AssessmentAnswerField,
     AssessmentSortOrder,
     Asset,
+    AssetAnalyticsFilter,
     AssetCreateResult,
     AssetCriticality,
     AssetInput,
@@ -52,6 +55,7 @@ from plextrac_api.types import (
     ExportTemplateType,
     Filter,
     Finding,
+    FindingAnalyticsBootstrapFilter,
     FindingCreateResult,
     FindingField,
     FindingFilter,
@@ -97,6 +101,7 @@ from plextrac_api.types import (
     RunbookTag,
     RunbookTeam,
     RunbookUploadResult,
+    SlaAnalyticsFilter,
     SLABenchmark,
     SLABenchmarkNotificationSettings,
     Sort,
@@ -504,7 +509,7 @@ def test_substatus_type_parses_and_serializes_documented_fields():
 
 def test_analytics_filter_serializes_documented_fields():
     payload = AnalyticsFilter(
-        clients=[1045],
+        client_ids=[1045],
         tags=AnalyticsTags(findings=["pci"], finding_tags_is_union=True),
         statuses=[FindingStatus.OPEN],
         limit=10,
@@ -518,9 +523,98 @@ def test_analytics_filter_serializes_documented_fields():
         "limit": 10,
         "offset": 0,
     }
+    assert FindingAnalyticsBootstrapFilter(
+        client_ids=[1045],
+        report_ids=[22],
+        finding_tags=["pci"],
+    ).to_api() == {
+        "clients": [1045],
+        "reports": [22],
+        "findingTags": ["pci"],
+    }
+    assert AssetAnalyticsFilter(
+        client_ids=[1045],
+        asset_types=["Server"],
+        criticality=[AssetCriticality.HIGH],
+    ).to_api() == {
+        "clients": [1045],
+        "criticality": ["High"],
+        "type": ["Server"],
+    }
+    assert AnalyticsTrendFilter(
+        client_ids=[1045],
+        report_ids=[22],
+        finding_severities=[FindingSeverity.HIGH],
+    ).to_api() == {
+        "clients": [1045],
+        "reports": [22],
+        "severity": ["High"],
+    }
+    assert SlaAnalyticsFilter(
+        client_ids=[1045],
+        report_ids=[22],
+        finding_severities=[FindingSeverity.HIGH],
+    ).to_api() == {
+        "clients": [1045],
+        "reports": [22],
+        "findingSeverities": ["High"],
+    }
     assert AnalyticsResult.from_api({"status": "success", "data": {"total": 1}}).data == {
         "total": 1
     }
+
+
+def test_analytics_records_parse_raw_keys_to_semantic_fields():
+    finding_result = AnalyticsResult.from_api(
+        {
+            "status": "success",
+            "data": {
+                "total": 1,
+                "rows": [
+                    {
+                        "id": 99,
+                        "clientName": "Example Client",
+                        "reportName": "External Pentest",
+                        "title": "SQL Injection",
+                        "severity": "High",
+                        "status": "Open",
+                        "lastUpdateAt": "2026-06-20T12:00:00Z",
+                        "severities": {"High": 1},
+                    }
+                ],
+            },
+        },
+        record_kind="finding",
+    )
+
+    assert finding_result.total_count == 1
+    assert finding_result.records[0].finding_id == 99
+    assert finding_result.records[0].client_name == "Example Client"
+    assert finding_result.records[0].report_name == "External Pentest"
+    assert finding_result.records[0].finding_title == "SQL Injection"
+    assert finding_result.records[0].severity is FindingSeverity.HIGH
+    assert finding_result.records[0].status is FindingStatus.OPEN
+    assert finding_result.records[0].last_update_at == "2026-06-20T12:00:00Z"
+    assert finding_result.records[0].severity_counts == {"High": 1}
+
+    asset_record = AnalyticsRecord.from_api(
+        {
+            "id": "asset-1",
+            "assetName": "host1",
+            "clientName": "Example Client",
+            "type": "Server",
+            "count": 4,
+            "percentage": "25%",
+        },
+        record_kind="asset",
+    )
+
+    assert asset_record.asset_id == "asset-1"
+    assert asset_record.asset_name == "host1"
+    assert asset_record.client_name == "Example Client"
+    assert asset_record.asset_type == "Server"
+    assert asset_record.count == 4
+    assert asset_record.percentage == "25%"
 
 
 def test_tenant_type_parses_documented_fields():

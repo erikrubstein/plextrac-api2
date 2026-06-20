@@ -890,7 +890,16 @@ def test_explicit_analytics_findings_uses_filter_type(monkeypatch):
         seen["method"] = method
         seen["path"] = path
         seen["json"] = kwargs["json"]
-        return httpx.Response(200, json={"status": "success", "data": {"total": 1}})
+        return httpx.Response(
+            200,
+            json={
+                "status": "success",
+                "data": {
+                    "total": 1,
+                    "rows": [{"id": 99, "clientName": "Example", "reportName": "Report"}],
+                },
+            },
+        )
 
     monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
     session = session_from_token("https://example.plextrac.com", "test-token")
@@ -898,7 +907,7 @@ def test_explicit_analytics_findings_uses_filter_type(monkeypatch):
     result = analytics.retrieve_analytics_findings(
         session,
         AnalyticsFilter(
-            clients=[1045],
+            client_ids=[1045],
             tags=AnalyticsTags(findings=["pci"]),
             statuses=[FindingStatus.OPEN],
             limit=10,
@@ -907,6 +916,9 @@ def test_explicit_analytics_findings_uses_filter_type(monkeypatch):
     )
 
     assert result.status == "success"
+    assert result.records[0].finding_id == 99
+    assert result.records[0].client_name == "Example"
+    assert result.records[0].report_name == "Report"
     assert seen["method"] == "POST"
     assert seen["path"] == "/api/v1/clients/analytics/findings"
     assert seen["json"] == {

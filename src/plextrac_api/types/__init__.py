@@ -22,6 +22,7 @@ from plextrac_api.types.admin import (
 )
 from plextrac_api.types.analytics import (
     AnalyticsFilter,
+    AnalyticsRecord,
     AnalyticsResult,
     AnalyticsTags,
     AnalyticsTrendFilter,
@@ -300,6 +301,7 @@ __all__ = [
     "AuditLogEntry",
     "AuditLogEventType",
     "AnalyticsFilter",
+    "AnalyticsRecord",
     "AnalyticsResult",
     "AnalyticsTags",
     "AnalyticsTrendFilter",
