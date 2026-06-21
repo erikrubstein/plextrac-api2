@@ -652,7 +652,7 @@ def test_explicit_finding_create_uses_reusable_input_and_enums(monkeypatch):
             description="Example description",
             affected_assets={
                 "asset-1": AffectedAsset(
-                    id="asset-1",
+                    asset_id="asset-1",
                     name="host1",
                     status=AffectedAssetStatus.OPEN,
                 )

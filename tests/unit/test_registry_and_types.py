@@ -354,7 +354,7 @@ def test_asset_type_parses_documented_fields():
         }
     )
 
-    assert asset.id == "asset-1"
+    assert asset.asset_id == "asset-1"
     assert asset.name == "host1"
     assert asset.criticality is AssetCriticality.HIGH
     assert asset.type is AssetType.SERVER

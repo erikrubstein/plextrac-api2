@@ -193,7 +193,7 @@ class AssetCreateResult:
 
 @dataclass(slots=True)
 class Asset:
-    id: str | None = None
+    asset_id: str | None = None
     cuid: str | None = None
     name: str | None = None
     client_id: int | str | None = None
@@ -217,7 +217,7 @@ class Asset:
     def from_api(cls, data: JsonDict) -> Asset:
         ports = data.get("ports")
         return cls(
-            id=data.get("id"),
+            asset_id=data.get("id"),
             cuid=data.get("cuid"),
             name=data.get("asset") or data.get("name"),
             client_id=data.get("client_id"),
@@ -270,7 +270,7 @@ class Asset:
         return {
             **clean(
                 {
-                    "id": self.id,
+                    "id": self.asset_id,
                     "cuid": self.cuid,
                     "client_id": self.client_id,
                     "doc_type": self.doc_type,
@@ -319,7 +319,7 @@ class AffectedAsset(Asset):
         asset = Asset.from_api(data)
         vulnerable_parameters = data.get("vulnerableParameters")
         return cls(
-            id=asset.id,
+            asset_id=asset.asset_id,
             cuid=asset.cuid,
             name=asset.name,
             client_id=asset.client_id,
