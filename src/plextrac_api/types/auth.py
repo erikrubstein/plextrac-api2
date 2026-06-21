@@ -16,6 +16,7 @@ class AuthSession:
 
     base_url: str
     token: str
+    cookie: str | None = None
     refresh_token: str | None = None
     expires_at: float | None = None
     username: str | None = None
@@ -31,6 +32,7 @@ class AuthSession:
         password: str | None = None,
     ) -> AuthSession:
         token = _first_string(data, ("token", "jwt", "jwtToken", "accessToken", "access_token"))
+        cookie = _first_string(data, ("cookie",))
         refresh_token = _first_string(data, ("refreshToken", "refresh_token"))
 
         nested = data.get("data")
@@ -43,6 +45,8 @@ class AuthSession:
                 nested,
                 ("refreshToken", "refresh_token"),
             )
+        if not cookie and isinstance(nested, dict):
+            cookie = _first_string(nested, ("cookie",))
 
         if not token:
             raise ValueError("PlexTrac auth response did not include a token.")
@@ -50,6 +54,7 @@ class AuthSession:
         return cls(
             base_url=base_url.rstrip("/"),
             token=token,
+            cookie=cookie,
             refresh_token=refresh_token,
             expires_at=_jwt_expiration(token),
             username=username,
@@ -62,11 +67,13 @@ class AuthSession:
         *,
         base_url: str,
         token: str,
+        cookie: str | None = None,
         refresh_token: str | None = None,
     ) -> AuthSession:
         return cls(
             base_url=base_url.rstrip("/"),
             token=token,
+            cookie=cookie,
             refresh_token=refresh_token,
             expires_at=_jwt_expiration(token),
         )
@@ -82,6 +89,7 @@ class AuthSession:
         return cls(
             base_url=base_url.rstrip("/"),
             token=token,
+            cookie=data.get("cookie"),
             refresh_token=data.get("refresh_token"),
             expires_at=data.get("expires_at"),
             username=data.get("username"),
@@ -92,6 +100,7 @@ class AuthSession:
         data: JsonDict = {
             "base_url": self.base_url,
             "token": self.token,
+            "cookie": self.cookie,
             "refresh_token": self.refresh_token,
             "expires_at": self.expires_at,
             "username": self.username,

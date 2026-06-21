@@ -48,11 +48,12 @@ def session_from_token(
     base_url: str,
     token: str,
     *,
+    cookie: str | None = None,
     refresh_token: str | None = None,
 ) -> AuthSession:
     """Create a session from an existing PlexTrac bearer token."""
 
-    return AuthSession.from_token(base_url=base_url, token=token, refresh_token=refresh_token)
+    return AuthSession.from_token(base_url=base_url, token=token, cookie=cookie, refresh_token=refresh_token)
 
 
 def save_session(

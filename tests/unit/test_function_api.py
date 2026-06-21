@@ -43,6 +43,7 @@ from plextrac_api.types import (
     AssetCriticality,
     AssetInput,
     AssetType,
+    AuthSession,
     AuditLogEventType,
     AuthenticationProviderName,
     ClientAssetPageLimit,
@@ -787,6 +788,13 @@ def test_explicit_files_list_artifacts_uses_typed_relations(monkeypatch):
     }
 
 
+def test_explicit_files_list_artifacts_requires_relation_filter():
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    with pytest.raises(ValueError, match="relation filter"):
+        files.list_artifacts(session)
+
+
 def test_explicit_files_upload_artifact_uses_documented_form_fields(monkeypatch, tmp_path):
     seen = {}
     artifact_path = tmp_path / "proof.txt"
@@ -821,6 +829,33 @@ def test_explicit_files_upload_artifact_uses_documented_form_fields(monkeypatch,
     }
     assert seen["files"]["file"][0] == "proof.txt"
     assert seen["files"]["file"][2] == "text/plain"
+
+
+def test_explicit_files_get_upload_uses_session_cookie(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["headers"] = kwargs["headers"]
+        return httpx.Response(200, content=b"image-bytes")
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token", cookie="upload-cookie")
+
+    result = files.get_upload_by_name(session, "logo.png")
+
+    assert result == b"image-bytes"
+    assert seen["method"] == "GET"
+    assert seen["path"] == "/api/v1/uploads/logo.png"
+    assert seen["headers"] == {"Cookie": "token=upload-cookie"}
+
+
+def test_explicit_files_get_upload_requires_session_cookie():
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    with pytest.raises(ValueError, match="upload cookie"):
+        files.get_upload_by_name(session, "logo.png")
 
 
 def test_explicit_mailer_upsert_template_uses_template_enum(monkeypatch):
@@ -1505,6 +1540,18 @@ def test_request_maps_http_errors(monkeypatch):
         clients.get_client(session, client_id="missing")
 
 
+def test_auth_session_preserves_upload_cookie_from_auth_response():
+    session = AuthSession.from_auth_response(
+        {"token": "test-token", "cookie": "upload-cookie"},
+        base_url="https://example.plextrac.com",
+        username="person@example.com",
+    )
+
+    assert session.cookie == "upload-cookie"
+    assert session.to_dict()["cookie"] == "upload-cookie"
+    assert AuthSession.from_dict(session.to_dict()).cookie == "upload-cookie"
+
+
 def test_request_refreshes_before_request_when_token_expires_within_five_minutes(monkeypatch):
     calls = []
     old_token = _jwt_expiring_in(299)
@@ -1512,7 +1559,7 @@ def test_request_refreshes_before_request_when_token_expires_within_five_minutes
     def fake_send(session, method, path, **kwargs):
         calls.append((method, path, kwargs["headers"].get("Authorization")))
         if path == "/api/v1/token/refresh":
-            return httpx.Response(200, json={"token": "new-token"})
+            return httpx.Response(200, json={"token": "new-token", "cookie": "new-cookie"})
         return httpx.Response(200, json={"ok": True})
 
     monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
@@ -1522,6 +1569,7 @@ def test_request_refreshes_before_request_when_token_expires_within_five_minutes
 
     assert result.ok
     assert session.token == "new-token"
+    assert session.cookie == "new-cookie"
     assert calls == [
         ("PUT", "/api/v1/token/refresh", f"Bearer {old_token}"),
         ("DELETE", "/api/v1/client/client-1", "Bearer new-token"),

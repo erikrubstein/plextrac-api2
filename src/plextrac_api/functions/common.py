@@ -196,10 +196,13 @@ def refresh_session(session: AuthSession) -> AuthSession:
     if not isinstance(data, dict):
         raise PlexTracAuthError("Refresh response was not a JSON object.")
     token = _first_string(data, ("token", "jwt", "jwtToken", "accessToken", "access_token"))
+    cookie = _first_string(data, ("cookie",))
     refresh_token = _first_string(data, ("refreshToken", "refresh_token"))
     if not token:
         raise PlexTracAuthError("Refresh response did not include a token.")
     session.token = token
+    if cookie:
+        session.cookie = cookie
     session.expires_at = _jwt_expiration(token)
     if refresh_token:
         session.refresh_token = refresh_token

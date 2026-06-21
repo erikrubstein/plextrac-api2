@@ -23,6 +23,8 @@ def list_artifacts(
     relations: list[ArtifactRelation] | None = None,
 ) -> list[Artifact]:
     """List file-manager artifacts using documented component and relation filters."""
+    if not relations:
+        raise ValueError("list_artifacts requires at least one relation filter.")
     data = rest_request(
         session,
         "POST",
@@ -83,15 +85,15 @@ def delete_artifact(
 def get_upload_by_name(
     session: AuthSession,
     upload_name: str,
-    *,
-    cookie: str,
 ) -> bytes:
     """Get an inline rich-text upload using PlexTrac's cookie-only upload auth."""
+    if not session.cookie:
+        raise ValueError("PlexTrac session did not include an upload cookie. Log in again.")
     data = rest_request(
         session,
         "GET",
         f"/api/v1/uploads/{upload_name}",
-        headers={"Cookie": _token_cookie(cookie)},
+        headers={"Cookie": _token_cookie(session.cookie)},
         authenticated=False,
     )
     if isinstance(data, bytes):
