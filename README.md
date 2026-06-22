@@ -349,6 +349,7 @@ available on `AnalyticsResult.data` and `AnalyticsResult.raw`.
 - `create_engagement_schedule_event`
 - `approve_engagement_schedule_event`
 - `list_mailer_templates`
+- `get_email_template`
 - `upsert_email_template`
 - `get_tenant_parsers`
 - `list_tenant_parser_actions`

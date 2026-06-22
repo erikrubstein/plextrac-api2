@@ -184,7 +184,7 @@ from plextrac_api.types.integrations import (
     JiraTicketCreateResult,
     TenableTag,
 )
-from plextrac_api.types.mailer import EmailTemplate, EmailTemplateKind
+from plextrac_api.types.mailer import EmailTemplate, EmailTemplateInput, EmailTemplateKind
 from plextrac_api.types.parser_actions import (
     Parser,
     ParserAction,
@@ -382,6 +382,7 @@ __all__ = [
     "EngagementScheduleEventSearch",
     "Evidence",
     "EmailTemplate",
+    "EmailTemplateInput",
     "EmailTemplateKind",
     "ExportTemplate",
     "ExportTemplateType",

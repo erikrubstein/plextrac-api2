@@ -11,6 +11,15 @@ class EmailTemplateKind(StrEnum):
 
 
 @dataclass(slots=True)
+class EmailTemplateInput:
+    subject: str
+    body: str
+
+    def to_api(self) -> JsonDict:
+        return {"body": self.body, "subject": self.subject}
+
+
+@dataclass(slots=True)
 class EmailTemplate:
     template: EmailTemplateKind | None = None
     subject: str | None = None

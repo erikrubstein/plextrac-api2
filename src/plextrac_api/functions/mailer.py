@@ -3,7 +3,7 @@ from __future__ import annotations
 from plextrac_api.functions.common import rest_request
 from plextrac_api.types.auth import AuthSession
 from plextrac_api.types.common import OperationResult
-from plextrac_api.types.mailer import EmailTemplate, EmailTemplateKind
+from plextrac_api.types.mailer import EmailTemplate, EmailTemplateInput, EmailTemplateKind
 
 
 def list_mailer_templates(
@@ -34,9 +34,8 @@ def get_email_template(
 def upsert_email_template(
     session: AuthSession,
     tenant_id: int | str,
+    email_template: EmailTemplateInput,
     *,
-    subject: str,
-    body: str,
     template: EmailTemplateKind = EmailTemplateKind.FORGOTTEN_PASSWORD,
 ) -> OperationResult:
     """Create or replace one tenant email template."""
@@ -44,7 +43,7 @@ def upsert_email_template(
         session,
         "PUT",
         f"/api/v2/tenants/{tenant_id}/mailer/templates/{template.value}",
-        json={"body": body, "subject": subject},
+        json=email_template.to_api(),
     )
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 

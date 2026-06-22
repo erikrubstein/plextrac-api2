@@ -55,6 +55,7 @@ from plextrac_api.types import (
     ClientFindingPagination,
     ClientInput,
     ContentLibraryUserInput,
+    EmailTemplateInput,
     EmailTemplateKind,
     EngagementScheduleEventSearch,
     ExportTemplateType,
@@ -1097,9 +1098,8 @@ def test_explicit_mailer_upsert_template_uses_template_enum(monkeypatch):
     result = mailer.upsert_email_template(
         session,
         tenant_id=1,
+        email_template=EmailTemplateInput(subject="Reset", body="<html>Reset</html>"),
         template=EmailTemplateKind.FORGOTTEN_PASSWORD,
-        subject="Reset",
-        body="<html>Reset</html>",
     )
 
     assert result.ok

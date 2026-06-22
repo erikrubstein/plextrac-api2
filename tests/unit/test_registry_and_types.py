@@ -55,6 +55,7 @@ from plextrac_api.types import (
     CurrentUserUpdate,
     DefaultUserRole,
     EmailTemplate,
+    EmailTemplateInput,
     EmailTemplateKind,
     EngagementScheduleEventSearch,
     ExportTemplateType,
@@ -586,6 +587,10 @@ def test_mailer_type_parses_documented_template_fields():
     assert template.template is EmailTemplateKind.FORGOTTEN_PASSWORD
     assert template.subject == "Reset your password"
     assert template.body == "<html>Reset</html>"
+    assert EmailTemplateInput(subject="Reset", body="<html>Reset</html>").to_api() == {
+        "body": "<html>Reset</html>",
+        "subject": "Reset",
+    }
 
 
 def test_substatus_type_parses_and_serializes_documented_fields():

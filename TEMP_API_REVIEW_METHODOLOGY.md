@@ -228,3 +228,9 @@ A group pass is complete when:
   tested tenant product integration lookups returned `Not Found`, and mutating Jira connection /
   integration configuration creation returned `Unauthorized`; no disposable integration artifacts
   were created.
+- `mailer.py`: Steps 1-3 completed locally. Public upsert payloads now use
+  `EmailTemplateInput` for the documented `subject`/`body` request shape. Live non-mutating tests
+  for listing mailer templates and reading the forgotten-password template returned `Unauthorized`
+  for this account. The only mutating endpoint updates the tenant's real `FORGOTTEN_PASSWORD`
+  email template and has no disposable create/delete path; because the account also could not read
+  the current template for safe restoration, live mutation was intentionally skipped.
