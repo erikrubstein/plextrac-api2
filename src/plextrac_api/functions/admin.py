@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import cast
 
-from plextrac_api.functions.common import rest_request
+from plextrac_api.functions.common import PlexTracNotFoundError, rest_request
 from plextrac_api.types.admin import (
     AuditLogEntry,
     AuthenticationProvider,
@@ -77,7 +77,7 @@ def update_tenant_user_authentication_method(
     *,
     authentication_provider: AuthenticationProviderName,
     mfa_enabled: bool,
-    mfa_qrcode: str = "",
+    mfa_qr_code: str = "",
     mfa_secret: str = "",
     mfa_url: str = "",
 ) -> OperationResult:
@@ -90,7 +90,7 @@ def update_tenant_user_authentication_method(
             "authentication_provider": authentication_provider.value,
             "mfa": {
                 "enabled": mfa_enabled,
-                "qrcode": mfa_qrcode,
+                "qrcode": mfa_qr_code,
                 "secret": mfa_secret,
                 "url": mfa_url,
             },
@@ -205,14 +205,14 @@ def get_security_role(
 def check_security_role_name_availability(
     session: AuthSession,
     tenant_id: int | str,
-    key: str,
+    role_key: str,
 ) -> RoleNameAvailability:
     """Check whether a generated RBAC role key is available."""
     data = rest_request(
         session,
         "POST",
         f"/api/v2/tenants/{tenant_id}/security/role/availability",
-        json={"key": key},
+        json={"key": role_key},
     )
     return RoleNameAvailability.from_api(_object(data, "security role availability"))
 
@@ -357,6 +357,8 @@ def get_tenant_tag_by_name(
         f"/api/v1/tenant/{tenant_id}/tag/find",
         json={"name": name},
     )
+    if data is None or (isinstance(data, list) and not data):
+        raise PlexTracNotFoundError(f"PlexTrac tenant tag {name!r} was not found.")
     return TenantTag.from_api(_object(data, "tenant tag"))
 
 
@@ -379,23 +381,26 @@ def create_sla_benchmark(
 
 def get_sla_benchmark(
     session: AuthSession,
-    sla_benchmark_id: int | str,
+    benchmark_id: int | str,
 ) -> SLABenchmark:
     """Get one SLA benchmark."""
-    data = rest_request(session, "GET", f"/api/v2/sla/benchmarks/{sla_benchmark_id}")
-    return SLABenchmark.from_api(_object(data, "SLA benchmark"))
+    data = rest_request(session, "GET", f"/api/v2/sla/benchmarks/{benchmark_id}")
+    benchmark = SLABenchmark.from_api(_object(data, "SLA benchmark"))
+    if benchmark.benchmark_id is None:
+        benchmark.benchmark_id = benchmark_id
+    return benchmark
 
 
 def update_sla_benchmark(
     session: AuthSession,
-    sla_benchmark_id: int | str,
+    benchmark_id: int | str,
     benchmark: SLABenchmark,
 ) -> SLABenchmarkResult:
     """Update an SLA benchmark."""
     data = rest_request(
         session,
         "PUT",
-        f"/api/v2/sla/benchmarks/{sla_benchmark_id}",
+        f"/api/v2/sla/benchmarks/{benchmark_id}",
         json=benchmark.to_api(),
     )
     return SLABenchmarkResult.from_api(_object(data, "SLA benchmark update"))
@@ -403,10 +408,10 @@ def update_sla_benchmark(
 
 def delete_sla_benchmark(
     session: AuthSession,
-    sla_benchmark_id: int | str,
+    benchmark_id: int | str,
 ) -> SLABenchmarkResult:
     """Delete an SLA benchmark."""
-    data = rest_request(session, "DELETE", f"/api/v2/sla/benchmarks/{sla_benchmark_id}")
+    data = rest_request(session, "DELETE", f"/api/v2/sla/benchmarks/{benchmark_id}")
     return SLABenchmarkResult.from_api(_object(data, "SLA benchmark delete"))
 
 

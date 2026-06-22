@@ -80,7 +80,7 @@ class SamlConfiguration:
     enabled: bool
     provider_name: str
     issuer: str
-    cert: str
+    certificate: str
     idp_sso_url: str
     raw: JsonDict | None = None
 
@@ -90,7 +90,7 @@ class SamlConfiguration:
             enabled=bool(data.get("enabled")),
             provider_name=str(data.get("providerName") or data.get("provider_name") or ""),
             issuer=str(data.get("issuer") or ""),
-            cert=str(data.get("cert") or ""),
+            certificate=str(data.get("cert") or data.get("certificate") or ""),
             idp_sso_url=str(data.get("idpSSOUrl") or data.get("idp_sso_url") or ""),
             raw=dict(data),
         )
@@ -100,7 +100,7 @@ class SamlConfiguration:
             "enabled": self.enabled,
             "providerName": self.provider_name,
             "issuer": self.issuer,
-            "cert": self.cert,
+            "cert": self.certificate,
             "idpSSOUrl": self.idp_sso_url,
         }
 
@@ -497,18 +497,18 @@ class SLABenchmark:
 @dataclass(slots=True)
 class SLABenchmarkResult:
     status: str | None = None
-    sla_benchmark_id: int | str | None = None
+    benchmark_id: int | str | None = None
     raw: JsonDict | None = None
 
     @property
     def ok(self) -> bool:
-        return self.status == "success" or self.sla_benchmark_id is not None
+        return self.status == "success" or self.benchmark_id is not None
 
     @classmethod
     def from_api(cls, data: JsonDict) -> SLABenchmarkResult:
         return cls(
             status=data.get("status"),
-            sla_benchmark_id=data.get("data") or data.get("id"),
+            benchmark_id=data.get("data") or data.get("id") or data.get("slaBenchmarkId"),
             raw=dict(data),
         )
 

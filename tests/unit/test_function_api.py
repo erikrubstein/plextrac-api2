@@ -43,9 +43,9 @@ from plextrac_api.types import (
     AssetCriticality,
     AssetInput,
     AssetType,
-    AuthSession,
     AuditLogEventType,
     AuthenticationProviderName,
+    AuthSession,
     ClientAssetPageLimit,
     ClientAssetSort,
     ClientAssetSortField,
@@ -841,7 +841,11 @@ def test_explicit_files_get_upload_uses_session_cookie(monkeypatch):
         return httpx.Response(200, content=b"image-bytes")
 
     monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
-    session = session_from_token("https://example.plextrac.com", "test-token", cookie="upload-cookie")
+    session = session_from_token(
+        "https://example.plextrac.com",
+        "test-token",
+        cookie="upload-cookie",
+    )
 
     result = files.get_upload_by_name(session, "logo.png")
 
@@ -1224,6 +1228,43 @@ def test_explicit_admin_updates_provider_configuration(monkeypatch):
     }
 
 
+def test_explicit_admin_updates_user_authentication_method_uses_refined_names(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"status": "success"})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = admin.update_tenant_user_authentication_method(
+        session,
+        tenant_id=1,
+        user_id="user-1",
+        authentication_provider=AuthenticationProviderName.OKTA,
+        mfa_enabled=True,
+        mfa_qr_code="qr-code",
+        mfa_secret="secret",
+        mfa_url="otpauth://example",
+    )
+
+    assert result.ok
+    assert seen["method"] == "PUT"
+    assert seen["path"] == "/api/v2/authenticate/tenants/1/users/user-1/configuration"
+    assert seen["json"] == {
+        "authentication_provider": "okta",
+        "mfa": {
+            "enabled": True,
+            "qrcode": "qr-code",
+            "secret": "secret",
+            "url": "otpauth://example",
+        },
+    }
+
+
 def test_explicit_admin_lists_security_roles_from_data_wrapper(monkeypatch):
     seen = {}
 
@@ -1254,6 +1295,92 @@ def test_explicit_admin_lists_security_roles_from_data_wrapper(monkeypatch):
     assert roles[0].permissions == ["ADMINISTRATION.ADMINISTRATION_ACCESS"]
     assert seen["method"] == "GET"
     assert seen["path"] == "/api/v2/tenants/1/security/role"
+
+
+def test_explicit_admin_checks_security_role_name_availability_with_role_key(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"available": True})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = admin.check_security_role_name_availability(
+        session,
+        tenant_id=1,
+        role_key="TENANT_1_ROLE_TEST",
+    )
+
+    assert result.available is True
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v2/tenants/1/security/role/availability"
+    assert seen["json"] == {"key": "TENANT_1_ROLE_TEST"}
+
+
+def test_explicit_admin_tenant_tag_operations_handle_live_response_shapes(monkeypatch):
+    seen = []
+
+    def fake_send(session, method, path, **kwargs):
+        seen.append({
+            "method": method,
+            "path": path,
+            "json": kwargs.get("json"),
+            "params": kwargs.get("params"),
+        })
+        return httpx.Response(200, json=[])
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    create_result = admin.create_tenant_tag(session, tenant_id=1, name="codex-temp")
+    delete_result = admin.delete_tenant_tag(session, tenant_id=1, tag_id="tag-1")
+
+    assert create_result.ok
+    assert delete_result.ok
+    assert seen == [
+        {
+            "method": "POST",
+            "path": "/api/v1/tenant/1/tag",
+            "json": {"name": "codex-temp", "scope": "tenant", "ownerId": 1},
+            "params": None,
+        },
+        {
+            "method": "DELETE",
+            "path": "/api/v1/tenant/1/tag/tag-1",
+            "json": None,
+            "params": None,
+        },
+    ]
+
+
+def test_explicit_admin_get_tenant_tag_by_name_raises_not_found_for_empty_list(
+    monkeypatch,
+):
+    def fake_send(session, method, path, **kwargs):
+        return httpx.Response(200, json=[])
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    with pytest.raises(PlexTracNotFoundError):
+        admin.get_tenant_tag_by_name(session, tenant_id=1, name="missing")
+
+
+def test_explicit_admin_get_tenant_tag_by_name_raises_not_found_for_no_content(
+    monkeypatch,
+):
+    def fake_send(session, method, path, **kwargs):
+        return httpx.Response(204)
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    with pytest.raises(PlexTracNotFoundError):
+        admin.get_tenant_tag_by_name(session, tenant_id=1, name="missing")
 
 
 def test_explicit_admin_creates_sla_benchmark(monkeypatch):
@@ -1308,6 +1435,74 @@ def test_explicit_admin_creates_sla_benchmark(monkeypatch):
             "hoursBeforeExpirationNotify": 12,
             "recipients": ["ada@example.com"],
         },
+    }
+
+
+def test_explicit_admin_get_sla_benchmark_preserves_requested_id_when_response_omits_it(
+    monkeypatch,
+):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        return httpx.Response(
+            200,
+            json={
+                "name": "Critical SLA",
+                "daysToClose": 5,
+                "findingSeverity": ["Critical"],
+                "enabled": True,
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    benchmark = admin.get_sla_benchmark(session, benchmark_id="sla-1")
+
+    assert benchmark.benchmark_id == "sla-1"
+    assert benchmark.raw == {
+        "name": "Critical SLA",
+        "daysToClose": 5,
+        "findingSeverity": ["Critical"],
+        "enabled": True,
+    }
+    assert seen["method"] == "GET"
+    assert seen["path"] == "/api/v2/sla/benchmarks/sla-1"
+
+
+def test_explicit_admin_updates_sla_benchmark_with_benchmark_id(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"status": "success", "id": "sla-1"})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = admin.update_sla_benchmark(
+        session,
+        benchmark_id="sla-1",
+        benchmark=SLABenchmark(
+            name="Critical SLA",
+            days_to_close=5,
+            finding_severity=[FindingSeverity.CRITICAL],
+            enabled=True,
+        ),
+    )
+
+    assert result.benchmark_id == "sla-1"
+    assert seen["method"] == "PUT"
+    assert seen["path"] == "/api/v2/sla/benchmarks/sla-1"
+    assert seen["json"] == {
+        "name": "Critical SLA",
+        "daysToClose": 5,
+        "findingSeverity": ["Critical"],
+        "enabled": True,
     }
 
 

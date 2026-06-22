@@ -159,19 +159,23 @@ class OperationResult:
 
     @property
     def ok(self) -> bool:
-        if self.raw and self.raw.get("ok") is True:
-            return True
+        if self.raw:
+            for key in ("ok", "success", "created", "updated", "deleted"):
+                if self.raw.get(key) is True:
+                    return True
         return _is_success_text(self.status) or _is_success_text(self.message)
 
     @classmethod
     def from_api(cls, data: JsonDict | list[JsonDict] | None) -> OperationResult:
         if isinstance(data, dict):
+            status = data.get("status") or data.get("result")
+            message = data.get("message") or data.get("detail")
             return cls(
-                status=data.get("status") or data.get("result"),
-                message=data.get("message") or data.get("detail"),
+                status=status or ("success" if "data" in data and message is None else None),
+                message=message,
                 raw=dict(data),
             )
-        return cls(raw={"data": data})
+        return cls(status="success", raw={"ok": True, "data": data})
 
 
 def _is_success_text(value: object) -> bool:

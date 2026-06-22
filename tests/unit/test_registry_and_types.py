@@ -93,6 +93,7 @@ from plextrac_api.types import (
     ReportSort,
     ReportSortField,
     ReportStatus,
+    RoleNameAvailability,
     RunbookListArgs,
     RunbookMutationResult,
     RunbookProcedureLog,
@@ -102,10 +103,12 @@ from plextrac_api.types import (
     RunbookTag,
     RunbookTeam,
     RunbookUploadResult,
+    SamlConfiguration,
     SlaAnalyticsFilter,
     SlaAssetCriticality,
     SLABenchmark,
     SLABenchmarkNotificationSettings,
+    SLABenchmarkResult,
     Sort,
     SortOrder,
     Substatus,
@@ -404,6 +407,19 @@ def test_operation_result_does_not_flatten_specific_ids():
     assert result.ok
     assert not hasattr(result, "id")
     assert result.raw == {"status": "success", "report_id": 42}
+
+
+def test_operation_result_treats_non_object_success_response_as_ok():
+    result = OperationResult.from_api([])
+
+    assert result.ok
+    assert result.raw == {"ok": True, "data": []}
+
+
+def test_operation_result_treats_boolean_success_flags_as_ok():
+    assert OperationResult.from_api({"deleted": True}).ok
+    assert OperationResult.from_api({"created": True}).ok
+    assert OperationResult.from_api({"updated": True}).ok
 
 
 def test_create_result_types_preserve_specific_identifiers():
@@ -931,6 +947,25 @@ def test_admin_type_serializes_documented_sla_and_audit_fields():
         AuthenticationProviderName.OPENID_CONNECT,
     ]
     assert configuration.provider is AuthenticationProviderName.OKTA
+    saml_configuration = SamlConfiguration.from_api(
+        {
+            "enabled": True,
+            "providerName": "plextrac",
+            "issuer": "https://idp.example.com",
+            "cert": "certificate-body",
+            "idpSSOUrl": "https://idp.example.com/sso",
+        }
+    )
+
+    assert saml_configuration.certificate == "certificate-body"
+    assert saml_configuration.to_api() == {
+        "enabled": True,
+        "providerName": "plextrac",
+        "issuer": "https://idp.example.com",
+        "cert": "certificate-body",
+        "idpSSOUrl": "https://idp.example.com/sso",
+    }
+    assert RoleNameAvailability.from_api({"available": True}).available is True
 
     benchmark = SLABenchmark(
         name="Critical SLA",
@@ -961,6 +996,7 @@ def test_admin_type_serializes_documented_sla_and_audit_fields():
             "sendDailyNotificationToAssignedUser": True,
         },
     }
+    assert SLABenchmarkResult.from_api({"id": "sla-1"}).benchmark_id == "sla-1"
 
     entry = AuditLogEntry.from_api(
         {
