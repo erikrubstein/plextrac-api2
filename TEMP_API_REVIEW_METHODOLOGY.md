@@ -49,7 +49,12 @@ behavior is in scope.
 
 ## Per-Group Review Checklist
 
-For each group:
+Each group is reviewed in three separate user-prompted steps. Do not advance from one step to the
+next until the user asks for it.
+
+### Step 1: Naming And Schemas
+
+For each group, first perform a static naming and schema review:
 
 1. Inventory endpoints from `AGENTS.md` and `src/plextrac_api/generated/endpoints.py`.
 2. Inspect the public function module under `src/plextrac_api/functions/`.
@@ -62,6 +67,29 @@ For each group:
 8. Keep public polished functions explicit: no public `**kwargs`, `Any`, or `JsonDict` returns.
 9. Update tests for request shape, parsing, enum values, and exports.
 10. Update README or AGENTS only when public behavior or review guidance changes.
+
+### Step 2: Non-Mutating Live Tests
+
+After naming and schema changes are reviewed and tested offline, run live non-mutating probes only
+when the user prompts for this step.
+
+- Prefer true read-only endpoints.
+- For POST endpoints that are semantically reads/searches, use minimal payloads and avoid broad
+  scans when a narrower fixture can be discovered.
+- Print structural summaries, counts, response shapes, and whether typed parsing succeeds.
+- Stop broad discovery scans if they become slow or noisy; record the result as inconclusive rather
+  than hammering the tenant.
+- Do not create, update, delete, import, assign, or bulk-modify data in this step.
+
+### Step 3: Careful Mutating Live Tests
+
+Run mutating tests only after the user explicitly prompts for this step.
+
+- Create uniquely named disposable data with an obvious marker.
+- Exercise mutating endpoints only against IDs created in the current probe.
+- Verify each mutation through a read-back endpoint.
+- Clean up in reverse dependency order with marker verification before each delete.
+- Run a read-only marker audit afterward to confirm no created artifacts remain.
 
 ## Live Test Methodology
 
