@@ -337,6 +337,10 @@ NOT_EXPOSED_NOTES = {
         "analytics",
         "retrieve_analytics_trends_age_of_open_findings",
     ): "live-unavailable; not exposed in polished module",
+    (
+        "assessments",
+        "list_client_assessments_legacy",
+    ): "redundant legacy v1 operation; use `list_client_assessments`",
     ("content_library", "add_writeup_to_report"): "deprecated; not exposed in polished module",
     (
         "content_library",

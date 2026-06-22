@@ -47,6 +47,7 @@ from plextrac_api.types import (
     AuditLogEventType,
     AuthenticationProviderName,
     AuthSession,
+    ClientAssessmentInput,
     ClientAssetPageLimit,
     ClientAssetSort,
     ClientAssetSortField,
@@ -69,6 +70,7 @@ from plextrac_api.types import (
     ParserActionSearchType,
     QuestionAnswerType,
     QuestionInput,
+    QuestionnaireInput,
     ReportInput,
     ReportPageLimit,
     ReportPagination,
@@ -1607,6 +1609,7 @@ def test_explicit_assessment_create_question_uses_question_type(monkeypatch):
             title="New Question",
             text="Question text",
             severity=FindingSeverity.HIGH,
+            order=3,
             answer_type=[
                 QuestionAnswerType(
                     key="answer_type_1",
@@ -1637,6 +1640,83 @@ def test_explicit_assessment_create_question_uses_question_type(monkeypatch):
     }
 
 
+def test_explicit_assessment_update_question_sends_order(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"status": "success"})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    assessments.update_question(
+        session,
+        questionnaire_id=123,
+        question_id="q-1",
+        question=QuestionInput(
+            title="Updated Question",
+            text="Updated text",
+            order=3,
+            answer_type=[
+                QuestionAnswerType(
+                    key="answer_type_1",
+                    label="Response",
+                    value="freeForm",
+                    required=False,
+                )
+            ],
+        ),
+    )
+
+    assert seen["method"] == "PUT"
+    assert seen["path"] == "/api/v2/assessments/questionnaires/123/questions/q-1"
+    assert seen["json"] == {
+        "answer_type": [
+            {
+                "key": "answer_type_1",
+                "label": "Response",
+                "value": "freeForm",
+                "required": False,
+            }
+        ],
+        "order": 3,
+        "text": "Updated text",
+        "title": "Updated Question",
+    }
+
+
+def test_explicit_assessment_update_questionnaire_sends_validated_payload(
+    monkeypatch,
+):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={"status": "success", "questionnaire_id": 123},
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = assessments.update_questionnaire(
+        session,
+        questionnaire_id=123,
+        questionnaire=QuestionnaireInput(title="Updated Title", framework_id="cis20"),
+    )
+
+    assert result.ok is True
+    assert seen["method"] == "PUT"
+    assert seen["path"] == "/api/v2/assessments/questionnaires/123"
+    assert seen["json"] == {"assessment_title": "Updated Title", "framework_id": "cis20"}
+
+
 def test_explicit_assessment_list_client_assessments_uses_latest_endpoint(monkeypatch):
     seen = {}
 
@@ -1663,6 +1743,7 @@ def test_explicit_assessment_list_client_assessments_uses_latest_endpoint(monkey
     results = assessments.list_client_assessments(session, tenant_id=1, client_id=2)
 
     assert results[0].assessment_id == 3151
+    assert results[0].title == "CIS Control 12"
     assert seen["method"] == "GET"
     assert seen["path"] == "/api/v2/tenants/1/clients/2/assessments"
     assert seen["params"] == {"limit": 10, "offset": 0, "order": "ascend", "sort": 0}
@@ -1716,6 +1797,7 @@ def test_explicit_assessment_update_answers_serializes_answers(monkeypatch):
     )
 
     assert result.assessment_id == 3151
+    assert result.title == "CIS Control 12"
     assert seen["method"] == "PUT"
     assert seen["path"] == "/api/v2/tenants/1/clients/2/assessments/3/answers"
     assert seen["json"] == {
@@ -1736,6 +1818,79 @@ def test_explicit_assessment_update_answers_serializes_answers(monkeypatch):
             }
         ]
     }
+
+
+def test_explicit_assessment_mutation_results_preserve_top_level_metadata(
+    monkeypatch,
+):
+    seen = []
+
+    def fake_send(session, method, path, **kwargs):
+        seen.append({"method": method, "path": path, "json": kwargs.get("json")})
+        if path.endswith("/report"):
+            return httpx.Response(
+                200,
+                json={
+                    "status": "success",
+                    "message": "full report created successfully",
+                    "data": {},
+                    "report_id": 35228,
+                },
+            )
+        return httpx.Response(
+            200,
+            json={
+                "status": "success",
+                "data": {},
+                "message": "success",
+                "doc_id": "assessment_3151_tenant_1_client_2",
+                "assessment_id": 3151,
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+    assessment = ClientAssessmentInput(questionnaire_id=7, save_only=True)
+
+    created = assessments.create_client_assessment(
+        session,
+        tenant_id=1,
+        client_id=2,
+        assessment=assessment,
+    )
+    updated = assessments.update_client_assessment(
+        session,
+        tenant_id=1,
+        client_id=2,
+        assessment_id=3151,
+        assessment=assessment,
+    )
+    deleted = assessments.delete_client_assessment(
+        session,
+        tenant_id=1,
+        client_id=2,
+        assessment_id=3151,
+    )
+    copied = assessments.copy_assessment_questionnaire(
+        session,
+        tenant_id=1,
+        client_id=2,
+        assessment_id=3151,
+    )
+    report = assessments.create_report_from_assessment_questionnaire(
+        session,
+        tenant_id=1,
+        client_id=2,
+        assessment_id=3151,
+        questionnaire_id=7,
+    )
+
+    assert created.assessment_id == 3151
+    assert updated.document_id == "assessment_3151_tenant_1_client_2"
+    assert deleted.status == "success"
+    assert copied.ok is True
+    assert report.report_id == 35228
+    assert [item["method"] for item in seen] == ["POST", "PUT", "DELETE", "POST", "POST"]
 
 
 def test_explicit_finding_list_uses_latest_paginated_endpoint(monkeypatch):

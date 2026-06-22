@@ -16,8 +16,10 @@ from plextrac_api.types import (
     ArtifactRelation,
     ArtifactRelationModel,
     ArtifactUploadResult,
+    Assessment,
     AssessmentAnswer,
     AssessmentAnswerField,
+    AssessmentCreateResult,
     AssessmentSortOrder,
     Asset,
     AssetAnalyticsFilter,
@@ -31,6 +33,7 @@ from plextrac_api.types import (
     AuthenticationProviderConfiguration,
     AuthenticationProviderName,
     Client,
+    ClientAssessmentInput,
     ClientAssetFilter,
     ClientAssetFilterField,
     ClientAssetSort,
@@ -86,6 +89,8 @@ from plextrac_api.types import (
     ParserPluginSource,
     QuestionAnswerType,
     QuestionInput,
+    Questionnaire,
+    QuestionnaireInput,
     Report,
     ReportCreateResult,
     ReportFilter,
@@ -190,6 +195,9 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "list_client_assessments" in method_names
     assert "list_client_assessments_filtered" not in method_names
     assert "list_client_assessments_legacy" in method_names
+    from plextrac_api.functions import assessments
+
+    assert not hasattr(assessments, "list_client_assessments_legacy")
     assert "get_client_assessment_details" in method_names
     assert "get_client_assessment_with_questions_and_answers" not in method_names
     assert "list_assessment_questions" in method_names
@@ -1061,6 +1069,21 @@ def test_admin_type_serializes_documented_sla_and_audit_fields():
 
 
 def test_assessment_type_serializes_question_and_answer_payloads():
+    questionnaire = Questionnaire.from_api(
+        {
+            "questionnaire_id": 123,
+            "assessment_title": "CIS Control 12",
+            "questions_count": 5,
+        }
+    )
+
+    assert questionnaire.questionnaire_id == 123
+    assert questionnaire.title == "CIS Control 12"
+    assert QuestionnaireInput(title="CIS Control 12", framework_id="cis20").to_api() == {
+        "assessment_title": "CIS Control 12",
+        "framework_id": "cis20",
+    }
+
     question = QuestionInput(
         title="New Question",
         text="Description of new question.",
@@ -1116,6 +1139,57 @@ def test_assessment_type_serializes_question_and_answer_payloads():
         ],
         "status": "completed",
     }
+    parsed_answer = AssessmentAnswer.from_api(
+        {"qid": "12.6", "completionRequired": False}
+    )
+
+    assert parsed_answer.completion_required is False
+    assessment = Assessment.from_api(
+        {
+            "assess_id": 3151,
+            "assessment_title": "CIS Control 12",
+            "hasReviewers": False,
+            "allApproved": False,
+        }
+    )
+
+    assert assessment.assessment_id == 3151
+    assert assessment.title == "CIS Control 12"
+    assert assessment.has_reviewers is False
+    assert assessment.all_approved is False
+
+
+def test_client_assessment_input_serializes_backend_required_defaults():
+    assert ClientAssessmentInput(questionnaire_id=7).to_api() == {
+        "questionnaire_id": 7,
+        "answers": [],
+        "saveOnly": True,
+    }
+
+
+def test_assessment_create_result_parses_nested_ids():
+    result = AssessmentCreateResult.from_api(
+        {
+            "status": "success",
+            "data": {
+                "doc_id": "assessment_3151_tenant_0_client_2",
+                "assessment_id": 3151,
+            },
+        }
+    )
+
+    assert result.ok is True
+    assert result.document_id == "assessment_3151_tenant_0_client_2"
+    assert result.assessment_id == 3151
+    live_shape = AssessmentCreateResult.from_api(
+        {
+            "status": "success",
+            "message": "success",
+            "doc_id": "assessment_4072_tenant_0_client_66602",
+        }
+    )
+
+    assert live_shape.assessment_id == "4072"
 
 
 def test_report_request_shape_types_serialize_with_verified_fields():

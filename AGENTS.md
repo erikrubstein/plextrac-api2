@@ -95,7 +95,7 @@ Total documented endpoint operations in snapshot: **357**
 | Admin | `plextrac_api.functions.admin` | 29 explicit functions |
 | Affected Assets | `plextrac_api.functions.affected_assets` | 6 explicit functions |
 | Analytics | `plextrac_api.functions.analytics` | 10 explicit functions; 1 documented operation not exposed |
-| Assessments | `plextrac_api.functions.assessments` | 32 explicit functions |
+| Assessments | `plextrac_api.functions.assessments` | 31 explicit functions; 1 documented operation not exposed |
 | Assets | `plextrac_api.functions.assets` | 9 explicit functions |
 | Content Library | `plextrac_api.functions.content_library` | 39 explicit functions |
 | Clients | `plextrac_api.functions.clients` | 14 explicit functions |
@@ -222,7 +222,7 @@ Display name: Assessments
 | `export_questionnaire` | GET | `/api/v2/assessments/questionnaires/{questionnaireId}/export` |  |
 | `import_questionnaire` | POST | `/api/v2/import/questionnaire` |  |
 | `list_tenant_assessments` | GET | `/api/v2/tenants/{tenantId}/assessments` |  |
-| `list_client_assessments_legacy` | GET | `/api/v1/tenant/{tenantId}/client/{clientId}/assessments` |  |
+| `list_client_assessments_legacy` | GET | `/api/v1/tenant/{tenantId}/client/{clientId}/assessments` | redundant legacy v1 operation; use `list_client_assessments` |
 | `list_client_assessments` | GET | `/api/v2/tenants/{tenantId}/clients/{clientId}/assessments` |  |
 | `get_client_assessment_details` | GET | `/api/v1/tenant/{tenantId}/client/{clientId}/assessment/{assessmentId}` |  |
 | `get_client_assessment` | GET | `/api/v2/tenants/{tenantId}/clients/{clientId}/assessments/{assessmentId}` |  |

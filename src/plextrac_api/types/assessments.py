@@ -278,17 +278,17 @@ class Framework:
 
 @dataclass(slots=True)
 class QuestionnaireInput:
-    assessment_title: str
+    title: str
     framework_id: str
 
     def to_api(self) -> JsonDict:
-        return {"assessment_title": self.assessment_title, "framework_id": self.framework_id}
+        return {"assessment_title": self.title, "framework_id": self.framework_id}
 
 
 @dataclass(slots=True)
 class Questionnaire:
     questionnaire_id: int | str | None = None
-    assessment_title: str | None = None
+    title: str | None = None
     framework: Framework | None = None
     questions_count: int | None = None
     tenant_id: int | str | None = None
@@ -299,7 +299,7 @@ class Questionnaire:
         source = _nested_object(data)
         return cls(
             questionnaire_id=source.get("questionnaire_id") or source.get("questionnaireId"),
-            assessment_title=source.get("assessment_title") or source.get("title"),
+            title=source.get("assessment_title") or source.get("title"),
             framework=Framework.from_api(source.get("framework")),
             questions_count=source.get("questions_count") or source.get("questionsCount"),
             tenant_id=source.get("tenant_id") or source.get("tenantId"),
@@ -381,7 +381,7 @@ class AssessmentAnswer:
             note=data.get("note"),
             status=data.get("status"),
             order=data.get("order"),
-            completion_required=data.get("completion_required") or data.get("completionRequired"),
+            completion_required=_first(data, "completion_required", "completionRequired"),
             raw=dict(data),
         )
 
@@ -416,7 +416,7 @@ class Assessment:
     tenant_id: int | str | None = None
     client_id: int | str | None = None
     client_name: str | None = None
-    assessment_title: str | None = None
+    title: str | None = None
     assessment_date: int | None = None
     framework: Framework | None = None
     answers: list[AssessmentAnswer] | None = None
@@ -434,13 +434,15 @@ class Assessment:
         questions = source.get("questions")
         reviewers = source.get("reviewers")
         return cls(
-            assessment_id=source.get("assess_id") or source.get("assessmentId"),
+            assessment_id=source.get("assess_id")
+            or source.get("assessment_id")
+            or source.get("assessmentId"),
             cuid=source.get("cuid"),
             questionnaire_id=source.get("questionnaire_id") or source.get("questionnaireId"),
             tenant_id=source.get("tenant_id") or source.get("tenantId"),
             client_id=source.get("client_id") or source.get("clientId"),
             client_name=source.get("client_name") or source.get("clientName"),
-            assessment_title=source.get("assessment_title") or source.get("title"),
+            title=source.get("assessment_title") or source.get("title"),
             assessment_date=source.get("assessment_date") or source.get("assessmentDate"),
             framework=Framework.from_api(source.get("framework")),
             answers=[
@@ -456,8 +458,8 @@ class Assessment:
             ]
             if isinstance(reviewers, list)
             else None,
-            has_reviewers=source.get("has_reviewers") or source.get("hasReviewers"),
-            all_approved=source.get("all_approved") or source.get("allApproved"),
+            has_reviewers=_first(source, "has_reviewers", "hasReviewers"),
+            all_approved=_first(source, "all_approved", "allApproved"),
             doc_type=source.get("doc_type"),
             raw=dict(data),
         )
@@ -533,7 +535,7 @@ class ClientAssessmentInput:
     reviewer_ids: list[int | str] | None = None
     has_reviewers: bool | None = None
     all_approved: bool | None = None
-    save_only: bool | None = None
+    save_only: bool | None = True
 
     def to_api(self) -> JsonDict:
         return clean(
@@ -541,7 +543,7 @@ class ClientAssessmentInput:
                 "questionnaire_id": self.questionnaire_id,
                 "answers": [answer.to_api() for answer in self.answers]
                 if self.answers is not None
-                else None,
+                else [],
                 "reviewers": self.reviewer_ids,
                 "has_reviewers": self.has_reviewers,
                 "all_approved": self.all_approved,
@@ -570,10 +572,14 @@ class AssessmentCreateResult:
     def from_api(cls, data: JsonDict) -> AssessmentCreateResult:
         source = _nested_object(data)
         return cls(
-            status=data.get("status"),
+            status=source.get("status") or data.get("status"),
             message=source.get("message") or data.get("message"),
             document_id=source.get("doc_id") or data.get("doc_id"),
-            assessment_id=data.get("assessment_id") or data.get("assessmentId"),
+            assessment_id=source.get("assessment_id")
+            or source.get("assessmentId")
+            or data.get("assessment_id")
+            or data.get("assessmentId")
+            or _assessment_id_from_doc_id(source.get("doc_id") or data.get("doc_id")),
             raw=dict(data),
         )
 
@@ -595,7 +601,10 @@ class AssessmentReportCreateResult:
         return cls(
             status=source.get("status") or data.get("status"),
             message=source.get("message") or data.get("message"),
-            report_id=source.get("report_id") or source.get("reportId"),
+            report_id=source.get("report_id")
+            or source.get("reportId")
+            or data.get("report_id")
+            or data.get("reportId"),
             raw=dict(data),
         )
 
@@ -622,6 +631,23 @@ def _nested_object(data: JsonDict) -> JsonDict:
     if isinstance(nested, dict):
         return cast(JsonDict, nested)
     return data
+
+
+def _assessment_id_from_doc_id(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    prefix = "assessment_"
+    if not value.startswith(prefix):
+        return None
+    assessment_id = value.removeprefix(prefix).split("_tenant_", 1)[0]
+    return assessment_id or None
+
+
+def _first(data: JsonDict, *keys: str) -> object:
+    for key in keys:
+        if key in data:
+            return data[key]
+    return None
 
 
 def _custom_fields(value: object) -> list[CustomField] | None:

@@ -69,7 +69,7 @@ def create_question(
         session,
         "POST",
         f"/api/v2/assessments/questionnaires/{questionnaire_id}/questions",
-        json=question.to_api(),
+        json={key: value for key, value in question.to_api().items() if key != "order"},
     )
     return Question.from_api(_object(data, "question"))
 
@@ -457,7 +457,7 @@ def create_client_assessment(
         f"/api/v1/tenant/{tenant_id}/client/{client_id}/assessment",
         json=assessment.to_api(),
     )
-    return AssessmentCreateResult.from_api(_object(data, "assessment create result"))
+    return AssessmentCreateResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
 def update_client_assessment(
@@ -474,7 +474,7 @@ def update_client_assessment(
         f"/api/v1/tenant/{tenant_id}/client/{client_id}/assessment/{assessment_id}",
         json=assessment.to_api(),
     )
-    return AssessmentCreateResult.from_api(_object(data, "assessment update result"))
+    return AssessmentCreateResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
 def delete_client_assessment(
@@ -489,7 +489,7 @@ def delete_client_assessment(
         "DELETE",
         f"/api/v1/tenant/{tenant_id}/client/{client_id}/assessment/{assessment_id}",
     )
-    return AssessmentCreateResult.from_api(_object(data, "assessment delete result"))
+    return AssessmentCreateResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
 def create_report_from_assessment_questionnaire(
@@ -511,7 +511,7 @@ def create_report_from_assessment_questionnaire(
             "answers": [answer.to_api() for answer in answers] if answers is not None else [],
         },
     )
-    return AssessmentReportCreateResult.from_api(_object(data, "assessment report create result"))
+    return AssessmentReportCreateResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
 def copy_assessment_questionnaire(
@@ -526,7 +526,7 @@ def copy_assessment_questionnaire(
         "POST",
         f"/api/v2/tenants/{tenant_id}/clients/{client_id}/assessments/{assessment_id}/copy",
     )
-    return AssessmentCreateResult.from_api(_object(data, "assessment copy result"))
+    return AssessmentCreateResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
 def _upload_file(

@@ -233,13 +233,35 @@ wrapper. All authenticated API functions take `session` as their first argument.
 ### Assessments
 
 - `list_questions`
+- `get_question`
 - `create_question`
 - `update_question`
+- `update_question_order`
+- `delete_question`
+- `list_answer_types`
+- `get_answer_type`
+- `create_answer_type`
+- `update_answer_type`
+- `delete_answer_type`
 - `list_questionnaires`
+- `get_questionnaire`
 - `create_questionnaire`
+- `update_questionnaire`
+- `delete_questionnaire`
+- `export_questionnaire`
+- `import_questionnaire`
+- `list_tenant_assessments`
 - `list_client_assessments`
+- `get_client_assessment_details`
 - `get_client_assessment`
+- `get_assessment_by_cuid`
+- `list_assessment_questions`
+- `list_assessment_answers`
 - `update_assessment_answers`
+- `list_assessment_reviewers`
+- `create_client_assessment`
+- `update_client_assessment`
+- `delete_client_assessment`
 - `create_report_from_assessment_questionnaire`
 - `copy_assessment_questionnaire`
 

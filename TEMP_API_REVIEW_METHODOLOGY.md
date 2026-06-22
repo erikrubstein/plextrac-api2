@@ -144,3 +144,17 @@ A group pass is complete when:
 - `.venv/bin/python -m pytest tests/unit` passes.
 - `.venv/bin/python -m ruff check .` passes.
 - The review notes are clear enough to inform CLI/MCP design.
+
+## Group Progress Notes
+
+- `admin.py`: Steps 1-3 completed and committed.
+- `affected_assets.py`: Steps 1-3 completed and committed.
+- `analytics.py`: Steps 1-3 completed and committed. Removed the documented but unavailable
+  age-of-open-findings trend endpoint from the polished public surface.
+- `assessments.py`: Steps 1-3 completed locally. Live testing confirmed that client assessment
+  creation requires an explicit `answers: []` payload even when no answers are supplied, question
+  creation rejects `order`, question update requires `order`, and questionnaire update currently
+  returns a backend 500 even with the only validation-accepted `assessment_title`/`framework_id`
+  payload. The redundant v1 `list_client_assessments_legacy` operation is documented in endpoint
+  inventory but not exposed in the polished API; use the v2 `list_client_assessments` wrapper.
+  All disposable live artifacts were deleted and marker audits were empty.
