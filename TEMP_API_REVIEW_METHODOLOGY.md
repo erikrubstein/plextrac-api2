@@ -250,3 +250,17 @@ A group pass is complete when:
   imported, bulk-deleted, and single-deleted marked disposable reports only. Word export worked on
   the disposable report; PDF export returned a PlexTrac backend error for the empty report. Final
   marker audits were empty.
+- `runbooks.py`: Full economic audit completed locally. The 63 documented operations were reviewed
+  by shared families instead of individually; the polished module now exposes 62 wrappers because
+  live testing found the generated attachment-update mutation fails with a backend SQL syntax
+  error and upload already attaches files. Live testing corrected shared GraphQL list args to
+  nested `pagination`, removed unsupported runbook `search`, added repository `record_type`,
+  split procedure asset IDs into `procedure_asset_id` and `client_asset_id`, added typed
+  `RunbookOperatorInput`, required procedure log `start_date`, omitted create-only fields from
+  engagement/log update payloads, and sent required attachment upload `team`/`title` fields.
+  Non-mutating tests covered list/detail families, repository users, engagement procedures, and
+  procedure child reads. Mutating tests created and deleted disposable methodologies, tactics,
+  techniques, engagements, test plans, procedure logs, procedure assets, and attachments. Repository
+  create/export/import and procedure create were permission-limited because this account cannot
+  create repositories and no editable repository exists; operator update was permission-limited by
+  user/client engagement access. Final marker audits were empty.

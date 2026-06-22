@@ -19,6 +19,7 @@ from plextrac_api.types.runbooks import (
     RunbookListArgs,
     RunbookMethodology,
     RunbookMutationResult,
+    RunbookOperatorInput,
     RunbookProcedure,
     RunbookProcedureLog,
     RunbookProcedureLogInput,
@@ -52,7 +53,7 @@ def list_runbook_engagement_procedure_operators(
 def update_runbook_engagement_procedure_operators(
     session: AuthSession,
     procedure_id: int | str,
-    operators: list[RunbookUserInput],
+    operators: list[RunbookOperatorInput],
 ) -> list[RunbookUser]:
     """Execute the runbook engagement procedure operators update operation."""
     variables = {
@@ -107,12 +108,12 @@ def create_runbook_engagement_procedure_asset(
 
 def delete_runbook_engagement_procedure_asset(
     session: AuthSession,
-    asset_id: int | str,
+    procedure_asset_id: int | str,
     procedure_id: int | str,
 ) -> RunbookMutationResult:
     """Execute the runbook engagement procedure asset delete operation."""
     variables = {
-        "id": asset_id,
+        "id": procedure_asset_id,
         "procedureId": procedure_id,
     }
     data = _graphql_data(session, "delete_runbook_engagement_procedure_asset", variables)
@@ -121,14 +122,14 @@ def delete_runbook_engagement_procedure_asset(
 
 def update_runbook_engagement_procedure_asset(
     session: AuthSession,
-    asset_id: int | str,
+    procedure_asset_id: int | str,
     procedure_id: int | str,
     asset: RunbookAssetInput | None = None,
     evidence_ids: list[int | str] | None = None,
 ) -> RunbookAsset:
     """Execute the runbook engagement procedure asset update operation."""
     variables = {
-        "id": asset_id,
+        "id": procedure_asset_id,
         "procedureId": procedure_id,
         "clientAsset": asset.to_api() if asset is not None else None,
         "evidences": [_id_input(item) for item in evidence_ids] if evidence_ids is not None else None,
@@ -171,7 +172,7 @@ def update_runbook_engagement_procedure_log(
     """Execute the runbook engagement procedure log update operation."""
     variables = {
         "id": log_id,
-        "input": log.to_api(),
+        "input": log.to_api(include_team=False),
     }
     data = _graphql_data(session, "update_runbook_engagement_procedure_log", variables)
     return RunbookProcedureLog.from_api(_record_object(data))
@@ -200,20 +201,6 @@ def list_runbook_engagement_procedure_attachments(
         "team": team.value,
     }
     data = _graphql_data(session, "list_runbook_engagement_procedure_attachments", variables)
-    return _attachment_list(data)
-
-
-def update_runbook_engagement_procedure_attachments(
-    session: AuthSession,
-    procedure_id: int | str,
-    attachment_ids: list[int | str],
-) -> list[RunbookAttachment]:
-    """Execute the runbook engagement procedure attachments update operation."""
-    variables = {
-        "procedureId": procedure_id,
-        "attachments": [_id_input(item) for item in attachment_ids],
-    }
-    data = _graphql_data(session, "update_runbook_engagement_procedure_attachments", variables)
     return _attachment_list(data)
 
 
@@ -353,7 +340,7 @@ def update_runbook_engagement(
     """Execute the runbook engagement update operation."""
     variables = {
         "id": engagement_id,
-        "data": engagement.to_api(),
+        "data": engagement.to_api(include_client_id=False),
         "procedureIds": procedure_ids,
         "tags": tags,
     }
@@ -892,16 +879,20 @@ def upload_runbook_engagement_procedure_attachment(
     engagement_procedure_id: int | str,
     file: str | Path | BinaryIO,
     *,
+    team: RunbookTeam,
+    title: str | None = None,
     filename: str | None = None,
     content_type: str | None = None,
 ) -> RunbookUploadResult:
     """Upload an attachment to an engagement procedure."""
+    upload_title = title or filename or Path(getattr(file, "name", "runbook-attachment")).name
     data = _upload_file(
         session,
         f"/api/v2/runbooks/engagement-procedures/{engagement_procedure_id}/attachments/upload",
         file,
         filename=filename,
         content_type=content_type,
+        data={"team": team.value, "title": upload_title},
         fallback_name="runbook-attachment",
     )
     return RunbookUploadResult.from_api(data if isinstance(data, dict) else {"data": data})
@@ -1041,6 +1032,7 @@ def _upload_file(
     filename: str | None,
     content_type: str | None,
     fallback_name: str,
+    data: JsonDict | None = None,
 ) -> object:
     close_after = None
     if isinstance(file, (str, Path)):
@@ -1054,7 +1046,7 @@ def _upload_file(
 
     files = {"file": (upload_name, file_obj, content_type) if content_type else (upload_name, file_obj)}
     try:
-        return rest_request(session, "POST", path, files=files)
+        return rest_request(session, "POST", path, data=data, files=files)
     finally:
         if close_after is not None:
             close_after.close()

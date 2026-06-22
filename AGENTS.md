@@ -106,7 +106,7 @@ Total documented endpoint operations in snapshot: **356**
 | Parser Actions | `plextrac_api.functions.parser_actions` | 8 explicit functions |
 | QA Workflow | _not generated_ | 0 |
 | Reports | `plextrac_api.functions.reports` | 17 explicit functions |
-| Runbooks | `plextrac_api.functions.runbooks` | 63 explicit functions |
+| Runbooks | `plextrac_api.functions.runbooks` | 62 explicit functions |
 | Scheduler | `plextrac_api.functions.scheduler` | 10 explicit functions |
 | Substatus | `plextrac_api.functions.substatus` | 4 explicit functions |
 | Templates | `plextrac_api.functions.templates` | 14 explicit functions |
@@ -468,7 +468,7 @@ Display name: Runbooks
 | `delete_runbook_engagement_procedure_log` | POST | `/graphql` |  |
 | `list_runbook_engagement_procedure_attachments` | POST | `/graphql` |  |
 | `upload_runbook_engagement_procedure_attachment` | POST | `/api/v2/runbooks/engagement-procedures/{engagementProcedureId}/attachments/upload` |  |
-| `update_runbook_engagement_procedure_attachments` | POST | `/graphql` |  |
+| `update_runbook_engagement_procedure_attachments` | POST | `/graphql` | live backend error; not exposed in polished module |
 | `delete_runbook_engagement_procedure_attachment` | POST | `/graphql` |  |
 | `list_runbook_engagement_procedure_ids` | POST | `/graphql` |  |
 | `list_runbook_engagement_procedures` | POST | `/graphql` |  |

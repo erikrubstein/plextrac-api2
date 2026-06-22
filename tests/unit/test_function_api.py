@@ -82,8 +82,13 @@ from plextrac_api.types import (
     ReportPagination,
     ReportStatus,
     RunbookAssetInput,
+    RunbookEngagementInput,
     RunbookListArgs,
+    RunbookOperatorInput,
+    RunbookProcedureLogInput,
     RunbookRecordInput,
+    RunbookRepositoryType,
+    RunbookTeam,
     RunbookUserInput,
     SLABenchmark,
     SLABenchmarkNotificationSettings,
@@ -511,6 +516,7 @@ def test_explicit_create_runbook_repository_uses_graphql_variables(monkeypatch):
             name="Purple Team",
             short_name="PT",
             description="Shared procedures",
+            record_type=RunbookRepositoryType.CURATED,
         ),
     )
 
@@ -523,6 +529,7 @@ def test_explicit_create_runbook_repository_uses_graphql_variables(monkeypatch):
             "name": "Purple Team",
             "shortName": "PT",
             "description": "Shared procedures",
+            "type": "curated",
         }
     }
 
@@ -548,12 +555,42 @@ def test_explicit_list_runbook_repositories_parses_graphql_items(monkeypatch):
 
     results = runbooks.list_runbook_repositories(
         session,
-        RunbookListArgs(limit=10, offset=5, search="default"),
+        RunbookListArgs(limit=10, offset=5),
     )
 
     assert results[0].record_id == "repo-1"
     assert seen["json"]["operationName"] == "RunbookRepositoryListV2"
-    assert seen["json"]["variables"] == {"args": {"limit": 10, "offset": 5, "search": "default"}}
+    assert seen["json"]["variables"] == {"args": {"pagination": {"limit": 10, "offset": 5}}}
+
+
+def test_explicit_list_runbook_repositories_parses_graphql_edges(monkeypatch):
+    def fake_send(session, method, path, **kwargs):
+        return httpx.Response(
+            200,
+            json={
+                "data": {
+                    "runbookRepositoryListV2": {
+                        "edges": [
+                            {
+                                "node": {
+                                    "id": "repo-1",
+                                    "name": "Default",
+                                    "type": "repository",
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    results = runbooks.list_runbook_repositories(session)
+
+    assert results[0].record_id == "repo-1"
+    assert results[0].record_type == "repository"
 
 
 def test_explicit_runbook_update_asset_uses_single_asset_payload(monkeypatch):
@@ -566,9 +603,12 @@ def test_explicit_runbook_update_asset_uses_single_asset_payload(monkeypatch):
             json={
                 "data": {
                     "runbookEngagementProcedureAssetUpdateV2": {
-                        "id": "asset-1",
-                        "name": "host1",
-                        "hostname": "host1.example.com",
+                        "id": "procedure-asset-1",
+                        "clientAsset": {
+                            "id": "client-asset-1",
+                            "name": "host1",
+                            "type": "server",
+                        },
                     }
                 }
             },
@@ -579,18 +619,19 @@ def test_explicit_runbook_update_asset_uses_single_asset_payload(monkeypatch):
 
     result = runbooks.update_runbook_engagement_procedure_asset(
         session,
-        asset_id="asset-1",
+        procedure_asset_id="procedure-asset-1",
         procedure_id="procedure-1",
-        asset=RunbookAssetInput(name="host1", hostname="host1.example.com"),
+        asset=RunbookAssetInput(name="host1", asset_type="server"),
         evidence_ids=["evidence-1"],
     )
 
-    assert result.asset_id == "asset-1"
+    assert result.procedure_asset_id == "procedure-asset-1"
+    assert result.client_asset_id == "client-asset-1"
     assert seen["json"]["operationName"] == "RunbookEngagementProcedureAssetUpdateV2"
     assert seen["json"]["variables"] == {
-        "id": "asset-1",
+        "id": "procedure-asset-1",
         "procedureId": "procedure-1",
-        "clientAsset": {"name": "host1", "hostname": "host1.example.com"},
+        "clientAsset": {"name": "host1", "type": "server"},
         "evidences": [{"id": "evidence-1"}],
     }
     assert "input" not in seen["json"]["variables"]
@@ -633,6 +674,113 @@ def test_explicit_runbook_update_repository_user_serializes_user_input(monkeypat
     }
 
 
+def test_explicit_runbook_update_procedure_operators_serializes_team(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={
+                "data": {
+                    "runbookEngagementProcedureOperatorsUpdateV2": [
+                        {"id": "operator-1", "userId": "user-1", "team": "RED"}
+                    ]
+                }
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = runbooks.update_runbook_engagement_procedure_operators(
+        session,
+        procedure_id="procedure-1",
+        operators=[RunbookOperatorInput(user_id="user-1", team=RunbookTeam.RED)],
+    )
+
+    assert result[0].user_id == "user-1"
+    assert seen["json"]["operationName"] == "RunbookEngagementProcedureOperatorsUpdateV2"
+    assert seen["json"]["variables"] == {
+        "procedureId": "procedure-1",
+        "operators": [{"userId": "user-1", "team": "RED"}],
+    }
+
+
+def test_explicit_runbook_update_procedure_log_omits_create_only_team(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={
+                "data": {
+                    "runbookEngagementProcedureLogUpdateV2": {
+                        "id": "log-1",
+                        "text": "Updated",
+                    }
+                }
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = runbooks.update_runbook_engagement_procedure_log(
+        session,
+        log_id="log-1",
+        log=RunbookProcedureLogInput(
+            text="Updated",
+            start_date="2026-06-22T00:00:00Z",
+            team=RunbookTeam.BLUE,
+        ),
+    )
+
+    assert result.log_id == "log-1"
+    assert seen["json"]["operationName"] == "RunbookEngagementProcedureLogUpdateV2"
+    assert seen["json"]["variables"] == {
+        "id": "log-1",
+        "input": {"text": "Updated", "startDate": "2026-06-22T00:00:00Z"},
+    }
+
+
+def test_explicit_runbook_update_engagement_omits_create_only_client_id(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["json"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={
+                "data": {
+                    "runbookEngagementUpdateV2": {
+                        "id": "engagement-1",
+                        "title": "Updated",
+                    }
+                }
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = runbooks.update_runbook_engagement(
+        session,
+        engagement_id="engagement-1",
+        engagement=RunbookEngagementInput(title="Updated", client_id=123),
+        procedure_ids=["procedure-1"],
+    )
+
+    assert result.record_id == "engagement-1"
+    assert seen["json"]["operationName"] == "RunbookEngagementUpdateV2"
+    assert seen["json"]["variables"] == {
+        "id": "engagement-1",
+        "data": {"title": "Updated"},
+        "procedureIds": ["procedure-1"],
+    }
+
+
 def test_explicit_runbook_attachment_upload_uses_rest_endpoint(monkeypatch, tmp_path):
     seen = {}
     upload_path = tmp_path / "evidence.txt"
@@ -641,6 +789,7 @@ def test_explicit_runbook_attachment_upload_uses_rest_endpoint(monkeypatch, tmp_
     def fake_send(session, method, path, **kwargs):
         seen["method"] = method
         seen["path"] = path
+        seen["data"] = kwargs["data"]
         seen["files"] = kwargs["files"]
         return httpx.Response(
             200,
@@ -654,11 +803,13 @@ def test_explicit_runbook_attachment_upload_uses_rest_endpoint(monkeypatch, tmp_
         session,
         engagement_procedure_id="procedure-1",
         file=upload_path,
+        team=RunbookTeam.RED,
     )
 
     assert result.ok
     assert seen["method"] == "POST"
     assert seen["path"] == "/api/v2/runbooks/engagement-procedures/procedure-1/attachments/upload"
+    assert seen["data"] == {"team": "RED", "title": "evidence.txt"}
     assert seen["files"]["file"][0] == "evidence.txt"
 
 

@@ -113,12 +113,15 @@ from plextrac_api.types import (
     ReportStatus,
     ReportSummary,
     RoleNameAvailability,
+    RunbookEngagementInput,
     RunbookListArgs,
     RunbookMutationResult,
+    RunbookOperatorInput,
     RunbookProcedureLog,
     RunbookProcedureLogInput,
     RunbookRecordInput,
     RunbookRepository,
+    RunbookRepositoryType,
     RunbookTag,
     RunbookTeam,
     RunbookUploadResult,
@@ -989,21 +992,29 @@ def test_content_library_types_parse_and_serialize_documented_fields():
 
 def test_runbook_types_parse_and_serialize_graphql_shapes():
     assert RunbookTeam.RED.value == "RED"
-    assert RunbookListArgs(limit=10, offset=5, search="repo").to_api() == {
-        "limit": 10,
-        "offset": 5,
-        "search": "repo",
+    assert RunbookListArgs(limit=10, offset=5).to_api() == {
+        "pagination": {"limit": 10, "offset": 5},
     }
     assert RunbookRecordInput(
         name="Purple Team",
         short_name="PT",
         description="Shared procedures",
+        record_type=RunbookRepositoryType.CURATED,
         repository_id="repo-1",
     ).to_api() == {
         "name": "Purple Team",
         "shortName": "PT",
         "description": "Shared procedures",
+        "type": "curated",
         "repositoryId": "repo-1",
+    }
+    assert RunbookEngagementInput(title="Engagement", client_id=123).to_api() == {
+        "title": "Engagement",
+        "clientId": "123",
+    }
+    assert RunbookOperatorInput(user_id=123, team=RunbookTeam.RED).to_api() == {
+        "userId": "123",
+        "team": "RED",
     }
     assert RunbookProcedureLogInput(
         text="Started",
@@ -1020,6 +1031,8 @@ def test_runbook_types_parse_and_serialize_graphql_shapes():
             "id": "repo-1",
             "name": "Purple Team",
             "shortName": "PT",
+            "type": "repository",
+            "isEditable": False,
             "tags": [{"id": "tag-1", "tag": "attack"}],
         }
     )
@@ -1028,11 +1041,18 @@ def test_runbook_types_parse_and_serialize_graphql_shapes():
     )
 
     assert repository.record_id == "repo-1"
+    assert repository.record_type == "repository"
+    assert repository.is_editable is False
     assert isinstance(repository.tags[0], RunbookTag)
     assert repository.tags[0].tag == "attack"
     assert log.engagement_procedure_id == "procedure-1"
     assert RunbookMutationResult.from_api({"id": "repo-1"}).ok
+    assert RunbookMutationResult.from_api({"recordId": "repo-1"}).ok
     assert RunbookUploadResult.from_api({"id": "attachment-1"}).ok
+    assert (
+        RunbookUploadResult.from_api({"status": "ok", "data": {"id": "attachment-2"}}).attachment_id
+        == "attachment-2"
+    )
 
 
 def test_integration_type_serializes_documented_enums():
