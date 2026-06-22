@@ -44,7 +44,7 @@ def get_tenant_parsers(
 def list_tenant_parser_actions(
     session: AuthSession,
     tenant_id: int | str,
-    parser_name: str,
+    parser_id: str,
     *,
     limit: int = 985,
     skip: int = 0,
@@ -61,7 +61,7 @@ def list_tenant_parser_actions(
     data = rest_request(
         session,
         "GET",
-        f"/api/v1/tenant/{tenant_id}/actions/{parser_name}",
+        f"/api/v1/tenant/{tenant_id}/actions/{parser_id}",
         params={key: value for key, value in params.items() if value is not None},
     )
     return [ParserAction.from_api(item) for item in data if isinstance(item, dict)] if isinstance(data, list) else []
@@ -70,14 +70,14 @@ def list_tenant_parser_actions(
 def get_tenant_parser_action(
     session: AuthSession,
     tenant_id: int | str,
-    parser_name: str,
+    parser_id: str,
     action_id: int | str,
 ) -> ParserAction:
     """Get one parser action."""
     data = rest_request(
         session,
         "GET",
-        f"/api/v1/tenant/{tenant_id}/actions/{parser_name}/action/{action_id}",
+        f"/api/v1/tenant/{tenant_id}/actions/{parser_id}/action/{action_id}",
     )
     if not isinstance(data, dict):
         raise ValueError("PlexTrac parser action response was not a JSON object.")
@@ -87,14 +87,14 @@ def get_tenant_parser_action(
 def create_tenant_parser_action(
     session: AuthSession,
     tenant_id: int | str,
-    parser_name: str,
+    parser_id: str,
     action: ParserActionInput,
 ) -> ParserAction:
     """Create a parser action for a parser source."""
     data = rest_request(
         session,
         "POST",
-        f"/api/v1/tenant/{tenant_id}/actions/{parser_name}/action",
+        f"/api/v1/tenant/{tenant_id}/actions/{parser_id}/action",
         json=action.to_api(),
     )
     if not isinstance(data, dict):
@@ -105,7 +105,7 @@ def create_tenant_parser_action(
 def update_parser_action(
     session: AuthSession,
     tenant_id: int | str,
-    parser_name: str,
+    parser_id: str,
     action_id: int | str,
     action: ParserActionInput,
 ) -> ParserAction:
@@ -113,7 +113,7 @@ def update_parser_action(
     data = rest_request(
         session,
         "PUT",
-        f"/api/v1/tenant/{tenant_id}/actions/{parser_name}/action/{action_id}",
+        f"/api/v1/tenant/{tenant_id}/actions/{parser_id}/action/{action_id}",
         json=action.to_api(),
     )
     if not isinstance(data, dict):
@@ -124,14 +124,14 @@ def update_parser_action(
 def bulk_update_tenant_parser_actions(
     session: AuthSession,
     tenant_id: int | str,
-    parser_name: str,
+    parser_id: str,
     actions: list[ParserActionInput],
 ) -> list[ParserAction]:
     """Bulk update parser actions for a parser source."""
     data = rest_request(
         session,
         "PUT",
-        f"/api/v1/tenant/{tenant_id}/actions/{parser_name}/bulk",
+        f"/api/v1/tenant/{tenant_id}/actions/{parser_id}/bulk",
         json=[action.to_api() for action in actions],
     )
     return [ParserAction.from_api(item) for item in data if isinstance(item, dict)] if isinstance(data, list) else []

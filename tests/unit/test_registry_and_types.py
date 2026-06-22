@@ -89,6 +89,8 @@ from plextrac_api.types import (
     NarrativeSectionInput,
     OperationResult,
     Pagination,
+    Parser,
+    ParserAction,
     ParserActionInput,
     ParserActionType,
     ParserPluginSource,
@@ -1062,7 +1064,7 @@ def test_integration_type_serializes_documented_enums():
 
 def test_parser_action_type_serializes_documented_enums():
     assert ParserActionInput(
-        id="sql-1",
+        action_id="sql-1",
         severity=FindingSeverity.HIGH,
         title="SQL Injection",
         action=ParserActionType.IGNORE,
@@ -1072,6 +1074,11 @@ def test_parser_action_type_serializes_documented_enums():
         "title": "SQL Injection",
         "action": "IGNORE",
     }
+    parser = Parser.from_api({"name": "Nessus", "source": "nessus"})
+    assert parser.parser_id == "nessus"
+    action = ParserAction.from_api({"id": "sql-1", "action": "IGNORE"})
+    assert action.action_id == "sql-1"
+    assert action.action is ParserActionType.IGNORE
     assert ParserPluginSource.OWASP_ZAP.value == "owaspzap"
 
 

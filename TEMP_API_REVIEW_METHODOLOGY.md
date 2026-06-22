@@ -234,3 +234,10 @@ A group pass is complete when:
   for this account. The only mutating endpoint updates the tenant's real `FORGOTTEN_PASSWORD`
   email template and has no disposable create/delete path; because the account also could not read
   the current template for safe restoration, live mutation was intentionally skipped.
+- `parser_actions.py`: Steps 1-3 completed locally. Public parser responses now expose
+  `parser_id` instead of raw `source`, and parser action request/response models expose
+  `action_id` instead of generic `id` while preserving PlexTrac wire keys. Live non-mutating tests
+  returned `Unauthorized` at the tenant parser list endpoint for this account. Mutating tests were
+  intentionally skipped: parser plugin action enablement is tenant-wide with no read endpoint in
+  this group for restoration, parser action creation/import have no documented delete path, and
+  update/bulk update would alter existing tenant parser mappings.

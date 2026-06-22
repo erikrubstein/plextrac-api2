@@ -353,7 +353,12 @@ available on `AnalyticsResult.data` and `AnalyticsResult.raw`.
 - `upsert_email_template`
 - `get_tenant_parsers`
 - `list_tenant_parser_actions`
+- `get_tenant_parser_action`
+- `create_tenant_parser_action`
+- `update_parser_action`
+- `bulk_update_tenant_parser_actions`
 - `set_parser_plugin_actions_enabled`
+- `import_parser_plugins`
 - `list_substatuses`
 - `create_substatus`
 

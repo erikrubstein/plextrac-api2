@@ -1425,12 +1425,12 @@ def test_explicit_parser_action_list_uses_named_action_type(monkeypatch):
     actions = parser_actions.list_tenant_parser_actions(
         session,
         tenant_id=1,
-        parser_name="nessus",
+        parser_id="nessus",
         action_type=ParserActionSearchType.IGNORE,
         query="sql",
     )
 
-    assert actions[0].id == "sql-1"
+    assert actions[0].action_id == "sql-1"
     assert seen["method"] == "GET"
     assert seen["path"] == "/api/v1/tenant/1/actions/nessus"
     assert seen["params"] == {"limit": 985, "skip": 0, "type": "IGNORE", "query": "sql"}

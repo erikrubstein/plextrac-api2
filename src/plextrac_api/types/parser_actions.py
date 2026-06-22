@@ -48,21 +48,21 @@ class ParserPluginSource(StrEnum):
 @dataclass(slots=True)
 class Parser:
     name: str | None = None
-    source: str | None = None
+    parser_id: str | None = None
     raw: JsonDict | None = None
 
     @classmethod
     def from_api(cls, data: JsonDict) -> Parser:
         return cls(
             name=data.get("name") or data.get("parserName"),
-            source=data.get("source") or data.get("parserId"),
+            parser_id=data.get("source") or data.get("parserId"),
             raw=dict(data),
         )
 
 
 @dataclass(slots=True)
 class ParserActionInput:
-    id: int | str | None = None
+    action_id: int | str | None = None
     severity: FindingSeverity | None = None
     title: str | None = None
     action: ParserActionType = ParserActionType.DEFAULT
@@ -71,7 +71,7 @@ class ParserActionInput:
     def to_api(self) -> JsonDict:
         return clean(
             {
-                "id": self.id,
+                "id": self.action_id,
                 "severity": self.severity.value if self.severity is not None else None,
                 "title": self.title,
                 "action": self.action.value,
@@ -82,7 +82,7 @@ class ParserActionInput:
 
 @dataclass(slots=True)
 class ParserAction:
-    id: int | str | None = None
+    action_id: int | str | None = None
     severity: FindingSeverity | None = None
     title: str | None = None
     action: ParserActionType | None = None
@@ -92,7 +92,7 @@ class ParserAction:
     @classmethod
     def from_api(cls, data: JsonDict) -> ParserAction:
         return cls(
-            id=data.get("id"),
+            action_id=data.get("id") or data.get("actionId"),
             severity=_severity(data.get("severity")),
             title=data.get("title"),
             action=_action(data.get("action")),
