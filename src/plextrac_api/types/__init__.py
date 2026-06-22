@@ -249,6 +249,10 @@ from plextrac_api.types.scheduler import (
     EngagementScheduleEventInput,
     EngagementScheduleEventPage,
     EngagementScheduleEventSearch,
+    EngagementScheduleOrder,
+    EngagementSchedulePageLimit,
+    EngagementSchedulePagination,
+    EngagementScheduleStatus,
 )
 from plextrac_api.types.substatus import Substatus, SubstatusInput, SubstatusStatus
 from plextrac_api.types.templates import (
@@ -383,6 +387,10 @@ __all__ = [
     "EngagementScheduleEventInput",
     "EngagementScheduleEventPage",
     "EngagementScheduleEventSearch",
+    "EngagementScheduleOrder",
+    "EngagementSchedulePageLimit",
+    "EngagementSchedulePagination",
+    "EngagementScheduleStatus",
     "Evidence",
     "EmailTemplate",
     "EmailTemplateInput",

@@ -264,3 +264,14 @@ A group pass is complete when:
   create/export/import and procedure create were permission-limited because this account cannot
   create repositories and no editable repository exists; operator update was permission-limited by
   user/client engagement access. Final marker audits were empty.
+- `scheduler.py`: Full economic audit completed locally. Public scheduler response types now use
+  semantic `event_cuid` and `artifact_cuid` fields, unwrap nested `data` responses, and parse live
+  event fields such as `title`, nested client/report references, timestamps, and typed scheduler
+  statuses. Live testing found search requires raw key `filter`, nested pagination with `order`,
+  and limits `[10, 25, 50, 100, 500]`, so `EngagementScheduleEventSearch` now exposes semantic
+  `criteria` plus `EngagementSchedulePagination`. Artifact upload requires form key `cuid`
+  instead of the documented-looking `engagementScheduleEventCuid`, and `created` is a successful
+  upload status. Non-mutating tests covered search, get, and artifact list. Event create/update/
+  approve mutations were skipped because scheduler events cannot be deleted, only canceled. Artifact
+  upload passed validation but returned a backend 500 for the only visible completed event; no
+  artifact remained in live audits.

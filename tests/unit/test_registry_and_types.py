@@ -57,7 +57,13 @@ from plextrac_api.types import (
     EmailTemplate,
     EmailTemplateInput,
     EmailTemplateKind,
+    EngagementScheduleArtifactUploadResult,
+    EngagementScheduleEvent,
+    EngagementScheduleEventInput,
     EngagementScheduleEventSearch,
+    EngagementSchedulePageLimit,
+    EngagementSchedulePagination,
+    EngagementScheduleStatus,
     ExportTemplateType,
     Filter,
     Finding,
@@ -1108,13 +1114,51 @@ def test_parser_action_type_serializes_documented_enums():
 
 
 def test_scheduler_type_serializes_search_payload():
-    assert EngagementScheduleEventSearch(
-        filters={"status": "APPROVED"},
-        pagination={"offset": 0, "limit": 10},
-    ).to_api() == {
-        "filters": {"status": "APPROVED"},
-        "pagination": {"offset": 0, "limit": 10},
+    assert EngagementScheduleEventInput(payload={"title": "Assessment"}).to_api() == {
+        "title": "Assessment"
     }
+    assert EngagementScheduleEventSearch(
+        criteria={"status": EngagementScheduleStatus.COMPLETE.value},
+        pagination=EngagementSchedulePagination(
+            offset=0,
+            limit=EngagementSchedulePageLimit.TEN,
+        ),
+    ).to_api() == {
+        "filter": {"status": "COMPLETE"},
+        "pagination": {"offset": 0, "limit": 10, "order": "asc"},
+    }
+    event = EngagementScheduleEvent.from_api(
+        {
+            "engagementScheduleEventCuid": "event-1",
+            "tenantCuid": "tenant-1",
+            "title": "Assessment",
+            "status": "COMPLETE",
+            "client": {"id": 12, "cuid": "client-1", "name": "Client"},
+            "report": {"id": 34, "cuid": "report-1", "name": "Report"},
+            "lastUpdateAt": "2026-06-22T00:00:00.000Z",
+        }
+    )
+    upload = EngagementScheduleArtifactUploadResult.from_api(
+        {
+            "status": "ok",
+            "data": {"engagementScheduleArtifactCuid": "artifact-1"},
+        }
+    )
+
+    assert event.event_cuid == "event-1"
+    assert event.tenant_cuid == "tenant-1"
+    assert event.title == "Assessment"
+    assert event.client_cuid == "client-1"
+    assert event.client_id == 12
+    assert event.client_name == "Client"
+    assert event.report_id == 34
+    assert event.report_cuid == "report-1"
+    assert event.report_name == "Report"
+    assert event.status is EngagementScheduleStatus.COMPLETE
+    assert event.last_update_at == "2026-06-22T00:00:00.000Z"
+    assert EngagementScheduleEvent.from_api({"data": {"cuid": "event-2"}}).event_cuid == "event-2"
+    assert upload.artifact_cuid == "artifact-1"
+    assert upload.ok is True
 
 
 def test_user_type_serializes_documented_fields():

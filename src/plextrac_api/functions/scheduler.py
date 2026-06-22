@@ -43,7 +43,7 @@ def upload_engagement_schedule_event_artifact(
             "POST",
             "/api/v2/engagement-schedule-artifacts",
             data={
-                "engagementScheduleEventCuid": engagement_schedule_event_cuid,
+                "cuid": engagement_schedule_event_cuid,
                 "clientCuid": client_cuid,
             },
             files=files,

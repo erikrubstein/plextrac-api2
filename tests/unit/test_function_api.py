@@ -58,6 +58,7 @@ from plextrac_api.types import (
     EmailTemplateInput,
     EmailTemplateKind,
     EngagementScheduleEventSearch,
+    EngagementSchedulePagination,
     ExportTemplateType,
     FindingEvidenceUpdate,
     FindingField,
@@ -1639,19 +1640,51 @@ def test_explicit_scheduler_search_uses_search_type(monkeypatch):
     page = scheduler.search_engagement_schedule_events(
         session,
         EngagementScheduleEventSearch(
-            filters={"status": "APPROVED"},
-            pagination={"offset": 0, "limit": 10},
+            criteria={"status": "COMPLETE"},
+            pagination=EngagementSchedulePagination(offset=0),
         ),
     )
 
     assert page.total_count == 1
-    assert page.events[0].cuid == "event-1"
+    assert page.events[0].event_cuid == "event-1"
     assert seen["method"] == "POST"
     assert seen["path"] == "/api/v2/engagement-schedule-events/search"
     assert seen["json"] == {
-        "filters": {"status": "APPROVED"},
-        "pagination": {"offset": 0, "limit": 10},
+        "filter": {"status": "COMPLETE"},
+        "pagination": {"offset": 0, "limit": 10, "order": "asc"},
     }
+
+
+def test_explicit_scheduler_artifact_upload_uses_live_form_keys(monkeypatch, tmp_path):
+    seen = {}
+    upload_path = tmp_path / "schedule.txt"
+    upload_path.write_text("schedule artifact")
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["data"] = kwargs["data"]
+        seen["files"] = kwargs["files"]
+        return httpx.Response(
+            200,
+            json={"status": "created", "message": "created"},
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = scheduler.upload_engagement_schedule_event_artifact(
+        session,
+        engagement_schedule_event_cuid="event-1",
+        client_cuid="client-1",
+        file=upload_path,
+    )
+
+    assert result.ok
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v2/engagement-schedule-artifacts"
+    assert seen["data"] == {"cuid": "event-1", "clientCuid": "client-1"}
+    assert seen["files"]["file"][0] == "schedule.txt"
 
 
 def test_explicit_users_paginated_list_uses_search_name(monkeypatch):
