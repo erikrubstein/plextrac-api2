@@ -58,10 +58,12 @@ from plextrac_api.types import (
     EmailTemplateKind,
     EngagementScheduleEventSearch,
     ExportTemplateType,
+    FindingEvidenceUpdate,
     FindingField,
     FindingInput,
     FindingSeverity,
     FindingStatus,
+    FindingStatusUpdate,
     FindingTemplateInput,
     FindingVisibility,
     JiraConnectionInput,
@@ -864,12 +866,18 @@ def test_explicit_finding_create_uses_reusable_input_and_enums(monkeypatch):
                     comment="triage note",
                 )
             },
-            fields=[FindingField(key="synopsis", label="Synopsis", value="Example")],
+            fields={
+                "Synopsis": FindingField(
+                    key="synopsis",
+                    label="Synopsis",
+                    value="Example",
+                )
+            },
         ),
     )
 
     assert result.status == "success"
-    assert result.flaw_id == 99
+    assert result.finding_id == 99
     assert seen["method"] == "POST"
     assert seen["path"] == "/api/v1/client/client-1/report/report-1/flaw/create"
     assert seen["json"] == {
@@ -886,7 +894,7 @@ def test_explicit_finding_create_uses_reusable_input_and_enums(monkeypatch):
                 "comment": "triage note",
             }
         },
-        "fields": [{"key": "synopsis", "label": "Synopsis", "value": "Example"}],
+        "fields": {"Synopsis": {"key": "synopsis", "label": "Synopsis", "value": "Example"}},
     }
 
 
@@ -2120,6 +2128,112 @@ def test_explicit_finding_list_uses_latest_paginated_endpoint(monkeypatch):
     assert seen["method"] == "POST"
     assert seen["path"] == "/api/v2/clients/client-1/reports/report-1/findings"
     assert seen["json"] == {"pagination": {"offset": 0, "limit": 10}}
+
+
+def test_scanner_output_empty_live_shape_returns_empty_bytes(monkeypatch):
+    def fake_send(session, method, path, **kwargs):
+        return httpx.Response(200, json=[])
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    assert (
+        findings.get_scanner_output(
+            session,
+            client_id="client-1",
+            report_id="report-1",
+            finding_id="finding-1",
+            asset_id="asset-1",
+        )
+        == b""
+    )
+
+
+def test_finding_status_update_uses_live_comment_key(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"status": "success"})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    findings.create_finding_status_update(
+        session,
+        client_id="client-1",
+        report_id="report-1",
+        finding_id="finding-1",
+        update=FindingStatusUpdate(status=FindingStatus.CLOSED, comment="done"),
+    )
+
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v1/client/client-1/report/report-1/flaw/finding-1/status/update"
+    assert seen["json"] == {"status": "Closed", "comment": "done"}
+
+
+def test_bulk_upsert_finding_evidence_uses_live_minimal_shape(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"status": "success"})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+    session.tenant_id = 7
+
+    findings.bulk_upsert_finding_evidence(
+        session,
+        tenant_id=7,
+        client_id="client-1",
+        report_id="report-1",
+        finding_id="finding-1",
+        evidence=[
+            FindingEvidenceUpdate(
+                evidence_id="evidence-1",
+                caption="Proof",
+                code="proof text",
+                assets=["asset-1"],
+            )
+        ],
+    )
+
+    assert seen["method"] == "PUT"
+    assert seen["path"] == (
+        "/api/v2/tenant/7/client/client-1/report/report-1/finding/finding-1/asset/evidence"
+    )
+    assert seen["json"] == [
+        {"id": "evidence-1", "caption": "Proof", "code": "proof text", "assets": ["asset-1"]}
+    ]
+
+
+def test_bulk_delete_findings_uses_live_flaws_key(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"data": True, "status": "success"})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    findings.bulk_delete_findings(
+        session,
+        client_id="client-1",
+        report_id="report-1",
+        finding_ids=[99],
+    )
+
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v1/client/client-1/report/report-1/flaws/delete"
+    assert seen["json"] == {"flaws": [99]}
 
 
 def test_request_maps_http_errors(monkeypatch):

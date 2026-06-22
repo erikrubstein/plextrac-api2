@@ -202,3 +202,20 @@ A group pass is complete when:
   disposable artifact upload, readback, download, delete, and marker audit. Tenant image upload was
   skipped because the backend rejects arbitrary scopes and no known valid disposable scope was
   configured.
+- `findings.py`: Steps 1-3 completed locally. Public finding result/object fields now expose
+  `finding_id` instead of PlexTrac's raw `flaw_id`, finding sort/filter enums use
+  `FINDING_ID` while preserving the documented `flawId`/`flaw_id` wire values, and evidence/import
+  helper types use semantic `evidence_id`, `import_id`, and `code_sample_id` names. Live testing
+  found report findings pagination rejects the documented `99999` limit and only accepts
+  `[1, 10, 50, 100]`, so `FindingPageLimit` intentionally does not expose `ALL`; the default
+  remains 10. Live testing also found finding `fields` are object maps keyed by field name rather
+  than lists, scanner output returns an empty JSON list when no scanner output exists, status
+  updates require singular `comment`, bulk evidence requires `id`/`caption`/`code`/`assets`, and
+  bulk finding delete uses the v1 key `flaws`. The metadata bulk-update and bulk status-update
+  endpoints rejected their documented update fields or returned backend 500s, so they are not
+  exposed in the polished module. The single evidence update endpoint requires GUID-style asset IDs,
+  while this tenant's client and affected asset IDs are CUIDs, so it is not exposed; use the
+  successfully live-tested bulk evidence endpoint. The deprecated bulk evidence read endpoint
+  remains intentionally unexposed; use `get_scanner_output` for that documented workflow. Careful
+  mutating tests created and deleted marked disposable reports, assets, findings, status updates,
+  and bulk evidence; marker audits were empty.

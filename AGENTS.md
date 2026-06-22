@@ -100,7 +100,7 @@ Total documented endpoint operations in snapshot: **356**
 | Content Library | `plextrac_api.functions.content_library` | 38 explicit functions; 1 documented operation not exposed |
 | Clients | `plextrac_api.functions.clients` | 14 explicit functions |
 | Files | `plextrac_api.functions.files` | 6 explicit functions |
-| Findings | `plextrac_api.functions.findings` | 16 explicit functions |
+| Findings | `plextrac_api.functions.findings` | 13 explicit functions |
 | Integrations | `plextrac_api.functions.integrations` | 21 explicit functions |
 | Mailer | `plextrac_api.functions.mailer` | 3 explicit functions |
 | Parser Actions | `plextrac_api.functions.parser_actions` | 8 explicit functions |
@@ -349,15 +349,15 @@ Display name: Findings
 | `get_import_status` | GET | `/api/v2/my-imports` |  |
 | `get_scanner_output` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/asset/{assetId}/scanoutput` |  |
 | `bulk_get_evidence` | POST | `/api/v2/tenant/{tenantId}/client/{clientId}/report/{reportId}/finding/{findingId}/asset/evidence` |  |
-| `update_evidence` | PUT | `/api/v2/client/{clientId}/report/{reportId}/finding/{findingId}/asset/{assetId}/evidence/{evidenceId}` |  |
+| `update_evidence` | PUT | `/api/v2/client/{clientId}/report/{reportId}/finding/{findingId}/asset/{assetId}/evidence/{evidenceId}` | live GUID/CUID mismatch; not exposed in polished module |
 | `bulk_upsert_evidence` | PUT | `/api/v2/tenant/{tenantId}/client/{clientId}/report/{reportId}/finding/{findingId}/asset/evidence` |  |
 | `list_report_findings` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaws` |  |
 | `get_findings_by_report` | POST | `/api/v2/clients/{clientId}/reports/{reportId}/findings` |  |
 | `get_finding` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}` | `get` |
 | `create_finding` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaw/create` | `create` |
 | `update_finding` | PUT | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}` | `update` |
-| `bulk_update_findings` | PUT | `/api/v2/clients/{clientId}/reports/{reportId}/findings` |  |
-| `bulk_update_findings_assign_update_status` | PUT | `/api/v2/client/{clientId}/findings` |  |
+| `bulk_update_findings` | PUT | `/api/v2/clients/{clientId}/reports/{reportId}/findings` | live-unavailable; not exposed in polished module |
+| `bulk_update_findings_assign_update_status` | PUT | `/api/v2/client/{clientId}/findings` | live-unavailable; not exposed in polished module |
 | `delete_finding` | DELETE | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}` | `delete` |
 | `bulk_delete_findings` | POST | `/api/v1/client/{clientId}/report/{reportId}/flaws/delete` |  |
 | `get_finding_status_list` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/status` |  |
@@ -757,7 +757,7 @@ Rules:
   field named `report_id` should become `ReportCreateResult.report_id`, not
   `OperationResult.id`.
 - Use explicit identifier names on domain models when PlexTrac documents them. For example,
-  prefer `Client.client_id`, `Report.report_id`, and `Finding.flaw_id` over a generic `id`
+  prefer `Client.client_id`, `Report.report_id`, and `Finding.finding_id` over a generic `id`
   property. Keep separate CUID-style document identifiers in a `cuid` field when present.
 - Keep raw API payloads available on response dataclasses when useful for debugging or forward
   compatibility, but never use `raw` to construct polished request payloads.

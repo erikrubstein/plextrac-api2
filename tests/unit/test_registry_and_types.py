@@ -49,6 +49,7 @@ from plextrac_api.types import (
     ClientPagination,
     ClientSort,
     ClientSortField,
+    CodeSample,
     ContentLibraryUser,
     ContentLibraryUserInput,
     CurrentUserUpdate,
@@ -63,9 +64,11 @@ from plextrac_api.types import (
     FindingAnalyticsBootstrapFilter,
     FindingAnalyticsBootstrapOrderField,
     FindingCreateResult,
+    FindingEvidenceUpdate,
     FindingField,
     FindingFilter,
     FindingFilterField,
+    FindingImportStatus,
     FindingPageLimit,
     FindingPagination,
     FindingSeverity,
@@ -501,7 +504,7 @@ def test_create_result_types_preserve_specific_identifiers():
         == "asset-2"
     )
     assert ReportCreateResult.from_api({"report_id": 42, "message": "success"}).report_id == 42
-    assert FindingCreateResult.from_api({"flaw_id": 99, "status": "success"}).flaw_id == 99
+    assert FindingCreateResult.from_api({"flaw_id": 99, "status": "success"}).finding_id == 99
 
 
 def test_asset_request_shape_types_serialize_with_verified_fields():
@@ -1344,10 +1347,42 @@ def test_finding_request_shape_types_serialize_with_verified_fields():
         "by": "status",
         "value": ["Open"],
     }
-    assert FindingField(key="synopsis", label="Synopsis", value="Example").to_api() == {
+    assert FindingField(
+        field_id="field-1",
+        key="synopsis",
+        label="Synopsis",
+        value="Example",
+        sort_order=0,
+    ).to_api() == {
+        "id": "field-1",
         "key": "synopsis",
         "label": "Synopsis",
         "value": "Example",
+        "sort_order": 0,
+    }
+    assert FindingSort(by=FindingSortField.FINDING_ID).to_api() == {
+        "by": "flawId",
+        "order": "ASC",
+    }
+    assert FindingFilter(by=FindingFilterField.FINDING_ID, value=99).to_api() == {
+        "by": "flaw_id",
+        "value": 99,
+    }
+    assert CodeSample(code_sample_id="cs1", caption="example", code="print(1)").to_api() == {
+        "id": "cs1",
+        "caption": "example",
+        "code": "print(1)",
+    }
+    assert FindingEvidenceUpdate(
+        evidence_id="ev1",
+        caption="Evidence",
+        code="proof",
+        assets=["asset-1"],
+    ).to_api() == {
+        "id": "ev1",
+        "caption": "Evidence",
+        "code": "proof",
+        "assets": ["asset-1"],
     }
 
 
@@ -1385,7 +1420,9 @@ def test_finding_type_parses_affected_assets_and_identifiers():
                 "CWE": [{"name": "CWE-79", "id": 79}],
                 "code_samples": [{"id": "cs1", "caption": "example", "code": "print(1)"}],
             },
-            "fields": [{"key": "synopsis", "label": "Synopsis", "value": "Example"}],
+            "fields": {
+                "Synopsis": {"key": "synopsis", "label": "Synopsis", "value": "Example"}
+            },
             "affected_assets": {
                 "asset-1": {
                     "id": "asset-1",
@@ -1399,18 +1436,28 @@ def test_finding_type_parses_affected_assets_and_identifiers():
         }
     )
 
-    assert finding.flaw_id == 99
+    assert finding.finding_id == 99
     assert finding.cuid == "finding-cuid"
     assert finding.severity is FindingSeverity.HIGH
     assert finding.status is FindingStatus.OPEN
     assert finding.visibility is FindingVisibility.PUBLISHED
     assert finding.cves[0].name == "CVE-2024-0001"
-    assert finding.fields[0].key == "synopsis"
+    assert finding.code_samples[0].code_sample_id == "cs1"
+    assert finding.fields["Synopsis"].key == "synopsis"
     assert isinstance(finding.affected_assets["asset-1"], AffectedAsset)
     assert finding.affected_assets["asset-1"].status is AffectedAssetStatus.OPEN
     assert finding.affected_assets["asset-1"].assigned_to == "analyst@example.com"
     assert finding.affected_assets["asset-1"].comment == "triage note"
     assert finding.affected_assets["asset-1"].vulnerable_parameters[0].text == "q"
+
+
+def test_finding_import_status_uses_semantic_import_id():
+    parsed = FindingImportStatus.from_api(
+        {"id": "import-1", "status": "completed", "message": "done"}
+    )
+
+    assert parsed.import_id == "import-1"
+    assert parsed.status == "completed"
 
 
 def test_affected_asset_status_update_serializes_documented_fields():

@@ -181,12 +181,14 @@ wrapper. All authenticated API functions take `session` as their first argument.
 - `create_finding`
 - `update_finding`
 - `delete_finding`
-- `bulk_update_findings_metadata`
-- `bulk_update_finding_statuses`
 - `bulk_delete_findings`
+- `bulk_upsert_finding_evidence`
+- `get_scanner_output`
+- `list_finding_status_updates`
 - `create_finding_status_update`
 - `request_presigned_upload_url`
 - `import_preuploaded_findings`
+- `list_import_statuses`
 
 ### Assets And Affected Assets
 

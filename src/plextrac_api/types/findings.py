@@ -43,7 +43,7 @@ class FindingSortField(StrEnum):
     UPDATED_AT = "updatedAt"
     REOPENED_AT = "reopenedAt"
     CLOSED_AT = "closedAt"
-    FLAW_ID = "flawId"
+    FINDING_ID = "flawId"
     REPORT_ID = "reportId"
     SEVERITY = "severity"
     SOURCE = "source"
@@ -64,7 +64,7 @@ class FindingFilterField(StrEnum):
     REOPENED_AT = "reopenedAt"
     CLOSED_AT = "closedAt"
     ASSIGNED_TO = "assignedTo"
-    FLAW_ID = "flaw_id"
+    FINDING_ID = "flaw_id"
     CLIENT_ID = "client_id"
     REPORT_ID = "report_id"
     SEVERITY = "severity"
@@ -132,7 +132,7 @@ class Identifier:
 
 @dataclass(slots=True)
 class CodeSample:
-    id: str | None = None
+    code_sample_id: str | None = None
     caption: str | None = None
     code: str | None = None
     raw: JsonDict | None = None
@@ -142,14 +142,14 @@ class CodeSample:
         if not data:
             return None
         return cls(
-            id=data.get("id"),
+            code_sample_id=_first_value(data, ("id", "codeSampleId")),
             caption=data.get("caption"),
             code=data.get("code"),
             raw=dict(data),
         )
 
     def to_api(self) -> JsonDict:
-        return clean({"id": self.id, "caption": self.caption, "code": self.code})
+        return clean({"id": self.code_sample_id, "caption": self.caption, "code": self.code})
 
 
 @dataclass(slots=True)
@@ -195,9 +195,11 @@ class CommonIdentifiers:
 
 @dataclass(slots=True)
 class FindingField:
+    field_id: int | str | None = None
     key: str | None = None
     label: str | None = None
     value: str | int | float | bool | list[str] | None = None
+    sort_order: int | None = None
     raw: JsonDict | None = None
 
     @classmethod
@@ -206,16 +208,26 @@ class FindingField:
             return None
         value = data.get("value")
         return cls(
+            field_id=_first_value(data, ("id", "fieldId")),
             key=data.get("key"),
             label=data.get("label"),
             value=value
             if isinstance(value, (str, int, float, bool, list)) or value is None
             else None,
+            sort_order=_first_int(data, ("sort_order", "sortOrder")),
             raw=dict(data),
         )
 
     def to_api(self) -> JsonDict:
-        return clean({"key": self.key, "label": self.label, "value": self.value})
+        return clean(
+            {
+                "id": self.field_id,
+                "key": self.key,
+                "label": self.label,
+                "value": self.value,
+                "sort_order": self.sort_order,
+            }
+        )
 
 
 @dataclass(slots=True)
@@ -231,7 +243,7 @@ class FindingInput:
     tags: list[str] | None = None
     affected_assets: dict[str, AffectedAsset] | None = None
     common_identifiers: CommonIdentifiers | None = None
-    fields: list[FindingField] | None = None
+    fields: dict[str, FindingField] | None = None
     recommendations: str | None = None
     references: str | None = None
 
@@ -256,7 +268,7 @@ class FindingInput:
 
 @dataclass(slots=True)
 class FindingCreateResult:
-    flaw_id: int | str | None = None
+    finding_id: int | str | None = None
     status: str | None = None
     message: str | None = None
     raw: JsonDict | None = None
@@ -268,7 +280,7 @@ class FindingCreateResult:
     @classmethod
     def from_api(cls, data: JsonDict) -> FindingCreateResult:
         return cls(
-            flaw_id=data.get("flaw_id") or data.get("finding_id"),
+            finding_id=_first_value(data, ("flaw_id", "flawId", "finding_id", "findingId")),
             status=data.get("status") or data.get("result"),
             message=data.get("message") or data.get("detail"),
             raw=dict(data),
@@ -278,7 +290,7 @@ class FindingCreateResult:
 @dataclass(slots=True)
 class Finding:
     cuid: str | None = None
-    flaw_id: int | str | None = None
+    finding_id: int | str | None = None
     client_id: int | str | None = None
     report_id: int | str | None = None
     title: str | None = None
@@ -297,7 +309,7 @@ class Finding:
     cves: list[Identifier] | None = None
     cwes: list[Identifier] | None = None
     code_samples: list[CodeSample] | None = None
-    fields: list[FindingField] | None = None
+    fields: dict[str, FindingField] | None = None
     created_at: int | None = None
     closed_at: int | None = None
     reopened_at: int | None = None
@@ -313,9 +325,9 @@ class Finding:
         fields = data.get("fields")
         return cls(
             cuid=data.get("cuid") or data.get("id"),
-            flaw_id=data.get("flaw_id"),
-            client_id=data.get("client_id"),
-            report_id=data.get("report_id"),
+            finding_id=_first_value(data, ("flaw_id", "flawId", "finding_id", "findingId")),
+            client_id=_first_value(data, ("client_id", "clientId")),
+            report_id=_first_value(data, ("report_id", "reportId")),
             title=data.get("title"),
             description=data.get("description"),
             severity=_finding_severity(data.get("severity")),
@@ -344,13 +356,7 @@ class Finding:
             code_samples=common_identifiers.code_samples
             if common_identifiers is not None
             else None,
-            fields=[
-                field
-                for field in (FindingField.from_api(item) for item in fields or [])
-                if field is not None
-            ]
-            if isinstance(fields, list)
-            else None,
+            fields=_finding_fields_from_api(fields),
             created_at=data.get("createdAt"),
             closed_at=data.get("closedAt"),
             reopened_at=data.get("reopenedAt") or data.get("repoenedAt"),
@@ -444,7 +450,7 @@ class PresignedUpload:
 
 @dataclass(slots=True)
 class FindingImportStatus:
-    id: str | None = None
+    import_id: str | None = None
     status: str | None = None
     message: str | None = None
     raw: JsonDict | None = None
@@ -452,7 +458,7 @@ class FindingImportStatus:
     @classmethod
     def from_api(cls, data: JsonDict) -> FindingImportStatus:
         return cls(
-            id=data.get("id") or data.get("importId") or data.get("cuid"),
+            import_id=_first_value(data, ("importId", "id", "cuid")),
             status=data.get("status"),
             message=data.get("message") or data.get("detail"),
             raw=dict(data),
@@ -461,21 +467,17 @@ class FindingImportStatus:
 
 @dataclass(slots=True)
 class FindingEvidenceUpdate:
-    id: str | None = None
-    name: str | None = None
-    description: str | None = None
-    file_url: str | None = None
-    content_type: str | None = None
+    evidence_id: str | None = None
+    caption: str | None = None
+    code: str | None = None
     assets: list[int | str] | None = None
 
     def to_api(self) -> JsonDict:
         return clean(
             {
-                "id": self.id,
-                "name": self.name,
-                "description": self.description,
-                "fileUrl": self.file_url,
-                "contentType": self.content_type,
+                "id": self.evidence_id,
+                "caption": self.caption,
+                "code": self.code,
                 "assets": self.assets,
             }
         )
@@ -487,7 +489,7 @@ class FindingStatusUpdate:
     substatus: str | None = None
     substatus_cuid: str | None = None
     assigned_to: str | None = None
-    comments: str | None = None
+    comment: str | None = None
     created_at: int | None = None
     raw: JsonDict | None = None
 
@@ -498,7 +500,7 @@ class FindingStatusUpdate:
             substatus=data.get("subStatus"),
             substatus_cuid=data.get("substatusCuid"),
             assigned_to=data.get("assignedTo"),
-            comments=data.get("comments") or data.get("comment"),
+            comment=data.get("comment") or data.get("comments"),
             created_at=data.get("createdAt"),
             raw=dict(data),
         )
@@ -510,9 +512,33 @@ class FindingStatusUpdate:
                 "subStatus": self.substatus,
                 "substatusCuid": self.substatus_cuid,
                 "assignedTo": self.assigned_to,
-                "comments": self.comments,
+                "comment": self.comment,
             }
         )
+
+
+def _finding_fields_from_api(data: object) -> dict[str, FindingField] | None:
+    if isinstance(data, dict):
+        fields: dict[str, FindingField] = {}
+        for key, value in data.items():
+            if isinstance(value, dict):
+                field = FindingField.from_api(value)
+                if field is not None:
+                    fields[str(key)] = field
+        return fields
+    if isinstance(data, list):
+        fields = {}
+        for item in data:
+            if not isinstance(item, dict):
+                continue
+            field = FindingField.from_api(item)
+            if field is None:
+                continue
+            key = field.key or field.label or field.field_id
+            if key is not None:
+                fields[str(key)] = field
+        return fields
+    return None
 
 
 def _finding_payload(
@@ -528,7 +554,7 @@ def _finding_payload(
     tags: list[str] | None = None,
     affected_assets: dict[str, AffectedAsset] | None = None,
     common_identifiers: CommonIdentifiers | None = None,
-    fields: list[FindingField] | None = None,
+    fields: dict[str, FindingField] | None = None,
     recommendations: str | None = None,
     references: str | None = None,
 ) -> JsonDict:
@@ -549,7 +575,9 @@ def _finding_payload(
             "common_identifiers": common_identifiers.to_api()
             if common_identifiers is not None
             else None,
-            "fields": [field.to_api() for field in fields] if fields is not None else None,
+            "fields": {key: field.to_api() for key, field in fields.items()}
+            if fields is not None
+            else None,
             "recommendations": recommendations,
             "references": references,
         }
@@ -630,4 +658,11 @@ def _first_int(data: JsonDict, keys: tuple[str, ...]) -> int | None:
             nested = _first_int(value, keys)
             if nested is not None:
                 return nested
+    return None
+
+
+def _first_value(data: JsonDict, keys: tuple[str, ...]) -> int | str | None:
+    for key in keys:
+        if key in data and data[key] is not None:
+            return data[key]
     return None

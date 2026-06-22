@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from plextrac_api.functions.common import rest_request
 from plextrac_api.types.auth import AuthSession
-from plextrac_api.types.common import JsonDict, OperationResult, clean
+from plextrac_api.types.common import JsonDict, OperationResult
 from plextrac_api.types.findings import (
     Finding,
     FindingCreateResult,
@@ -15,9 +15,7 @@ from plextrac_api.types.findings import (
     FindingPage,
     FindingPagination,
     FindingSort,
-    FindingStatus,
     FindingStatusUpdate,
-    FindingVisibility,
     PresignedUpload,
 )
 
@@ -68,21 +66,9 @@ def get_scanner_output(
         return data
     if isinstance(data, str):
         return data.encode()
+    if data == []:
+        return b""
     raise ValueError("PlexTrac scanner output response was not bytes or text.")
-
-
-def update_finding_evidence(
-    session: AuthSession,
-    client_id: int | str,
-    report_id: int | str,
-    finding_id: int | str,
-    asset_id: int | str,
-    evidence_id: int | str,
-    evidence: FindingEvidenceUpdate,
-) -> OperationResult:
-    """Update one evidence item for an affected asset on a finding."""
-    data = rest_request(session, "PUT", f"/api/v2/client/{client_id}/report/{report_id}/finding/{finding_id}/asset/{asset_id}/evidence/{evidence_id}", json=evidence.to_api())
-    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
 def bulk_upsert_finding_evidence(
@@ -165,48 +151,6 @@ def update_finding(
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
-def bulk_update_findings_metadata(
-    session: AuthSession,
-    client_id: int | str,
-    report_id: int | str,
-    finding_ids: list[int | str],
-    *,
-    tags: list[str] | None = None,
-    created_at: int | None = None,
-    visibility: FindingVisibility | None = None,
-) -> OperationResult:
-    """Apply bulk metadata changes such as tags, creation date, or visibility."""
-    payload = clean({"findingIds": finding_ids, "tags": tags, "createdAt": created_at, "visibility": visibility.value if visibility is not None else None})
-    data = rest_request(session, "PUT", f"/api/v2/clients/{client_id}/reports/{report_id}/findings", json=payload)
-    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
-
-
-def bulk_update_finding_statuses(
-    session: AuthSession,
-    client_id: int | str,
-    finding_ids: list[int | str],
-    *,
-    status: FindingStatus | None = None,
-    substatus: str | None = None,
-    substatus_cuid: str | None = None,
-    assigned_to: str | None = None,
-    comments: str | None = None,
-) -> OperationResult:
-    """Bulk update finding status, substatus, and assignment."""
-    payload = clean(
-        {
-            "findingIds": finding_ids,
-            "status": status.value if status is not None else None,
-            "subStatus": substatus,
-            "substatusCuid": substatus_cuid,
-            "assignedTo": assigned_to,
-            "comments": comments,
-        }
-    )
-    data = rest_request(session, "PUT", f"/api/v2/client/{client_id}/findings", json=payload)
-    return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
-
-
 def delete_finding(
     session: AuthSession,
     client_id: int | str,
@@ -225,7 +169,7 @@ def bulk_delete_findings(
     finding_ids: list[int | str],
 ) -> OperationResult:
     """Delete multiple findings from a report."""
-    data = rest_request(session, "POST", f"/api/v1/client/{client_id}/report/{report_id}/flaws/delete", json={"findingIds": finding_ids})
+    data = rest_request(session, "POST", f"/api/v1/client/{client_id}/report/{report_id}/flaws/delete", json={"flaws": finding_ids})
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
