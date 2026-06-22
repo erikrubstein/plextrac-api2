@@ -195,3 +195,10 @@ A group pass is complete when:
   created, updated/deleted where supported, and marker audits were empty. The documented
   `copy_section_to_narrative_repository` endpoint rejected tested payloads and is not exposed in
   the polished module.
+- `files.py`: Steps 1-3 completed locally. Public `ArtifactRelation` now uses semantic
+  `object_id` while serializing to PlexTrac wire key `id`; live testing confirmed relation IDs
+  must be sent as strings. Artifact and upload response parsers tolerate nested `data` wrappers
+  and additional raw ID/url key variants. Live testing confirmed client-scoped artifact listing,
+  disposable artifact upload, readback, download, delete, and marker audit. Tenant image upload was
+  skipped because the backend rejects arbitrary scopes and no known valid disposable scope was
+  configured.

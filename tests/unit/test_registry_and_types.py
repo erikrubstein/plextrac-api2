@@ -552,10 +552,10 @@ def test_file_type_parses_artifacts_and_upload_results():
     assert artifact.artifact_id == "artifact-1"
     assert artifact.content_type == "image/png"
     assert artifact.relations[0].model is ArtifactRelationModel.REPORT
-    assert artifact.relations[0].id == 500824
-    assert ArtifactRelation(model=ArtifactRelationModel.CLIENT, id=1045).to_api() == {
+    assert artifact.relations[0].object_id == 500824
+    assert ArtifactRelation(model=ArtifactRelationModel.CLIENT, object_id=1045).to_api() == {
         "model": "client",
-        "id": 1045,
+        "id": "1045",
     }
     upload_result = ArtifactUploadResult.from_api(
         {"status": "ok", "data": {"id": "artifact-2"}}
@@ -564,6 +564,9 @@ def test_file_type_parses_artifacts_and_upload_results():
     assert TenantImageUploadResult.from_api(
         {"fileUrl": "uploads/image.png"}
     ).file_url == "uploads/image.png"
+    assert TenantImageUploadResult.from_api(
+        {"data": {"url": "uploads/nested.png"}}
+    ).file_url == "uploads/nested.png"
 
 
 def test_mailer_type_parses_documented_template_fields():

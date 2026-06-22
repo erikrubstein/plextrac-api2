@@ -15,7 +15,7 @@ class ArtifactRelationModel(StrEnum):
 @dataclass(slots=True)
 class ArtifactRelation:
     model: ArtifactRelationModel
-    id: int | str
+    object_id: int | str
     raw: JsonDict | None = None
 
     @classmethod
@@ -24,10 +24,10 @@ class ArtifactRelation:
         relation_id = data.get("id")
         if model is None or relation_id is None:
             return None
-        return cls(model=model, id=relation_id, raw=dict(data))
+        return cls(model=model, object_id=relation_id, raw=dict(data))
 
     def to_api(self) -> JsonDict:
-        return {"model": self.model.value, "id": self.id}
+        return {"model": self.model.value, "id": str(self.object_id)}
 
 
 @dataclass(slots=True)
@@ -44,15 +44,18 @@ class Artifact:
 
     @classmethod
     def from_api(cls, data: JsonDict) -> Artifact:
-        relations = data.get("relations")
+        source = _nested_object(data)
+        relations = source.get("relations")
         return cls(
-            artifact_id=data.get("id") or data.get("artifactId"),
-            filename=data.get("filename") or data.get("name"),
-            content_type=data.get("content_type") or data.get("contentType"),
-            description=data.get("description"),
-            size=data.get("size") if isinstance(data.get("size"), int) else None,
-            created_at=data.get("createdAt"),
-            components=data.get("components") if isinstance(data.get("components"), list) else None,
+            artifact_id=_first_value(source, ("id", "artifactId", "artifact_id")),
+            filename=_first_value(source, ("filename", "name")),
+            content_type=_first_value(source, ("content_type", "contentType")),
+            description=source.get("description"),
+            size=source.get("size") if isinstance(source.get("size"), int) else None,
+            created_at=_first_value(source, ("createdAt", "created_at")),
+            components=source.get("components")
+            if isinstance(source.get("components"), list)
+            else None,
             relations=[
                 relation
                 for relation in (
@@ -81,7 +84,7 @@ class ArtifactUploadResult:
         nested = data.get("data")
         return cls(
             artifact_id=_artifact_id(nested) or _artifact_id(data),
-            status=data.get("status"),
+            status=_first_value(_nested_object(data), ("status",)) or data.get("status"),
             raw=dict(data),
         )
 
@@ -93,7 +96,8 @@ class TenantImageUploadResult:
 
     @classmethod
     def from_api(cls, data: JsonDict) -> TenantImageUploadResult:
-        return cls(file_url=data.get("fileUrl") or data.get("file_url"), raw=dict(data))
+        source = _nested_object(data)
+        return cls(file_url=_first_value(source, ("fileUrl", "file_url", "url")), raw=dict(data))
 
 
 def artifact_filter_payload(
@@ -125,5 +129,19 @@ def _artifact_relation_model(value: object) -> ArtifactRelationModel | None:
 def _artifact_id(data: object) -> str | None:
     if not isinstance(data, dict):
         return None
-    value = data.get("id") or data.get("artifactId")
+    value = _first_value(data, ("id", "artifactId", "artifact_id"))
     return str(value) if value is not None else None
+
+
+def _nested_object(data: JsonDict) -> JsonDict:
+    nested = data.get("data")
+    if isinstance(nested, dict):
+        return nested
+    return data
+
+
+def _first_value(data: JsonDict, keys: tuple[str, ...]) -> object:
+    for key in keys:
+        if key in data and data[key] is not None:
+            return data[key]
+    return None

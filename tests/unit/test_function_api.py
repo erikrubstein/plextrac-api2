@@ -986,7 +986,7 @@ def test_explicit_files_list_artifacts_uses_typed_relations(monkeypatch):
     artifacts = files.list_artifacts(
         session,
         components=["report_artifacts"],
-        relations=[ArtifactRelation(model=ArtifactRelationModel.REPORT, id=42)],
+        relations=[ArtifactRelation(model=ArtifactRelationModel.REPORT, object_id=42)],
     )
 
     assert artifacts[0].artifact_id == "artifact-1"
@@ -994,7 +994,7 @@ def test_explicit_files_list_artifacts_uses_typed_relations(monkeypatch):
     assert seen["path"] == "/api/v1/file-manager/artifacts"
     assert seen["json"] == {
         "components": ["report_artifacts"],
-        "relations": [{"model": "report", "id": 42}],
+        "relations": [{"model": "report", "id": "42"}],
     }
 
 
@@ -1025,7 +1025,7 @@ def test_explicit_files_upload_artifact_uses_documented_form_fields(monkeypatch,
         artifact_path,
         description="proof file",
         components=["report_artifacts"],
-        relations=[ArtifactRelation(model=ArtifactRelationModel.CLIENT, id=123)],
+        relations=[ArtifactRelation(model=ArtifactRelationModel.CLIENT, object_id=123)],
         content_type="text/plain",
     )
 
@@ -1035,7 +1035,7 @@ def test_explicit_files_upload_artifact_uses_documented_form_fields(monkeypatch,
     assert seen["data"] == {
         "description": "proof file",
         "components": "[\"report_artifacts\"]",
-        "relations": "[{\"model\": \"client\", \"id\": 123}]",
+        "relations": "[{\"model\": \"client\", \"id\": \"123\"}]",
     }
     assert seen["files"]["file"][0] == "proof.txt"
     assert seen["files"]["file"][2] == "text/plain"
