@@ -170,6 +170,7 @@ wrapper. All authenticated API functions take `session` as their first argument.
 - `bulk_add_tags_to_reports`
 - `bulk_assign_reviewers_to_reports`
 - `bulk_update_report_statuses`
+- `export_report_to_ptrac`
 - `export_report_to_word`
 - `export_report_to_pdf`
 - `import_report_from_ptrac`

@@ -241,3 +241,12 @@ A group pass is complete when:
   intentionally skipped: parser plugin action enablement is tenant-wide with no read endpoint in
   this group for restoration, parser action creation/import have no documented delete path, and
   update/bulk update would alter existing tenant parser mappings.
+- `reports.py`: Steps 1-3 completed locally. Public report response models now map raw report
+  `id` values to `report_id`, report list `cuid` values to `cuid`, narrative raw `id` values to
+  `narrative_id`, and exhibit raw `id` values to `exhibit_id`. Live testing confirmed report list
+  pagination accepts `[5, 10, 25, 50, 100, 1000]`, and `.ptrac` export returns structured JSON
+  rather than bytes, so `export_report_to_ptrac` now returns `ReportPtracExport`. Mutating tests
+  created, updated, search/replaced, bulk-tagged, bulk-statused, reviewer-assigned, exported,
+  imported, bulk-deleted, and single-deleted marked disposable reports only. Word export worked on
+  the disposable report; PDF export returned a PlexTrac backend error for the empty report. Final
+  marker audits were empty.

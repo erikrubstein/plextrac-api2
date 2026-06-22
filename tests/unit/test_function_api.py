@@ -684,6 +684,40 @@ def test_explicit_report_export_uses_snake_case_query_options(monkeypatch):
     assert seen["params"] == {"includeEvidence": True}
 
 
+def test_explicit_report_ptrac_export_returns_structured_export(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        return httpx.Response(
+            200,
+            json={
+                "report_info": {"id": 42},
+                "flaws_array": [{"flaw_id": 99}],
+                "summary": {},
+                "evidence": {},
+                "client_info": {"client_id": 1},
+                "procedures": [],
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = reports.export_report_to_ptrac(
+        session,
+        client_id="client-1",
+        report_id="report-1",
+    )
+
+    assert seen["method"] == "GET"
+    assert seen["path"] == "/api/v1/client/client-1/report/report-1/export/ptrac"
+    assert result.report_info == {"id": 42}
+    assert result.findings == [{"flaw_id": 99}]
+    assert result.client_info == {"client_id": 1}
+
+
 def test_explicit_client_create_uses_reusable_input(monkeypatch):
     seen = {}
 

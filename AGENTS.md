@@ -782,6 +782,8 @@ Examples:
 - `ReportStatus.READY_FOR_REVIEW` serializes to `"Ready For Review"`.
 - `ReportReplaceResult` is preferred over `OperationResult` for report text replacement because the
   response includes a meaningful `data` boolean.
+- `ReportPtracExport` is preferred over bytes for `.ptrac` export because live PlexTrac returns a
+  structured JSON object with report, finding, evidence, client, and procedure sections.
 
 Generated endpoint metadata may include unpolished operation names and raw request shapes. Public
 function modules should still expose explicit signatures and typed returns.

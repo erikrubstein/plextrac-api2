@@ -84,6 +84,7 @@ from plextrac_api.types import (
     IntegrationConfigurationType,
     JiraConnectionInput,
     JiraSyncFrequency,
+    Narrative,
     NarrativeRepository,
     NarrativeRepositoryInput,
     NarrativeSectionInput,
@@ -100,13 +101,17 @@ from plextrac_api.types import (
     QuestionnaireInput,
     Report,
     ReportCreateResult,
+    ReportExhibit,
     ReportFilter,
     ReportFilterField,
     ReportPageLimit,
     ReportPagination,
+    ReportPtracExport,
+    ReportSearchOccurrenceResult,
     ReportSort,
     ReportSortField,
     ReportStatus,
+    ReportSummary,
     RoleNameAvailability,
     RunbookListArgs,
     RunbookMutationResult,
@@ -1333,6 +1338,17 @@ def test_report_request_shape_types_serialize_with_verified_fields():
         "offset": 0,
         "limit": 1000,
     }
+    assert Narrative(
+        narrative_id="n1",
+        label="Executive Summary",
+        text="Summary",
+        is_from_narratives_db=False,
+    ).to_api() == {
+        "id": "n1",
+        "label": "Executive Summary",
+        "text": "Summary",
+        "isFromNarrativesDB": False,
+    }
     assert ReportSort(
         by=ReportSortField.STATUS,
         order=SortOrder.DESCENDING,
@@ -1410,11 +1426,21 @@ def test_finding_request_shape_types_serialize_with_verified_fields():
 def test_report_type_parses_narratives():
     report = Report.from_api(
         {
-            "report_id": 10,
+            "id": 10,
             "cuid": "report-cuid",
-            "client_id": 1,
+            "clientId": 1,
             "name": "Assessment",
             "status": "Draft",
+            "created_at": 1719272049422,
+            "includeEvidence": False,
+            "reportType": "standard",
+            "reportSource": "Legacy",
+            "template_name": "Default Report Template",
+            "fields_template_name": "Default Fields Template",
+            "startDate": "2026-01-01",
+            "endDate": "2026-01-31",
+            "isTrackChanges": False,
+            "findings": 5,
             "exec_summary": {
                 "custom_fields": [{"id": "n1", "label": "Executive Summary", "text": "Text"}]
             },
@@ -1424,7 +1450,61 @@ def test_report_type_parses_narratives():
     assert report.report_id == 10
     assert report.cuid == "report-cuid"
     assert report.status is ReportStatus.DRAFT
+    assert report.client_id == 1
+    assert report.created_at == 1719272049422
+    assert report.include_evidence is False
+    assert report.report_type == "standard"
+    assert report.report_source == "Legacy"
+    assert report.template_name == "Default Report Template"
+    assert report.fields_template_name == "Default Fields Template"
+    assert report.start_date == "2026-01-01"
+    assert report.end_date == "2026-01-31"
+    assert report.is_track_changes is False
+    assert report.findings_count == 5
+    assert report.narratives[0].narrative_id == "n1"
     assert report.narratives[0].label == "Executive Summary"
+
+
+def test_report_result_types_parse_raw_identifier_keys():
+    created = ReportCreateResult.from_api({"id": 42, "message": "success"})
+    summary = ReportSummary.from_api(
+        {
+            "id": "report_42_tenant_1_client_2",
+            "reportId": 42,
+            "clientId": 2,
+            "name": "Assessment",
+            "status": "Published",
+        }
+    )
+    exhibit = ReportExhibit.from_api({"id": "exhibit-1"})
+    occurrences = ReportSearchOccurrenceResult.from_api({"status": "success", "data": 3})
+
+    assert created.report_id == 42
+    assert created.ok is True
+    assert summary.cuid == "report_42_tenant_1_client_2"
+    assert summary.report_id == 42
+    assert summary.client_id == 2
+    assert summary.status is ReportStatus.PUBLISHED
+    assert exhibit.exhibit_id == "exhibit-1"
+    assert occurrences.count == 3
+
+
+def test_report_ptrac_export_parses_live_top_level_sections():
+    exported = ReportPtracExport.from_api(
+        {
+            "report_info": {"id": 42},
+            "flaws_array": [{"flaw_id": 99}],
+            "summary": {},
+            "evidence": {},
+            "client_info": {"client_id": 1},
+            "procedures": [],
+        }
+    )
+
+    assert exported.report_info == {"id": 42}
+    assert exported.findings == [{"flaw_id": 99}]
+    assert exported.client_info == {"client_id": 1}
+    assert exported.procedures == []
 
 
 def test_finding_type_parses_affected_assets_and_identifiers():

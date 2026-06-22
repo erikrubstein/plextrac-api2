@@ -17,6 +17,7 @@ from plextrac_api.types.reports import (
     ReportInput,
     ReportPage,
     ReportPagination,
+    ReportPtracExport,
     ReportReplaceResult,
     ReportSearchOccurrenceResult,
     ReportSort,
@@ -181,9 +182,12 @@ def export_report_to_ptrac(
     session: AuthSession,
     client_id: int | str,
     report_id: int | str,
-) -> bytes:
-    """Export a report in .ptrac format."""
-    return _bytes_response(rest_request(session, "GET", f"/api/v1/client/{client_id}/report/{report_id}/export/ptrac"))
+) -> ReportPtracExport:
+    """Export a report in PlexTrac's structured .ptrac JSON format."""
+    data = rest_request(session, "GET", f"/api/v1/client/{client_id}/report/{report_id}/export/ptrac")
+    if not isinstance(data, dict):
+        raise ValueError("PlexTrac .ptrac export response was not a JSON object.")
+    return ReportPtracExport.from_api(data)
 
 
 def export_report_to_word(

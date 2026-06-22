@@ -48,7 +48,7 @@ class ReportPagination:
 
 @dataclass(slots=True)
 class Narrative:
-    id: str | None = None
+    narrative_id: str | None = None
     label: str | None = None
     tags: list[str] | None = None
     text: str | None = None
@@ -60,7 +60,7 @@ class Narrative:
         if not data:
             return None
         return cls(
-            id=data.get("id"),
+            narrative_id=data.get("id") or data.get("narrativeId"),
             label=data.get("label"),
             tags=data.get("tags") if isinstance(data.get("tags"), list) else None,
             text=data.get("text"),
@@ -71,7 +71,7 @@ class Narrative:
     def to_api(self) -> JsonDict:
         return clean(
             {
-                "id": self.id,
+                "id": self.narrative_id,
                 "label": self.label,
                 "tags": self.tags,
                 "text": self.text,
@@ -123,8 +123,14 @@ class ReportCreateResult:
 
     @classmethod
     def from_api(cls, data: JsonDict) -> ReportCreateResult:
+        nested = data.get("data") if isinstance(data.get("data"), dict) else {}
         return cls(
-            report_id=data.get("report_id"),
+            report_id=data.get("report_id")
+            or data.get("reportId")
+            or data.get("id")
+            or nested.get("report_id")
+            or nested.get("reportId")
+            or nested.get("id"),
             status=data.get("status") or data.get("result"),
             message=data.get("message") or data.get("detail"),
             raw=dict(data),
@@ -138,16 +144,21 @@ class Report:
     client_id: int | str | None = None
     name: str | None = None
     status: ReportStatus | None = None
+    created_at: int | str | None = None
     include_evidence: bool | None = None
     report_type: str | None = None
+    report_source: str | None = None
     tags: list[str] | None = None
     custom_fields: list[CustomField] | None = None
     narratives: list[Narrative] | None = None
     template: str | None = None
     fields_template: str | None = None
+    template_name: str | None = None
+    fields_template_name: str | None = None
     start_date: str | None = None
     end_date: str | None = None
     is_track_changes: bool | None = None
+    findings_count: int | None = None
     doc_type: str | None = None
     raw: JsonDict | None = None
 
@@ -160,13 +171,15 @@ class Report:
             narrative_items = exec_summary.get("custom_fields")
 
         return cls(
-            report_id=data.get("report_id"),
+            report_id=data.get("report_id") or data.get("reportId") or data.get("id"),
             cuid=data.get("cuid"),
-            client_id=data.get("client_id"),
+            client_id=data.get("client_id") or data.get("clientId"),
             name=data.get("name"),
             status=_report_status(data.get("status")),
-            include_evidence=data.get("includeEvidence"),
-            report_type=data.get("reportType"),
+            created_at=data.get("created_at") or data.get("createdAt"),
+            include_evidence=_first_present(data, ("includeEvidence", "include_evidence")),
+            report_type=data.get("reportType") or data.get("report_type"),
+            report_source=data.get("reportSource") or data.get("report_source"),
             tags=data.get("tags") if isinstance(data.get("tags"), list) else None,
             custom_fields=[
                 field
@@ -183,18 +196,21 @@ class Report:
             if isinstance(narrative_items, list)
             else None,
             template=data.get("template"),
-            fields_template=data.get("fields_template"),
-            start_date=data.get("start_date"),
-            end_date=data.get("end_date"),
-            is_track_changes=data.get("isTrackChanges"),
-            doc_type=data.get("doc_type"),
+            fields_template=data.get("fields_template") or data.get("fieldsTemplate"),
+            template_name=data.get("template_name") or data.get("templateName"),
+            fields_template_name=data.get("fields_template_name") or data.get("fieldsTemplateName"),
+            start_date=data.get("start_date") or data.get("startDate"),
+            end_date=data.get("end_date") or data.get("endDate"),
+            is_track_changes=_first_present(data, ("isTrackChanges", "is_track_changes")),
+            findings_count=data.get("findings") if isinstance(data.get("findings"), int) else None,
+            doc_type=data.get("doc_type") or data.get("docType"),
             raw=dict(data),
         )
 
 
 @dataclass(slots=True)
 class ReportSummary:
-    id: str | None = None
+    cuid: str | None = None
     report_id: int | str | None = None
     client_id: int | str | None = None
     name: str | None = None
@@ -208,9 +224,9 @@ class ReportSummary:
         doc_ids = data.get("doc_id")
         tags = _list_value(values, 10)
         return cls(
-            id=data.get("id"),
-            report_id=_list_value(values, 0) or data.get("report_id"),
-            client_id=_list_value(doc_ids, 0) or data.get("client_id"),
+            cuid=data.get("cuid") or data.get("id"),
+            report_id=_list_value(values, 0) or data.get("report_id") or data.get("reportId"),
+            client_id=_list_value(doc_ids, 0) or data.get("client_id") or data.get("clientId"),
             name=_list_value(values, 1) or data.get("name"),
             status=_report_status(_list_value(values, 3) or data.get("status")),
             tags=tags if isinstance(tags, list) else data.get("tags"),
@@ -241,6 +257,35 @@ class ReportPage:
 
 
 @dataclass(slots=True)
+class ReportPtracExport:
+    report_info: JsonDict | None = None
+    findings: list[JsonDict] | None = None
+    summary: JsonDict | None = None
+    evidence: JsonDict | list[JsonDict] | None = None
+    client_info: JsonDict | None = None
+    procedures: list[JsonDict] | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> ReportPtracExport:
+        report_info = data.get("report_info")
+        findings = data.get("flaws_array")
+        summary = data.get("summary")
+        evidence = data.get("evidence")
+        client_info = data.get("client_info")
+        procedures = data.get("procedures")
+        return cls(
+            report_info=report_info if isinstance(report_info, dict) else None,
+            findings=findings if isinstance(findings, list) else None,
+            summary=summary if isinstance(summary, dict) else None,
+            evidence=evidence if isinstance(evidence, (dict, list)) else None,
+            client_info=client_info if isinstance(client_info, dict) else None,
+            procedures=procedures if isinstance(procedures, list) else None,
+            raw=dict(data),
+        )
+
+
+@dataclass(slots=True)
 class ReportSort:
     by: ReportSortField
     order: SortOrder = SortOrder.ASCENDING
@@ -266,8 +311,11 @@ class ReportSearchOccurrenceResult:
 
     @classmethod
     def from_api(cls, data: JsonDict) -> ReportSearchOccurrenceResult:
+        count = data.get("count")
+        if not isinstance(count, int):
+            count = data.get("data")
         return cls(
-            count=data.get("count") if isinstance(data.get("count"), int) else None,
+            count=count if isinstance(count, int) else None,
             status=data.get("status"),
             raw=dict(data),
         )
@@ -291,12 +339,12 @@ class ReportReplaceResult:
 
 @dataclass(slots=True)
 class ReportExhibit:
-    id: str | None = None
+    exhibit_id: str | None = None
     raw: JsonDict | None = None
 
     @classmethod
     def from_api(cls, data: JsonDict) -> ReportExhibit:
-        return cls(id=data.get("id"), raw=dict(data))
+        return cls(exhibit_id=data.get("id") or data.get("exhibitId"), raw=dict(data))
 
 
 def _report_payload(
@@ -372,6 +420,13 @@ def _report_status(value: object) -> ReportStatus | None:
 def _list_value(value: object, index: int) -> object:
     if isinstance(value, list) and len(value) > index:
         return value[index]
+    return None
+
+
+def _first_present(data: JsonDict, keys: tuple[str, ...]) -> object:
+    for key in keys:
+        if key in data:
+            return data[key]
     return None
 
 
