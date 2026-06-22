@@ -10,7 +10,10 @@ from plextrac_api.functions.webhooks import (
     verify_signature,
 )
 from plextrac_api.types import (
+    AssessmentSubmittedEvent,
     FindingPublishedEvent,
+    ReportCreatedOrEditedEvent,
+    ReportFindingCreatedOrEditedEvent,
     ReportPublishedEvent,
     SchedulerEngagementSubmittedEvent,
     UnknownWebhookEvent,
@@ -57,6 +60,31 @@ def test_parse_webhook_event_accepts_explicit_event_type_for_wfa_payloads():
     assert event.finding_id == "finding-1"
 
 
+def test_parse_webhook_event_maps_wfa_event_names():
+    finding_event = parse_webhook_event(
+        {
+            "event": "WFA: On Report Finding Creation/Edit",
+            "clientId": 0,
+            "reportId": 2,
+            "flawId": 3,
+        }
+    )
+    report_event = parse_webhook_event(
+        {
+            "event": "WFA: On Report Creation/Edit",
+            "clientId": 0,
+            "reportId": 2,
+        }
+    )
+
+    assert isinstance(finding_event, ReportFindingCreatedOrEditedEvent)
+    assert finding_event.client_id == 0
+    assert finding_event.finding_id == 3
+    assert isinstance(report_event, ReportCreatedOrEditedEvent)
+    assert report_event.client_id == 0
+    assert report_event.report_id == 2
+
+
 def test_parse_webhook_event_returns_unknown_for_unrecognized_payload():
     event = parse_webhook_event('{"event":"NewEvent","value":true}')
 
@@ -77,7 +105,17 @@ def test_parse_verified_webhook_event_verifies_before_parsing():
     )
 
     assert isinstance(event, ReportPublishedEvent)
-    assert event.target_cuid == "report-cuid"
+    assert event.report_cuid == "report-cuid"
+
+
+def test_parse_webhook_event_maps_assessment_submission_report_ids():
+    event = parse_webhook_event(
+        '{"event":"AssessmentSubmitted","clientId":"client-1","reportId":"report-1"}'
+    )
+
+    assert isinstance(event, AssessmentSubmittedEvent)
+    assert event.client_id == "client-1"
+    assert event.report_id == "report-1"
 
 
 def test_parse_verified_webhook_event_rejects_invalid_signature():
@@ -95,4 +133,4 @@ def test_parse_webhook_event_maps_scheduler_target_cuid():
     )
 
     assert isinstance(event, SchedulerEngagementSubmittedEvent)
-    assert event.target_cuid == "engagement-cuid"
+    assert event.engagement_schedule_event_cuid == "engagement-cuid"

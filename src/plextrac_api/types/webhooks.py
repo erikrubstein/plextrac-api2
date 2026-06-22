@@ -67,7 +67,7 @@ class ReportCreatedOrEditedEvent:
 
 @dataclass(slots=True)
 class ReportPublishedEvent:
-    target_cuid: str | None = None
+    report_cuid: str | None = None
     event_name: str | None = None
     raw: JsonDict | None = None
     event_type: WebhookEventType = field(default=WebhookEventType.REPORT_PUBLISHED, init=False)
@@ -75,7 +75,7 @@ class ReportPublishedEvent:
     @classmethod
     def from_api(cls, data: JsonDict) -> ReportPublishedEvent:
         return cls(
-            target_cuid=_string(data, "targetCuid", "target_cuid", "cuid"),
+            report_cuid=_string(data, "targetCuid", "target_cuid", "reportCuid", "cuid"),
             event_name=_event_name(data),
             raw=dict(data),
         )
@@ -124,7 +124,7 @@ class AssessmentSubmittedEvent:
 
 @dataclass(slots=True)
 class SchedulerEngagementSubmittedEvent:
-    target_cuid: str | None = None
+    engagement_schedule_event_cuid: str | None = None
     event_name: str | None = None
     raw: JsonDict | None = None
     event_type: WebhookEventType = field(
@@ -135,7 +135,12 @@ class SchedulerEngagementSubmittedEvent:
     @classmethod
     def from_api(cls, data: JsonDict) -> SchedulerEngagementSubmittedEvent:
         return cls(
-            target_cuid=_string(data, "targetCuid", "target_cuid", "engagementScheduleEventCuid"),
+            engagement_schedule_event_cuid=_string(
+                data,
+                "targetCuid",
+                "target_cuid",
+                "engagementScheduleEventCuid",
+            ),
             event_name=_event_name(data),
             raw=dict(data),
         )

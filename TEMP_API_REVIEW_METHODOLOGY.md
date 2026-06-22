@@ -303,3 +303,10 @@ A group pass is complete when:
   found notification filter `ALL` must serialize as `any`, not `all`. User creation, deletion,
   password, MFA, disable, notification-marking, and profile-update mutations were skipped because
   they affect real users or current-user state.
+- `webhooks.py`: Static audit completed locally. Webhooks remain framework-neutral inbound
+  helpers with no live SDK-initiated endpoint tests. Public event payloads now use semantic CUID
+  fields for documented `targetCuid` values: `ReportPublishedEvent.report_cuid` and
+  `SchedulerEngagementSubmittedEvent.engagement_schedule_event_cuid`. Raw payload keys still parse
+  through `from_api()` and raw payloads remain preserved. Fixture tests now cover WFA report/finding
+  event-name classification, zero-valued IDs, assessment submission, report publication, scheduler
+  engagement submission, unknown events, header lookup, and HMAC verification.
