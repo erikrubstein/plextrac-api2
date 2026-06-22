@@ -5,6 +5,7 @@ from typing import BinaryIO
 
 from plextrac_api.functions.common import rest_request
 from plextrac_api.types.assets import (
+    AffectedAssetBulkStatusUpdate,
     AffectedAssetImportSource,
     AffectedAssetStatusMap,
     AffectedAssetStatusUpdate,
@@ -126,13 +127,13 @@ def bulk_create_affected_asset_status_updates(
     client_id: int | str,
     report_id: int | str,
     finding_id: int | str,
-    updates: list[AffectedAssetStatusUpdate],
+    update: AffectedAssetBulkStatusUpdate,
 ) -> OperationResult:
     """Create affected-asset status tracker updates in bulk."""
     data = rest_request(
         session,
         "POST",
         f"/api/v2/client/{client_id}/report/{report_id}/finding/{finding_id}/asset/status",
-        json=[update.to_api(include_asset_id=True) for update in updates],
+        json=update.to_api(),
     )
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})

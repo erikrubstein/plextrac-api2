@@ -181,7 +181,8 @@ class OperationResult:
 def _is_success_text(value: object) -> bool:
     if not isinstance(value, str):
         return False
-    return value.lower() in {
+    normalized = value.lower().strip(" .!")
+    return normalized in {
         "ok",
         "success",
         "successful",

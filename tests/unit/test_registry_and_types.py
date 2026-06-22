@@ -2,6 +2,7 @@ from plextrac_api.functions import __all__ as function_groups
 from plextrac_api.generated.endpoints import GROUPS
 from plextrac_api.types import (
     AffectedAsset,
+    AffectedAssetBulkStatusUpdate,
     AffectedAssetStatus,
     AffectedAssetStatusMap,
     AffectedAssetStatusUpdate,
@@ -420,6 +421,10 @@ def test_operation_result_treats_boolean_success_flags_as_ok():
     assert OperationResult.from_api({"deleted": True}).ok
     assert OperationResult.from_api({"created": True}).ok
     assert OperationResult.from_api({"updated": True}).ok
+
+
+def test_operation_result_treats_punctuated_success_text_as_ok():
+    assert OperationResult.from_api({"status": "success!"}).ok
 
 
 def test_create_result_types_preserve_specific_identifiers():
@@ -1156,6 +1161,8 @@ def test_finding_type_parses_affected_assets_and_identifiers():
                     "id": "asset-1",
                     "asset": "host1",
                     "status": "Open",
+                    "assignedTo": "analyst@example.com",
+                    "comment": "triage note",
                     "vulnerableParameters": [{"id": "p1", "text": "q"}],
                 }
             },
@@ -1171,6 +1178,8 @@ def test_finding_type_parses_affected_assets_and_identifiers():
     assert finding.fields[0].key == "synopsis"
     assert isinstance(finding.affected_assets["asset-1"], AffectedAsset)
     assert finding.affected_assets["asset-1"].status is AffectedAssetStatus.OPEN
+    assert finding.affected_assets["asset-1"].assigned_to == "analyst@example.com"
+    assert finding.affected_assets["asset-1"].comment == "triage note"
     assert finding.affected_assets["asset-1"].vulnerable_parameters[0].text == "q"
 
 
@@ -1188,6 +1197,21 @@ def test_affected_asset_status_update_serializes_documented_fields():
         "status": "In Process",
         "subStatus": "Investigating",
         "assignedTo": "analyst@example.com",
+        "comment": "triage started",
+    }
+    bulk_update = AffectedAssetBulkStatusUpdate(
+        asset_ids=["asset-1", "asset-2"],
+        status=AffectedAssetStatus.IN_PROCESS,
+        assigned_to="analyst@example.com",
+        substatus="Investigating",
+        comment="triage started",
+    )
+
+    assert bulk_update.to_api() == {
+        "assetIds": ["asset-1", "asset-2"],
+        "status": "In Process",
+        "assignedTo": "analyst@example.com",
+        "subStatus": "Investigating",
         "comment": "triage started",
     }
 

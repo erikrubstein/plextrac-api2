@@ -59,6 +59,7 @@ from plextrac_api.types.assessments import (
 )
 from plextrac_api.types.assets import (
     AffectedAsset,
+    AffectedAssetBulkStatusUpdate,
     AffectedAssetImportSource,
     AffectedAssetStatus,
     AffectedAssetStatusMap,
@@ -296,6 +297,7 @@ from plextrac_api.types.webhooks import (
 
 __all__ = [
     "AffectedAsset",
+    "AffectedAssetBulkStatusUpdate",
     "AffectedAssetImportSource",
     "AffectedAssetStatus",
     "AffectedAssetStatusMap",

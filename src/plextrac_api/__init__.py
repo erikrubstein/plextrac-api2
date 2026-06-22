@@ -19,6 +19,7 @@ from plextrac_api.functions.common import (
 )
 from plextrac_api.types import (
     AffectedAsset,
+    AffectedAssetBulkStatusUpdate,
     Asset,
     AuthSession,
     Client,
@@ -38,6 +39,7 @@ from plextrac_api.types import (
 
 __all__ = [
     "AffectedAsset",
+    "AffectedAssetBulkStatusUpdate",
     "Asset",
     "AuthSession",
     "Client",

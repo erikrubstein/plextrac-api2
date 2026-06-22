@@ -30,9 +30,9 @@ from plextrac_api.functions.auth import session_from_token
 from plextrac_api.functions.common import PlexTracAuthError, PlexTracNotFoundError
 from plextrac_api.types import (
     AffectedAsset,
+    AffectedAssetBulkStatusUpdate,
     AffectedAssetStatus,
     AffectedAssetStatusMap,
-    AffectedAssetStatusUpdate,
     AnalyticsFilter,
     AnalyticsTags,
     ArtifactRelation,
@@ -656,6 +656,8 @@ def test_explicit_finding_create_uses_reusable_input_and_enums(monkeypatch):
                     asset_id="asset-1",
                     name="host1",
                     status=AffectedAssetStatus.OPEN,
+                    assigned_to="analyst@example.com",
+                    comment="triage note",
                 )
             },
             fields=[FindingField(key="synopsis", label="Synopsis", value="Example")],
@@ -671,7 +673,15 @@ def test_explicit_finding_create_uses_reusable_input_and_enums(monkeypatch):
         "severity": "High",
         "status": "Open",
         "description": "Example description",
-        "affected_assets": {"asset-1": {"id": "asset-1", "asset": "host1", "status": "Open"}},
+        "affected_assets": {
+            "asset-1": {
+                "id": "asset-1",
+                "asset": "host1",
+                "status": "Open",
+                "assignedTo": "analyst@example.com",
+                "comment": "triage note",
+            }
+        },
         "fields": [{"key": "synopsis", "label": "Synopsis", "value": "Example"}],
     }
 
@@ -726,27 +736,23 @@ def test_explicit_affected_asset_bulk_create_statuses_uses_reusable_update(monke
         client_id="client-1",
         report_id="report-1",
         finding_id="finding-1",
-        updates=[
-            AffectedAssetStatusUpdate(
-                asset_id="asset-1",
-                status=AffectedAssetStatus.IN_PROCESS,
-                assigned_to="analyst@example.com",
-                comment="triaging",
-            )
-        ],
+        update=AffectedAssetBulkStatusUpdate(
+            asset_ids=["asset-1"],
+            status=AffectedAssetStatus.IN_PROCESS,
+            assigned_to="analyst@example.com",
+            comment="triaging",
+        ),
     )
 
     assert result.ok
     assert seen["method"] == "POST"
     assert seen["path"] == "/api/v2/client/client-1/report/report-1/finding/finding-1/asset/status"
-    assert seen["json"] == [
-        {
-            "assetId": "asset-1",
-            "status": "In Process",
-            "assignedTo": "analyst@example.com",
-            "comment": "triaging",
-        }
-    ]
+    assert seen["json"] == {
+        "assetIds": ["asset-1"],
+        "status": "In Process",
+        "assignedTo": "analyst@example.com",
+        "comment": "triaging",
+    }
 
 
 def test_explicit_files_list_artifacts_uses_typed_relations(monkeypatch):

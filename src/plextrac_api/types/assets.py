@@ -307,6 +307,8 @@ class AffectedAsset(Asset):
     status: AffectedAssetStatus | None = None
     substatus: str | None = None
     substatus_cuid: str | None = None
+    assigned_to: str | None = None
+    comment: str | None = None
     evidence: list[str] | None = None
     location_url: str | None = None
     vulnerable_parameters: list[VulnerableParameter] | None = None
@@ -340,6 +342,8 @@ class AffectedAsset(Asset):
             status=_affected_asset_status(data.get("status")),
             substatus=data.get("subStatus"),
             substatus_cuid=data.get("substatusCuid"),
+            assigned_to=data.get("assignedTo"),
+            comment=data.get("comment") or data.get("comments"),
             evidence=data.get("evidence") if isinstance(data.get("evidence"), list) else None,
             location_url=data.get("locationUrl"),
             vulnerable_parameters=[
@@ -365,6 +369,8 @@ class AffectedAsset(Asset):
                     "status": self.status.value if self.status is not None else None,
                     "subStatus": self.substatus,
                     "substatusCuid": self.substatus_cuid,
+                    "assignedTo": self.assigned_to,
+                    "comment": self.comment,
                     "evidence": self.evidence,
                     "locationUrl": self.location_url,
                     "vulnerableParameters": [
@@ -413,6 +419,26 @@ class AffectedAssetStatusUpdate:
                 "status": self.status.value if self.status is not None else None,
                 "subStatus": self.substatus,
                 "assignedTo": self.assigned_to,
+                "comment": self.comment,
+            }
+        )
+
+
+@dataclass(slots=True)
+class AffectedAssetBulkStatusUpdate:
+    asset_ids: list[int | str]
+    status: AffectedAssetStatus
+    assigned_to: str
+    substatus: str | None = None
+    comment: str | None = None
+
+    def to_api(self) -> JsonDict:
+        return clean(
+            {
+                "assetIds": self.asset_ids,
+                "status": self.status.value,
+                "assignedTo": self.assigned_to,
+                "subStatus": self.substatus,
                 "comment": self.comment,
             }
         )
