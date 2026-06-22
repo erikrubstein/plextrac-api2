@@ -9,11 +9,9 @@ from plextrac_api.types.findings import Finding, FindingSeverity, FindingStatus,
 
 class ClientPageLimit(IntEnum):
     FIVE = 5
-    TEN = 10
     TWENTY_FIVE = 25
     FIFTY = 50
     ONE_HUNDRED = 100
-    ONE_THOUSAND = 1000
 
 
 class ClientFindingPageLimit(IntEnum):
@@ -188,8 +186,8 @@ class ClientInput:
     name: str | None = None
     tags: list[str] | None = None
     description: str | None = None
-    point_of_contact: str | None = None
-    point_of_contact_email: str | None = None
+    poc: str | None = None
+    poc_email: str | None = None
     custom_fields: list[CustomField] | None = None
 
     def to_api(self) -> JsonDict:
@@ -198,8 +196,8 @@ class ClientInput:
                 "name": self.name,
                 "tags": self.tags,
                 "description": self.description,
-                "poc": self.point_of_contact,
-                "poc_email": self.point_of_contact_email,
+                "poc": self.poc,
+                "poc_email": self.poc_email,
                 "custom_field": [field.to_api() for field in self.custom_fields or []]
                 if self.custom_fields is not None
                 else None,
@@ -225,12 +223,16 @@ class ClientCreateResult:
 
     @classmethod
     def from_api(cls, data: JsonDict) -> ClientCreateResult:
-        created = data.get("created")
+        source = _nested_object(data)
+        client_id = _first_value(source, ("client_id", "clientId", "id"))
+        if client_id is None:
+            client_id = _first_value(data, ("client_id", "clientId", "id"))
+        created = source.get("created") if "created" in source else data.get("created")
         return cls(
-            client_id=data.get("client_id"),
+            client_id=client_id,
             created=created if isinstance(created, bool) else None,
-            status=data.get("status") or data.get("result"),
-            message=data.get("message") or data.get("detail"),
+            status=source.get("status") or data.get("status") or data.get("result"),
+            message=source.get("message") or data.get("message") or data.get("detail"),
             raw=dict(data),
         )
 
@@ -243,8 +245,8 @@ class Client:
     tenant_id: int | str | None = None
     classification_id: str | None = None
     description: str | None = None
-    point_of_contact: str | None = None
-    point_of_contact_email: str | None = None
+    poc: str | None = None
+    poc_email: str | None = None
     role: str | None = None
     tags: list[str] | None = None
     custom_fields: list[CustomField] | None = None
@@ -254,19 +256,20 @@ class Client:
 
     @classmethod
     def from_api(cls, data: JsonDict) -> Client:
-        custom_fields = data.get("custom_field")
-        users = data.get("users")
+        source = _nested_object(data)
+        custom_fields = source.get("custom_field")
+        users = source.get("users")
         return cls(
-            client_id=data.get("client_id"),
-            cuid=data.get("cuid"),
-            name=data.get("name"),
-            tenant_id=data.get("tenant_id"),
-            classification_id=data.get("classificationId"),
-            description=data.get("description"),
-            point_of_contact=data.get("poc"),
-            point_of_contact_email=data.get("poc_email"),
-            role=data.get("role"),
-            tags=data.get("tags") if isinstance(data.get("tags"), list) else None,
+            client_id=_first_value(source, ("client_id", "clientId", "id")),
+            cuid=source.get("cuid"),
+            name=source.get("name"),
+            tenant_id=_first_value(source, ("tenant_id", "tenantId")),
+            classification_id=_first_value(source, ("classificationId", "classification_id")),
+            description=source.get("description"),
+            poc=source.get("poc"),
+            poc_email=source.get("poc_email"),
+            role=source.get("role"),
+            tags=source.get("tags") if isinstance(source.get("tags"), list) else None,
             custom_fields=[
                 field
                 for field in (CustomField.from_api(item) for item in custom_fields or [])
@@ -285,7 +288,7 @@ class Client:
             }
             if isinstance(users, dict)
             else None,
-            doc_type=data.get("doc_type"),
+            doc_type=_first_value(source, ("doc_type", "docType")),
             raw=dict(data),
         )
 
@@ -336,12 +339,26 @@ def _first_int(data: JsonDict, keys: tuple[str, ...]) -> int | None:
     return None
 
 
+def _first_value(data: JsonDict, keys: tuple[str, ...]) -> object:
+    for key in keys:
+        if key in data and data[key] is not None:
+            return data[key]
+    return None
+
+
 def _api_value(value: object) -> object:
     if isinstance(value, Enum):
         return value.value
     if isinstance(value, list):
         return [_api_value(item) for item in value]
     return value
+
+
+def _nested_object(data: JsonDict) -> JsonDict:
+    nested = data.get("data")
+    if isinstance(nested, dict):
+        return nested
+    return data
 
 
 def _is_success_text(value: object) -> bool:

@@ -500,10 +500,21 @@ def test_explicit_client_create_uses_reusable_input(monkeypatch):
     monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
     session = session_from_token("https://example.plextrac.com", "test-token")
 
-    clients.create_client(session, ClientInput(name="Example Client"))
+    clients.create_client(
+        session,
+        ClientInput(
+            name="Example Client",
+            poc="Alice",
+            poc_email="alice@example.com",
+        ),
+    )
 
     assert seen["method"] == "POST"
-    assert seen["json"] == {"name": "Example Client"}
+    assert seen["json"] == {
+        "name": "Example Client",
+        "poc": "Alice",
+        "poc_email": "alice@example.com",
+    }
 
 
 def test_explicit_asset_create_uses_reusable_input(monkeypatch):

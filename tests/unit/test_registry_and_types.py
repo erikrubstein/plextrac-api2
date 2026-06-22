@@ -356,8 +356,49 @@ def test_client_type_parses_documented_fields():
     assert client.client_id == 1
     assert client.cuid == "client-cuid"
     assert client.name == "Example"
+    assert client.poc == "Alice"
+    assert client.poc_email == "alice@example.com"
     assert client.custom_fields[0].label == "Region"
     assert client.users["user@example.com"].role == "ADMIN"
+
+    camel_client = Client.from_api(
+        {
+            "id": 2,
+            "clientId": 3,
+            "tenantId": 4,
+            "classification_id": "classification-1",
+            "docType": "client",
+        }
+    )
+
+    assert camel_client.client_id == 3
+    assert camel_client.tenant_id == 4
+    assert camel_client.classification_id == "classification-1"
+    assert camel_client.doc_type == "client"
+
+    nested_client = Client.from_api(
+        {
+            "data": {
+                "client_id": 5,
+                "tenant_id": 0,
+                "name": "Nested Client",
+                "poc": "Nested POC",
+            }
+        }
+    )
+
+    assert nested_client.client_id == 5
+    assert nested_client.tenant_id == 0
+    assert nested_client.name == "Nested Client"
+    assert nested_client.poc == "Nested POC"
+    assert nested_client.raw == {
+        "data": {
+            "client_id": 5,
+            "tenant_id": 0,
+            "name": "Nested Client",
+            "poc": "Nested POC",
+        }
+    }
 
 
 def test_asset_type_parses_documented_fields():
@@ -393,17 +434,17 @@ def test_client_request_shape_types_serialize_with_verified_fields():
         "offset": 25,
         "limit": 50,
     }
-    assert ClientPagination(limit=ClientPageLimit.TEN).to_api() == {
+    assert ClientPagination().to_api() == {
         "offset": 0,
-        "limit": 10,
-    }
-    assert ClientPagination(limit=ClientPageLimit.ONE_THOUSAND).to_api() == {
-        "offset": 0,
-        "limit": 1000,
+        "limit": 25,
     }
     assert ClientFindingPagination(limit=ClientFindingPageLimit.ALL).to_api() == {
         "offset": 0,
         "limit": 99999,
+    }
+    assert ClientFindingPagination().to_api() == {
+        "offset": 0,
+        "limit": 10,
     }
     assert ClientSort(by=ClientSortField.NAME, order=SortOrder.DESCENDING).to_api() == {
         "by": "name",
@@ -449,6 +490,11 @@ def test_operation_result_treats_punctuated_success_text_as_ok():
 
 def test_create_result_types_preserve_specific_identifiers():
     assert ClientCreateResult.from_api({"client_id": 1, "created": True}).client_id == 1
+    assert (
+        ClientCreateResult.from_api({"data": {"clientId": 2}, "status": "success"}).client_id
+        == 2
+    )
+    assert ClientCreateResult.from_api({"data": {"id": 0}, "status": "success"}).client_id == 0
     assert AssetCreateResult.from_api({"id": "asset-1", "status": "success"}).asset_id == "asset-1"
     assert (
         AssetCreateResult.from_api({"data": {"assetId": "asset-2"}, "status": "success"}).asset_id

@@ -170,3 +170,15 @@ A group pass is complete when:
   confirmed tenant/client/report asset reads, get, create, update, single delete, bulk delete, and
   import queueing. The CSV import job did not create a visible marked asset during delayed audits;
   all created direct assets were deleted and marker audits were empty.
+- `clients.py`: Steps 1-3 completed locally. Public client input/response models now use `poc`
+  and `poc_email`, `ClientPageLimit` is constrained to the documented list-client values
+  `[5, 25, 50, 100]`, and `Client.from_api()` / `ClientCreateResult.from_api()` tolerate
+  additional raw ID key variants while exposing semantic Python fields. Live testing confirmed
+  list clients, tenant clients, get client, client users, available tenant users, default client
+  finding pagination, and filtered `ALL` client finding pagination. It also found that tenant
+  client list records can wrap the client object under `data`, so `Client.from_api()` now unwraps
+  that shape while preserving raw data. Careful mutating tests confirmed create, update, add logo,
+  delete logo, and delete against a marked disposable client. Client user assign/bulk assign/remove
+  returned `Unauthorized` for this live account, so those remain permission-limited/inconclusive.
+  All disposable live artifacts were deleted and marker audits were empty. The documented client
+  asset endpoint remains owned by the `assets` group.
