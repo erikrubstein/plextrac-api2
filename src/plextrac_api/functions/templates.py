@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import BinaryIO
+from typing import BinaryIO, TypeVar
 
 from plextrac_api.functions.common import rest_request
 from plextrac_api.types.auth import AuthSession
@@ -16,6 +17,8 @@ from plextrac_api.types.templates import (
     TemplateOperationResult,
 )
 
+TemplateModel = TypeVar("TemplateModel", ReportTemplate, FindingTemplate)
+
 
 def list_report_templates(
     session: AuthSession,
@@ -23,7 +26,7 @@ def list_report_templates(
 ) -> list[ReportTemplate]:
     """List report templates for a tenant."""
     data = rest_request(session, "GET", f"/api/v1/tenant/{tenant_id}/report-templates")
-    return [ReportTemplate.from_api(item) for item in data if isinstance(item, dict)] if isinstance(data, list) else []
+    return _template_list(data, ReportTemplate.from_api)
 
 
 def get_report_template(
@@ -92,7 +95,7 @@ def list_finding_templates(
 ) -> list[FindingTemplate]:
     """List finding field templates."""
     data = rest_request(session, "GET", "/api/v1/field-templates")
-    return [FindingTemplate.from_api(item) for item in data if isinstance(item, dict)] if isinstance(data, list) else []
+    return _template_list(data, FindingTemplate.from_api)
 
 
 def get_finding_template(
@@ -157,11 +160,12 @@ def list_export_templates(
 ) -> list[ExportTemplate]:
     """List export templates for a tenant."""
     data = rest_request(session, "GET", f"/api/v2/tenant/{tenant_id}/export-templates")
-    if not isinstance(data, dict):
+    payload = _data_payload(data)
+    if not isinstance(payload, dict):
         return []
     return [
         ExportTemplate.from_api(template_id, item)
-        for template_id, item in data.items()
+        for template_id, item in payload.items()
         if isinstance(item, dict)
     ]
 
@@ -243,3 +247,18 @@ def _upload_template(
     finally:
         if close_after is not None:
             close_after.close()
+
+
+def _template_list(
+    data: object, parser: Callable[[dict], TemplateModel]
+) -> list[TemplateModel]:
+    payload = _data_payload(data)
+    if isinstance(payload, list):
+        return [parser(item) for item in payload if isinstance(item, dict)]
+    return []
+
+
+def _data_payload(data: object) -> object:
+    if isinstance(data, dict) and "data" in data:
+        return data["data"]
+    return data

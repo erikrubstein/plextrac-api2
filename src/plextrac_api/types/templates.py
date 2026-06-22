@@ -167,16 +167,19 @@ class ExportTemplate:
     template_id: str | None = None
     name: str | None = None
     file_id: str | None = None
-    type: str | None = None
+    template_type: ExportTemplateType | str | None = None
     raw: JsonDict | None = None
 
     @classmethod
     def from_api(cls, template_id: str, data: JsonDict) -> ExportTemplate:
         return cls(
-            template_id=template_id,
+            template_id=data.get("doc_id")
+            or data.get("templateId")
+            or data.get("template_id")
+            or template_id,
             name=data.get("name"),
-            file_id=data.get("id"),
-            type=data.get("type"),
+            file_id=data.get("fileId") or data.get("file_id") or data.get("id"),
+            template_type=_export_template_type(data.get("type")),
             raw=dict(data),
         )
 
@@ -195,11 +198,15 @@ class TemplateOperationResult:
 
     @classmethod
     def from_api(cls, data: JsonDict) -> TemplateOperationResult:
+        payload = _nested_payload(data)
         return cls(
-            status=data.get("status"),
-            message=data.get("message"),
-            template_id=data.get("doc_id") or data.get("id"),
-            name=data.get("name"),
+            status=data.get("status") or payload.get("status"),
+            message=data.get("message") or payload.get("message"),
+            template_id=payload.get("doc_id")
+            or payload.get("templateId")
+            or payload.get("template_id")
+            or payload.get("id"),
+            name=payload.get("name"),
             raw=dict(data),
         )
 
@@ -207,3 +214,14 @@ class TemplateOperationResult:
 def _nested_payload(data: JsonDict) -> JsonDict:
     payload = data.get("data")
     return cast(JsonDict, payload) if isinstance(payload, dict) else data
+
+
+def _export_template_type(value: object) -> ExportTemplateType | str | None:
+    if isinstance(value, ExportTemplateType):
+        return value
+    if isinstance(value, str):
+        try:
+            return ExportTemplateType(value)
+        except ValueError:
+            return value
+    return None

@@ -281,3 +281,11 @@ A group pass is complete when:
   this account and returned five configured substatuses. Mutating create/update/delete could not be
   fully exercised because `create_substatus` returned `Unauthorized`; the attempted create did not
   return an ID, and a follow-up marker audit found zero `codex-temp-substatus-*` entries.
+- `templates.py`: Economical audit completed locally. Public export template responses now expose
+  `template_type` instead of generic `type`, and template list/operation result parsing tolerates
+  nested `data` wrappers. Live non-mutating tests confirmed report template list, finding template
+  list/detail, and export template list. Report template detail, export template download, report
+  template create, finding template create, and export template import all returned `Unauthorized`
+  for this account, so update/delete paths were not exercised. Marker audits for report, finding,
+  and export templates found zero `codex-temp-template-*` leftovers. The audit also noted that the
+  current users parser drops a live `tenant_id` value of `0`; defer that fix to the users pass.

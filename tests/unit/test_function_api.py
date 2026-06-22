@@ -1471,6 +1471,33 @@ def test_explicit_template_create_finding_template_uses_input_type(monkeypatch):
     }
 
 
+def test_explicit_template_lists_tolerate_wrapped_payloads(monkeypatch):
+    calls = []
+
+    def fake_send(session, method, path, **kwargs):
+        calls.append((method, path))
+        if path.endswith("/report-templates"):
+            return httpx.Response(200, json={"data": [{"doc_id": "report-template-1"}]})
+        return httpx.Response(
+            200,
+            json={"data": {"export-template-1": {"id": "file-1", "type": "custom"}}},
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    report_templates = templates.list_report_templates(session, tenant_id=1)
+    export_templates = templates.list_export_templates(session, tenant_id=1)
+
+    assert report_templates[0].template_id == "report-template-1"
+    assert export_templates[0].template_id == "export-template-1"
+    assert export_templates[0].template_type is ExportTemplateType.CUSTOM
+    assert calls == [
+        ("GET", "/api/v1/tenant/1/report-templates"),
+        ("GET", "/api/v2/tenant/1/export-templates"),
+    ]
+
+
 def test_explicit_template_import_uses_named_template_type(monkeypatch, tmp_path):
     seen = {}
     template_path = tmp_path / "export.docx"

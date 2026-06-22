@@ -64,6 +64,7 @@ from plextrac_api.types import (
     EngagementSchedulePageLimit,
     EngagementSchedulePagination,
     EngagementScheduleStatus,
+    ExportTemplate,
     ExportTemplateType,
     Filter,
     Finding,
@@ -869,6 +870,18 @@ def test_tenant_type_parses_documented_fields():
 def test_template_type_parses_and_serializes_documented_fields():
     assert ExportTemplateType.CUSTOM.value == "custom"
 
+    export_template = ExportTemplate.from_api(
+        "export-1",
+        {
+            "id": "file-1",
+            "name": "Export Template",
+            "type": "custom",
+        },
+    )
+    assert export_template.template_id == "export-1"
+    assert export_template.file_id == "file-1"
+    assert export_template.template_type is ExportTemplateType.CUSTOM
+
     parsed = FindingTemplate.from_api(
         {
             "doc_id": "template-1",
@@ -879,6 +892,7 @@ def test_template_type_parses_and_serializes_documented_fields():
 
     assert parsed.template_id == "template-1"
     assert parsed.fields["synopsis"].label == "Synopsis"
+    assert FindingTemplate.from_api({"data": {"id": "template-2"}}).template_id == "template-2"
     assert FindingTemplateInput(
         template_name="Finding Template",
         fields={"synopsis": TemplateField(label="Synopsis", value="<p>Example</p>")},
