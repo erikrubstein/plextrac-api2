@@ -196,6 +196,7 @@ wrapper. All authenticated API functions take `session` as their first argument.
 - `update_asset`
 - `delete_asset`
 - `import_client_assets`
+- `bulk_delete_client_assets`
 - `import_finding_affected_assets`
 - `remove_affected_asset`
 - `bulk_get_affected_asset_statuses`

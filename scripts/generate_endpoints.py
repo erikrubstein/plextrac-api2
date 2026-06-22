@@ -97,6 +97,8 @@ METHOD_NAME_OVERRIDES = {
     ("Affected Assets", "create_affected_asset_status"): "create_affected_asset_status_update",
     ("Affected Assets", "get_affected_asset_status_list"): "list_affected_asset_status_updates",
     ("Affected Assets", "remove_affected_asset_from_flaw"): "remove_affected_asset",
+    ("Assets", "get_assets_by_client"): "list_client_assets",
+    ("Assets", "get_tenant_assets"): "list_tenant_assets",
     ("Clients", "available_tenant_users"): "list_available_tenant_users",
     ("Clients", "assign_user_to_client"): "assign_users_to_client",
     ("Clients", "remove_user_from_client"): "remove_users_from_client",
@@ -341,6 +343,10 @@ NOT_EXPOSED_NOTES = {
         "assessments",
         "list_client_assessments_legacy",
     ): "redundant legacy v1 operation; use `list_client_assessments`",
+    (
+        "assets",
+        "get_scanner_output",
+    ): "cross-group duplicate; use `findings.get_scanner_output`",
     ("content_library", "add_writeup_to_report"): "deprecated; not exposed in polished module",
     (
         "content_library",

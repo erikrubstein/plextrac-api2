@@ -158,3 +158,10 @@ A group pass is complete when:
   payload. The redundant v1 `list_client_assessments_legacy` operation is documented in endpoint
   inventory but not exposed in the polished API; use the v2 `list_client_assessments` wrapper.
   All disposable live artifacts were deleted and marker audits were empty.
+- `assets.py`: Steps 1-3 completed locally. Public asset models now use `asset_type` instead of
+  the ambiguous `type`, parse additional raw camelCase response keys, and keep the deprecated v1
+  client asset list out of the latest generated inventory. The scanner-output endpoint remains
+  documented in assets but is not exposed there; use `findings.get_scanner_output`. Live testing
+  confirmed tenant/client/report asset reads, get, create, update, single delete, bulk delete, and
+  import queueing. The CSV import job did not create a visible marked asset during delayed audits;
+  all created direct assets were deleted and marker audits were empty.

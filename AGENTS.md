@@ -87,7 +87,7 @@ The inventory is based on the public PlexTrac Postman collection snapshot.
 
 When multiple documented versions expose the same operation, this SDK keeps only the latest supported version.
 
-Total documented endpoint operations in snapshot: **357**
+Total documented endpoint operations in snapshot: **356**
 
 | API group | Function module | Endpoint functions |
 |---|---|---:|
@@ -96,7 +96,7 @@ Total documented endpoint operations in snapshot: **357**
 | Affected Assets | `plextrac_api.functions.affected_assets` | 6 explicit functions |
 | Analytics | `plextrac_api.functions.analytics` | 10 explicit functions; 1 documented operation not exposed |
 | Assessments | `plextrac_api.functions.assessments` | 31 explicit functions; 1 documented operation not exposed |
-| Assets | `plextrac_api.functions.assets` | 9 explicit functions |
+| Assets | `plextrac_api.functions.assets` | 9 explicit functions; 1 documented operation not exposed |
 | Content Library | `plextrac_api.functions.content_library` | 39 explicit functions |
 | Clients | `plextrac_api.functions.clients` | 14 explicit functions |
 | Files | `plextrac_api.functions.files` | 6 explicit functions |
@@ -243,9 +243,8 @@ Display name: Assets
 
 | Method | HTTP | Path | Aliases |
 |---|---|---|---|
-| `get_tenant_assets` | POST | `/api/v2/tenant/assets` |  |
-| `get_assets_by_client` | POST | `/api/v2/clients/{clientId}/assets` |  |
-| `list_client_assets` | GET | `/api/v1/client/{clientId}/assets` |  |
+| `list_tenant_assets` | POST | `/api/v2/tenant/assets` |  |
+| `list_client_assets` | POST | `/api/v2/clients/{clientId}/assets` |  |
 | `list_report_assets` | GET | `/api/v2/clients/{clientId}/reports/{reportId}/assets` |  |
 | `get_asset` | GET | `/api/v1/client/{clientId}/asset/{assetId}` | `get` |
 | `create_asset` | PUT | `/api/v1/client/{clientId}/asset/0` | `create` |
@@ -253,7 +252,7 @@ Display name: Assets
 | `delete_asset` | DELETE | `/api/v1/client/{clientId}/asset/{assetId}` | `delete` |
 | `import_client_assets` | POST | `/api/v2/client/{clientId}/assets/import/{source}` |  |
 | `bulk_delete_client_assets` | POST | `/api/v1/client/{clientId}/bulk/assets/delete` |  |
-| `get_scanner_output` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/asset/{assetId}/scanoutput` |  |
+| `get_scanner_output` | GET | `/api/v1/client/{clientId}/report/{reportId}/flaw/{findingId}/asset/{assetId}/scanoutput` | cross-group duplicate; use `findings.get_scanner_output` |
 
 ### `content_library`
 

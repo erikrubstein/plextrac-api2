@@ -137,7 +137,7 @@ class ClientAssetFilter:
 @dataclass(slots=True)
 class AssetInput:
     name: str | None = None
-    type: AssetType | None = None
+    asset_type: AssetType | None = None
     criticality: AssetCriticality | None = None
     description: str | None = None
     hostname: str | None = None
@@ -154,7 +154,7 @@ class AssetInput:
     def to_api(self) -> JsonDict:
         return _asset_payload(
             name=self.name,
-            type=self.type,
+            asset_type=self.asset_type,
             criticality=self.criticality,
             description=self.description,
             hostname=self.hostname,
@@ -183,10 +183,18 @@ class AssetCreateResult:
 
     @classmethod
     def from_api(cls, data: JsonDict) -> AssetCreateResult:
+        source = _nested_object(data)
         return cls(
-            asset_id=data.get("asset_id") or data.get("id") or data.get("cuid"),
-            status=data.get("status") or data.get("result"),
-            message=data.get("message") or data.get("detail"),
+            asset_id=source.get("asset_id")
+            or source.get("assetId")
+            or source.get("id")
+            or source.get("cuid")
+            or data.get("asset_id")
+            or data.get("assetId")
+            or data.get("id")
+            or data.get("cuid"),
+            status=source.get("status") or data.get("status") or data.get("result"),
+            message=source.get("message") or data.get("message") or data.get("detail"),
             raw=dict(data),
         )
 
@@ -197,7 +205,7 @@ class Asset:
     cuid: str | None = None
     name: str | None = None
     client_id: int | str | None = None
-    type: AssetType | None = None
+    asset_type: AssetType | None = None
     criticality: AssetCriticality | None = None
     description: str | None = None
     hostname: str | None = None
@@ -217,23 +225,29 @@ class Asset:
     def from_api(cls, data: JsonDict) -> Asset:
         ports = data.get("ports")
         return cls(
-            asset_id=data.get("id"),
+            asset_id=data.get("id") or data.get("asset_id") or data.get("assetId"),
             cuid=data.get("cuid"),
             name=data.get("asset") or data.get("name"),
-            client_id=data.get("client_id"),
-            type=_asset_type(data.get("type")),
-            criticality=_asset_criticality(data.get("assetCriticality")),
+            client_id=data.get("client_id") or data.get("clientId"),
+            asset_type=_asset_type(data.get("type")),
+            criticality=_asset_criticality(
+                data.get("assetCriticality") or data.get("criticality")
+            ),
             description=data.get("description"),
             hostname=data.get("hostname"),
-            dns_name=data.get("dns_name"),
-            host_fqdn=data.get("host_fqdn"),
-            host_rdns=data.get("host_rdns"),
-            mac_address=data.get("mac_address"),
-            known_ips=data.get("knownIps") if isinstance(data.get("knownIps"), list) else None,
-            operating_system=data.get("operating_system")
-            if isinstance(data.get("operating_system"), list)
-            else None,
-            parent_asset=ObjectReference.from_api(data.get("parent_asset")),
+            dns_name=data.get("dns_name") or data.get("dnsName"),
+            host_fqdn=data.get("host_fqdn") or data.get("hostFqdn"),
+            host_rdns=data.get("host_rdns") or data.get("hostRdns"),
+            mac_address=data.get("mac_address") or data.get("macAddress"),
+            known_ips=_string_list(
+                data.get("known_ips") or data.get("knownIps") or data.get("knownIPs")
+            ),
+            operating_system=_string_list(
+                data.get("operating_system") or data.get("operatingSystem")
+            ),
+            parent_asset=ObjectReference.from_api(
+                data.get("parent_asset") or data.get("parentAsset")
+            ),
             ports={
                 key: port
                 for key, port in (
@@ -253,7 +267,7 @@ class Asset:
     def to_api(self) -> JsonDict:
         data = _asset_payload(
             name=self.name,
-            type=self.type,
+            asset_type=self.asset_type,
             criticality=self.criticality,
             description=self.description,
             hostname=self.hostname,
@@ -325,7 +339,7 @@ class AffectedAsset(Asset):
             cuid=asset.cuid,
             name=asset.name,
             client_id=asset.client_id,
-            type=asset.type,
+            asset_type=asset.asset_type,
             criticality=asset.criticality,
             description=asset.description,
             hostname=asset.hostname,
@@ -497,7 +511,7 @@ class AffectedAssetStatusMap:
 def _asset_payload(
     *,
     name: str | None = None,
-    type: AssetType | None = None,
+    asset_type: AssetType | None = None,
     criticality: AssetCriticality | None = None,
     description: str | None = None,
     hostname: str | None = None,
@@ -514,7 +528,7 @@ def _asset_payload(
     return clean(
         {
             "asset": name,
-            "type": type.value if type is not None else None,
+            "type": asset_type.value if asset_type is not None else None,
             "assetCriticality": criticality.value if criticality is not None else None,
             "description": description,
             "hostname": hostname,
@@ -555,6 +569,19 @@ def _first_int(data: JsonDict, keys: tuple[str, ...]) -> int | None:
             if nested is not None:
                 return nested
     return None
+
+
+def _string_list(value: object) -> list[str] | None:
+    if isinstance(value, list):
+        return [str(item) for item in value]
+    return None
+
+
+def _nested_object(data: JsonDict) -> JsonDict:
+    nested = data.get("data")
+    if isinstance(nested, dict):
+        return nested
+    return data
 
 
 def _affected_asset_status(value: object) -> AffectedAssetStatus | None:

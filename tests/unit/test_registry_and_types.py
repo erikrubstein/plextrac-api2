@@ -143,7 +143,7 @@ from plextrac_api.types import (
 def test_generated_registry_covers_public_snapshot():
     total = sum(len(group["endpoints"]) for group in GROUPS.values())
 
-    assert total == 357
+    assert total == 356
     assert "clients" in GROUPS
     assert "assets" in GROUPS
     assert "reports" in GROUPS
@@ -192,6 +192,13 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "get_sla_benchmarks" not in method_names
     assert "list_audit_log_entries" in method_names
     assert "get_audit_log" not in method_names
+    assert "list_tenant_assets" in method_names
+    assert "get_tenant_assets" not in method_names
+    assert "list_client_assets" in method_names
+    assert "get_assets_by_client" not in method_names
+    from plextrac_api.functions import assets
+
+    assert not hasattr(assets, "get_scanner_output")
     assert "list_client_assessments" in method_names
     assert "list_client_assessments_filtered" not in method_names
     assert "list_client_assessments_legacy" in method_names
@@ -358,18 +365,23 @@ def test_asset_type_parses_documented_fields():
         {
             "id": "asset-1",
             "asset": "host1",
-            "client_id": 1,
+            "clientId": 1,
             "assetCriticality": "High",
             "type": "Server",
             "knownIps": ["192.0.2.1"],
+            "dnsName": "host1.example.com",
+            "macAddress": "00:11:22:33:44:55",
             "ports": {"443": {"number": "443", "service": "https", "protocol": "tcp"}},
         }
     )
 
     assert asset.asset_id == "asset-1"
     assert asset.name == "host1"
+    assert asset.client_id == 1
     assert asset.criticality is AssetCriticality.HIGH
-    assert asset.type is AssetType.SERVER
+    assert asset.asset_type is AssetType.SERVER
+    assert asset.dns_name == "host1.example.com"
+    assert asset.mac_address == "00:11:22:33:44:55"
     assert asset.ports["443"].protocol == "tcp"
 
 
@@ -438,6 +450,10 @@ def test_operation_result_treats_punctuated_success_text_as_ok():
 def test_create_result_types_preserve_specific_identifiers():
     assert ClientCreateResult.from_api({"client_id": 1, "created": True}).client_id == 1
     assert AssetCreateResult.from_api({"id": "asset-1", "status": "success"}).asset_id == "asset-1"
+    assert (
+        AssetCreateResult.from_api({"data": {"assetId": "asset-2"}, "status": "success"}).asset_id
+        == "asset-2"
+    )
     assert ReportCreateResult.from_api({"report_id": 42, "message": "success"}).report_id == 42
     assert FindingCreateResult.from_api({"flaw_id": 99, "status": "success"}).flaw_id == 99
 
@@ -464,7 +480,7 @@ def test_asset_request_shape_types_serialize_with_verified_fields():
     }
     assert AssetInput(
         name="host1",
-        type=AssetType.SERVER,
+        asset_type=AssetType.SERVER,
         criticality=AssetCriticality.HIGH,
     ).to_api() == {
         "asset": "host1",

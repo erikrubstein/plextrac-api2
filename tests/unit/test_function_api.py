@@ -521,7 +521,7 @@ def test_explicit_asset_create_uses_reusable_input(monkeypatch):
     result = assets.create_asset(
         session,
         client_id="client-1",
-        asset=AssetInput(name="host1", type=AssetType.SERVER, tags=["external"]),
+        asset=AssetInput(name="host1", asset_type=AssetType.SERVER, tags=["external"]),
     )
 
     assert result.asset_id == "asset-1"

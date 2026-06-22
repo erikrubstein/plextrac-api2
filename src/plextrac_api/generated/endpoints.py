@@ -1783,7 +1783,7 @@ GROUPS = {'admin': {'display_name': 'Admin',
                            'folder_path': ['Assets'],
                            'graphql_query': None,
                            'method': 'POST',
-                           'method_name': 'get_tenant_assets',
+                           'method_name': 'list_tenant_assets',
                            'name': 'Get Tenant Assets',
                            'path': '/api/v2/tenant/assets'},
                           {'aliases': [],
@@ -1818,28 +1818,9 @@ GROUPS = {'admin': {'display_name': 'Admin',
                            'folder_path': ['Assets'],
                            'graphql_query': None,
                            'method': 'POST',
-                           'method_name': 'get_assets_by_client',
+                           'method_name': 'list_client_assets',
                            'name': 'Get Assets by Client',
                            'path': '/api/v2/clients/{clientId}/assets'},
-                          {'aliases': [],
-                           'body_mode': 'none',
-                           'default_params': [],
-                           'description': '<p>DEPRECATED will be removed 12/03/2024</p>\n'
-                                          '<p>See <a '
-                                          'href="https://api-docs.plextrac.com/#47b8f7ee-84f6-48c6-81e9-f3eeae4edb70">Get '
-                                          'Tenant Assets</a> or <a '
-                                          'href="https://api-docs.plextrac.com/#2c9acc54-4481-443e-9246-8ed0b452f697">List '
-                                          'Report Assets</a> for replacement. See this <a '
-                                          'href="https://docs.plextrac.com/plextrac-documentation/api-documentation/api-change-policy/api-change-log#release-2.12-december-3-2024">API '
-                                          'Change Log</a> for more details.</p>\n'
-                                          '<p>This request <strong>retrieves a list of all '
-                                          'assets</strong> for a specific client.</p>\n',
-                           'folder_path': ['Assets'],
-                           'graphql_query': None,
-                           'method': 'GET',
-                           'method_name': 'list_client_assets',
-                           'name': 'List Client Assets',
-                           'path': '/api/v1/client/{clientId}/assets'},
                           {'aliases': [],
                            'body_mode': 'none',
                            'default_params': [],
