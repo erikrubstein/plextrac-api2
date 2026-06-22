@@ -333,6 +333,10 @@ METHOD_NAME_OVERRIDES = {
     ("Users", "set_user_notifications_read"): "mark_user_notifications_read",
 }
 NOT_EXPOSED_NOTES = {
+    (
+        "analytics",
+        "retrieve_analytics_trends_age_of_open_findings",
+    ): "live-unavailable; not exposed in polished module",
     ("content_library", "add_writeup_to_report"): "deprecated; not exposed in polished module",
     (
         "content_library",
@@ -766,7 +770,15 @@ def coverage_count_label(attr_name: str, count: int) -> str:
     if attr_name in TRANSPORT_ONLY_GROUPS:
         return "raw GraphQL helper only"
     if attr_name in HAND_WRITTEN_FUNCTION_GROUPS:
-        return f"{public_function_count(attr_name) or count} explicit functions"
+        explicit_count = public_function_count(attr_name) or count
+        not_exposed_count = sum(1 for group, _ in NOT_EXPOSED_NOTES if group == attr_name)
+        if not_exposed_count:
+            return (
+                f"{explicit_count} explicit functions; "
+                f"{not_exposed_count} documented operation"
+                f"{'s' if not_exposed_count != 1 else ''} not exposed"
+            )
+        return f"{explicit_count} explicit functions"
     if attr_name == "authentication":
         return "manual auth helpers"
     if attr_name == "webhooks":

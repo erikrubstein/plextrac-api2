@@ -131,20 +131,6 @@ def retrieve_analytics_trends_from_creation_to_close(
     return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
 
 
-def retrieve_analytics_trends_age_of_open_findings(
-    session: AuthSession,
-    filters: AnalyticsTrendFilter,
-) -> AnalyticsResult:
-    """Retrieve trend analytics for the age of open findings."""
-    data = rest_request(
-        session,
-        "POST",
-        "/api/v2/clients/analytics/trends/age-of-open-findings",
-        json=filters.to_api(),
-    )
-    return AnalyticsResult.from_api(data if isinstance(data, (dict, list)) else {"data": data})
-
-
 def retrieve_analytics_trends_slas(
     session: AuthSession,
     filters: SlaAnalyticsFilter,

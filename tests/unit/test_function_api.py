@@ -40,6 +40,7 @@ from plextrac_api.types import (
     AssessmentAnswer,
     AssessmentAnswerField,
     AssessmentSortOrder,
+    AssetAnalyticsFilter,
     AssetCriticality,
     AssetInput,
     AssetType,
@@ -973,6 +974,37 @@ def test_explicit_analytics_findings_uses_filter_type(monkeypatch):
         "limit": 10,
         "offset": 0,
     }
+
+
+def test_explicit_analytics_assets_with_filter_uses_documented_default_pagination(
+    monkeypatch,
+):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["params"] = kwargs["params"]
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"data": []})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = analytics.retrieve_analytics_assets_with_filter(
+        session,
+        AssetAnalyticsFilter(client_ids=[1045]),
+    )
+
+    assert result.records == []
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/v2/clients/analytics/assets"
+    assert seen["params"] == {"limit": 10, "offset": 0}
+    assert seen["json"] == {"clients": [1045]}
+
+
+def test_live_unavailable_analytics_age_of_open_findings_is_not_exposed():
+    assert not hasattr(analytics, "retrieve_analytics_trends_age_of_open_findings")
 
 
 def test_explicit_tenant_settings_uses_named_parameters(monkeypatch):

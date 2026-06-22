@@ -128,6 +128,20 @@ class FindingAnalyticsBootstrapFilter:
     report_tags: list[str] | None = None
     finding_tags: list[str] | None = None
     order: list[FindingAnalyticsBootstrapOrderField] | None = None
+    asset_pagination: FindingAnalyticsAssetPagination | None = None
+    runbook_ids: list[str] | None = None
+    methodology_ids: list[str] | None = None
+    engagement_ids: list[str] | None = None
+    engagement_tags: list[str] | None = None
+    tactic_ids: list[str] | None = None
+    assignees: list[str] | None = None
+    asset_ports: list[str] | None = None
+    operating_systems: list[str] | None = None
+    data_owners: list[str] | None = None
+    system_owners: list[str] | None = None
+    physical_locations: list[str] | None = None
+    cve_ids: list[str] | None = None
+    cwe_ids: list[str] | None = None
 
     def to_api(self) -> JsonDict:
         return clean(
@@ -142,8 +156,40 @@ class FindingAnalyticsBootstrapFilter:
                     item.value
                     for item in (self.order or DEFAULT_FINDING_ANALYTICS_BOOTSTRAP_ORDER)
                 ],
+                "assetPagination": self.asset_pagination.to_api()
+                if self.asset_pagination is not None
+                else None,
+                "runbooks": self.runbook_ids,
+                "methodologies": self.methodology_ids,
+                "engagements": self.engagement_ids,
+                "engagementTags": self.engagement_tags,
+                "tactics": self.tactic_ids,
+                "assignees": self.assignees,
+                "assetPorts": self.asset_ports,
+                "operatingSystem": self.operating_systems,
+                "dataOwner": self.data_owners,
+                "systemOwner": self.system_owners,
+                "physicalLocation": self.physical_locations,
+                "cveIDs": self.cve_ids,
+                "cweIDs": self.cwe_ids,
             }
         )
+
+
+@dataclass(slots=True)
+class FindingAnalyticsAssetPagination:
+    limit: int
+    offset: int
+    total: int
+    search: str = ""
+
+    def to_api(self) -> JsonDict:
+        return {
+            "limit": self.limit,
+            "offset": self.offset,
+            "total": self.total,
+            "search": self.search,
+        }
 
 
 @dataclass(slots=True)
@@ -153,8 +199,11 @@ class AssetAnalyticsFilter:
     finding_severities: list[FindingSeverity] | None = None
     asset_types: list[str] | None = None
     asset_tags: list[str] | None = None
-    limit: int | None = None
-    offset: int | None = None
+    data_owner: str | None = None
+    physical_location: str | None = None
+    system_owner: str | None = None
+    limit: int | None = 10
+    offset: int | None = 0
 
     def to_api(self) -> JsonDict:
         return clean(
@@ -167,6 +216,9 @@ class AssetAnalyticsFilter:
                 if self.finding_severities is not None
                 else None,
                 "type": self.asset_types,
+                "data_owner": self.data_owner,
+                "physical_location": self.physical_location,
+                "system_owner": self.system_owner,
                 "tags": {"assets": self.asset_tags} if self.asset_tags is not None else None,
             }
         )

@@ -280,9 +280,13 @@ available on `AnalyticsResult.data` and `AnalyticsResult.raw`.
 - `retrieve_analytics`
 - `retrieve_analytics_findings`
 - `retrieve_analytics_findings_aging`
+- `get_finding_analytics_bootstrap`
 - `retrieve_analytics_assets`
+- `retrieve_analytics_assets_with_filter`
 - `retrieve_analytics_trends_opened_closed`
+- `retrieve_analytics_trends_from_creation_to_close`
 - `retrieve_analytics_trends_slas`
+- `retrieve_analytics_trends_sla_findings`
 
 ### Runbooks
 

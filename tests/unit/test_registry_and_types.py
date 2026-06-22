@@ -56,6 +56,7 @@ from plextrac_api.types import (
     ExportTemplateType,
     Filter,
     Finding,
+    FindingAnalyticsAssetPagination,
     FindingAnalyticsBootstrapFilter,
     FindingAnalyticsBootstrapOrderField,
     FindingCreateResult,
@@ -205,7 +206,6 @@ def test_generated_registry_exposes_canonical_latest_names():
     assert "analytics_trends_opened_closed" not in method_names
     assert "retrieve_analytics_trends_from_creation_to_close" in method_names
     assert "analytics_trends_from_creation_to_close" not in method_names
-    assert "retrieve_analytics_trends_age_of_open_findings" in method_names
     assert "analytics_trends_age_of_open_findings" not in method_names
     assert "retrieve_analytics_trends_slas" in method_names
     assert "analytics_trends_slas" not in method_names
@@ -551,6 +551,25 @@ def test_analytics_filter_serializes_documented_fields():
         report_ids=[22],
         finding_tags=["pci"],
         order=[FindingAnalyticsBootstrapOrderField.CLIENTS],
+        asset_pagination=FindingAnalyticsAssetPagination(
+            limit=10,
+            offset=0,
+            total=25,
+            search="host",
+        ),
+        runbook_ids=["runbook-1"],
+        methodology_ids=["methodology-1"],
+        engagement_ids=["engagement-1"],
+        engagement_tags=["external"],
+        tactic_ids=["tactic-1"],
+        assignees=["analyst@example.com"],
+        asset_ports=["443"],
+        operating_systems=["Linux"],
+        data_owners=["data-owner"],
+        system_owners=["system-owner"],
+        physical_locations=["datacenter"],
+        cve_ids=["CVE-2026-0001"],
+        cwe_ids=["CWE-79"],
     ).to_api() == {
         "clients": [1045],
         "clientTags": [],
@@ -559,6 +578,25 @@ def test_analytics_filter_serializes_documented_fields():
         "reportTags": [],
         "findingTags": ["pci"],
         "order": ["clients"],
+        "assetPagination": {
+            "limit": 10,
+            "offset": 0,
+            "total": 25,
+            "search": "host",
+        },
+        "runbooks": ["runbook-1"],
+        "methodologies": ["methodology-1"],
+        "engagements": ["engagement-1"],
+        "engagementTags": ["external"],
+        "tactics": ["tactic-1"],
+        "assignees": ["analyst@example.com"],
+        "assetPorts": ["443"],
+        "operatingSystem": ["Linux"],
+        "dataOwner": ["data-owner"],
+        "systemOwner": ["system-owner"],
+        "physicalLocation": ["datacenter"],
+        "cveIDs": ["CVE-2026-0001"],
+        "cweIDs": ["CWE-79"],
     }
     assert FindingAnalyticsBootstrapFilter().to_api() == {
         "clients": [],
@@ -587,10 +625,16 @@ def test_analytics_filter_serializes_documented_fields():
         client_ids=[1045],
         asset_types=["Server"],
         criticality=[AssetCriticality.HIGH],
+        data_owner="data-owner",
+        physical_location="datacenter",
+        system_owner="system-owner",
     ).to_api() == {
         "clients": [1045],
         "criticality": ["High"],
         "type": ["Server"],
+        "data_owner": "data-owner",
+        "physical_location": "datacenter",
+        "system_owner": "system-owner",
     }
     assert AnalyticsTrendFilter(
         client_ids=[1045],

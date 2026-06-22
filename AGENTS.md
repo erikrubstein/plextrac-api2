@@ -94,7 +94,7 @@ Total documented endpoint operations in snapshot: **357**
 | Authentication | `plextrac_api.functions.auth` | manual auth helpers |
 | Admin | `plextrac_api.functions.admin` | 29 explicit functions |
 | Affected Assets | `plextrac_api.functions.affected_assets` | 6 explicit functions |
-| Analytics | `plextrac_api.functions.analytics` | 11 explicit functions |
+| Analytics | `plextrac_api.functions.analytics` | 10 explicit functions; 1 documented operation not exposed |
 | Assessments | `plextrac_api.functions.assessments` | 32 explicit functions |
 | Assets | `plextrac_api.functions.assets` | 9 explicit functions |
 | Content Library | `plextrac_api.functions.content_library` | 39 explicit functions |
@@ -193,7 +193,7 @@ Display name: Analytics
 | `retrieve_analytics_assets_with_filter` | POST | `/api/v2/clients/analytics/assets` |  |
 | `retrieve_analytics_trends_opened_closed` | POST | `/api/v2/clients/analytics/trends/opened-closed` |  |
 | `retrieve_analytics_trends_from_creation_to_close` | POST | `/api/v2/clients/analytics/trends/from-creation-to-close` |  |
-| `retrieve_analytics_trends_age_of_open_findings` | POST | `/api/v2/clients/analytics/trends/age-of-open-findings` |  |
+| `retrieve_analytics_trends_age_of_open_findings` | POST | `/api/v2/clients/analytics/trends/age-of-open-findings` | live-unavailable; not exposed in polished module |
 | `retrieve_analytics_trends_slas` | POST | `/api/v2/sla/analytics/mean-time` |  |
 | `retrieve_analytics_trends_sla_findings` | POST | `/api/v2/sla/analytics/findings` |  |
 
