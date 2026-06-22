@@ -350,6 +350,10 @@ NOT_EXPOSED_NOTES = {
     ("content_library", "add_writeup_to_report"): "deprecated; not exposed in polished module",
     (
         "content_library",
+        "copy_section_to_narrative_repository",
+    ): "live-unavailable; not exposed in polished module",
+    (
+        "content_library",
         "copy_finding_to_writeups_repository",
     ): "deprecated; use `create_writeup` instead",
     (

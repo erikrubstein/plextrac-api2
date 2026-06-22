@@ -182,3 +182,16 @@ A group pass is complete when:
   returned `Unauthorized` for this live account, so those remain permission-limited/inconclusive.
   All disposable live artifacts were deleted and marker audits were empty. The documented client
   asset endpoint remains owned by the `assets` group.
+- `content_library.py`: Steps 1-3 completed locally. Public response models now unwrap nested
+  `data` response objects, parse additional ID key variants, map narrative section `label` to
+  Python `title`, and parse user `first`/`last` name keys. Live testing found NarrativesDB section
+  and user list endpoints require default pagination, so those wrappers now send
+  `{"pagination": {"offset": 0, "limit": 25}}` by default. Live testing also found narrative
+  section create requires caller-provided `section_id` as wire `id` plus `repositoryId`, writeup
+  create/update expects `repositoryId`, and v1 writeup get/update/delete paths require numeric
+  `doc_id`. Bulk writeup delete expects string writeup IDs under `writeups`. Repository creation
+  endpoints returned `Unauthorized` for this account, so repository create/update/delete remain
+  permission-limited. Disposable section and writeup mutations against existing repositories were
+  created, updated/deleted where supported, and marker audits were empty. The documented
+  `copy_section_to_narrative_repository` endpoint rejected tested payloads and is not exposed in
+  the polished module.

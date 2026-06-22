@@ -5,7 +5,7 @@ from typing import BinaryIO, cast
 
 from plextrac_api.functions.common import rest_request
 from plextrac_api.types.auth import AuthSession
-from plextrac_api.types.common import JsonDict, OperationResult, clean
+from plextrac_api.types.common import JsonDict, OperationResult, Pagination, clean
 from plextrac_api.types.content_library import (
     ContentLibraryImportResult,
     ContentLibraryUser,
@@ -28,13 +28,17 @@ def list_all_sections(
     session: AuthSession,
     *,
     permission_level: str | None = None,
+    pagination: Pagination | None = None,
 ) -> list[NarrativeSection]:
     """List all NarrativesDB sections available to the caller."""
     data = rest_request(
         session,
         "POST",
         "/api/v2/narratives/sections/all",
-        json=clean({"permissionsLevel": permission_level}),
+        json=_paginated_payload(
+            pagination=pagination,
+            permissionsLevel=permission_level,
+        ),
     )
     return [NarrativeSection.from_api(item) for item in _items(data, "sections")]
 
@@ -44,13 +48,17 @@ def list_narrative_repository_sections(
     repository_id: int | str,
     *,
     permission_level: str | None = None,
+    pagination: Pagination | None = None,
 ) -> list[NarrativeSection]:
     """List sections for one NarrativesDB repository."""
     data = rest_request(
         session,
         "POST",
         f"/api/v2/narratives/{repository_id}/sections",
-        json=clean({"permissionsLevel": permission_level}),
+        json=_paginated_payload(
+            pagination=pagination,
+            permissionsLevel=permission_level,
+        ),
     )
     return [NarrativeSection.from_api(item) for item in _items(data, "sections")]
 
@@ -83,6 +91,8 @@ def create_narrative_repository_section(
     section: NarrativeSectionInput,
 ) -> NarrativeSection:
     """Create a section in a NarrativesDB repository."""
+    if section.section_id is None:
+        raise TypeError("create_narrative_repository_section requires section.section_id.")
     data = rest_request(
         session,
         "POST",
@@ -136,35 +146,21 @@ def list_narrative_repositories(
     return [NarrativeRepository.from_api(item) for item in _items(data, "repositories")]
 
 
-def copy_section_to_narrative_repository(
-    session: AuthSession,
-    section_id: int | str,
-    destination_repository_id: int | str,
-) -> NarrativeSection:
-    """Copy a NarrativesDB section to another repository."""
-    data = rest_request(
-        session,
-        "POST",
-        "/api/v2/narratives/sections/copy",
-        json={
-            "sectionId": section_id,
-            "destinationRepositoryId": destination_repository_id,
-        },
-    )
-    return NarrativeSection.from_api(_object(data, "copied narrative section"))
-
-
 def list_all_narrative_repository_users(
     session: AuthSession,
     *,
     filter_text: str | None = None,
+    pagination: Pagination | None = None,
 ) -> list[ContentLibraryUser]:
     """List users assigned to NarrativesDB repositories."""
     data = rest_request(
         session,
         "POST",
         "/api/v2/narratives/users/all",
-        json=clean({"filterText": filter_text}),
+        json=_paginated_payload(
+            pagination=pagination,
+            filterText=filter_text,
+        ),
     )
     return [ContentLibraryUser.from_api(item) for item in _items(data, "users")]
 
@@ -174,13 +170,17 @@ def list_narrative_repository_users(
     narrative_repository_id: int | str,
     *,
     filter_text: str | None = None,
+    pagination: Pagination | None = None,
 ) -> list[ContentLibraryUser]:
     """List users assigned to one NarrativesDB repository."""
     data = rest_request(
         session,
         "POST",
         f"/api/v2/narratives/{narrative_repository_id}/users",
-        json=clean({"filterText": filter_text}),
+        json=_paginated_payload(
+            pagination=pagination,
+            filterText=filter_text,
+        ),
     )
     return [ContentLibraryUser.from_api(item) for item in _items(data, "users")]
 
@@ -256,10 +256,10 @@ def list_writeups(
 
 def get_writeup(
     session: AuthSession,
-    writeup_id: int | str,
+    doc_id: int | str,
 ) -> Writeup:
-    """Get one WriteupsDB entry."""
-    data = rest_request(session, "GET", f"/api/v1/template/{writeup_id}")
+    """Get one WriteupsDB entry by numeric document ID."""
+    data = rest_request(session, "GET", f"/api/v1/template/{doc_id}")
     return Writeup.from_api(_object(data, "writeup"))
 
 
@@ -279,14 +279,14 @@ def create_writeup(
 
 def update_writeup(
     session: AuthSession,
-    writeup_id: int | str,
+    doc_id: int | str,
     writeup: WriteupInput,
 ) -> Writeup:
-    """Update one WriteupsDB entry."""
+    """Update one WriteupsDB entry by numeric document ID."""
     data = rest_request(
         session,
         "PUT",
-        f"/api/v1/template/{writeup_id}",
+        f"/api/v1/template/{doc_id}",
         json=writeup.to_api(),
     )
     return Writeup.from_api(_object(data, "writeup"))
@@ -294,10 +294,10 @@ def update_writeup(
 
 def delete_writeup(
     session: AuthSession,
-    writeup_id: int | str,
+    doc_id: int | str,
 ) -> WriteupDeleteResult:
-    """Delete one WriteupsDB entry."""
-    data = rest_request(session, "DELETE", f"/api/v1/template/{writeup_id}")
+    """Delete one WriteupsDB entry by numeric document ID."""
+    data = rest_request(session, "DELETE", f"/api/v1/template/{doc_id}")
     return WriteupDeleteResult.from_api(data if isinstance(data, dict) else {"data": data})
 
 
@@ -430,14 +430,14 @@ def bulk_add_tags_to_writeups(
 
 def bulk_delete_writeups(
     session: AuthSession,
-    writeup_doc_ids: list[int | str],
+    writeup_ids: list[int | str],
 ) -> OperationResult:
-    """Delete WriteupsDB entries in bulk using documented doc IDs."""
+    """Delete WriteupsDB entries in bulk using writeup IDs."""
     data = rest_request(
         session,
         "POST",
         "/api/v2/writeups/bulk/delete",
-        json={"doc_ids": writeup_doc_ids},
+        json={"writeups": writeup_ids},
     )
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})
 
@@ -600,12 +600,29 @@ def _items(data: object, key: str) -> list[JsonDict]:
     if isinstance(data, list):
         return [item for item in data if isinstance(item, dict)]
     if isinstance(data, dict):
-        nested = data.get(key) or data.get("data") or data.get("items") or data.get("results")
-        if isinstance(nested, list):
-            return [item for item in nested if isinstance(item, dict)]
-        if isinstance(nested, dict):
-            return [nested]
+        for nested_key in (key, "data", "items", "results"):
+            nested = data.get(nested_key)
+            if isinstance(nested, list):
+                return [item for item in nested if isinstance(item, dict)]
+            if isinstance(nested, dict):
+                nested_items = _items(nested, key)
+                if nested_items:
+                    return nested_items
+                if any(wrapper_key in nested for wrapper_key in (key, "data", "items", "results")):
+                    return []
+                return [nested]
     return []
+
+
+def _paginated_payload(
+    *,
+    pagination: Pagination | None,
+    **values: object,
+) -> JsonDict:
+    return {
+        "pagination": (pagination or Pagination()).to_api(),
+        **clean(cast(JsonDict, values)),
+    }
 
 
 def _object(data: object, label: str) -> JsonDict:

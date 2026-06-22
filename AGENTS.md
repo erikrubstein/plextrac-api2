@@ -97,7 +97,7 @@ Total documented endpoint operations in snapshot: **356**
 | Analytics | `plextrac_api.functions.analytics` | 10 explicit functions; 1 documented operation not exposed |
 | Assessments | `plextrac_api.functions.assessments` | 31 explicit functions; 1 documented operation not exposed |
 | Assets | `plextrac_api.functions.assets` | 9 explicit functions; 1 documented operation not exposed |
-| Content Library | `plextrac_api.functions.content_library` | 39 explicit functions |
+| Content Library | `plextrac_api.functions.content_library` | 38 explicit functions; 1 documented operation not exposed |
 | Clients | `plextrac_api.functions.clients` | 14 explicit functions |
 | Files | `plextrac_api.functions.files` | 6 explicit functions |
 | Findings | `plextrac_api.functions.findings` | 16 explicit functions |
@@ -268,7 +268,7 @@ Display name: Content Library
 | `update_narrative_repository_section` | PUT | `/api/v2/narratives/sections/{sectionId}` |  |
 | `delete_narrative_repository_section` | DELETE | `/api/v2/narratives/{repositoryId}/sections/{sectionId}` |  |
 | `list_narrative_repositories` | POST | `/api/v2/narratives/getAllNarrativesRepositories` |  |
-| `copy_section_to_narrative_repository` | POST | `/api/v2/narratives/sections/copy` |  |
+| `copy_section_to_narrative_repository` | POST | `/api/v2/narratives/sections/copy` | live-unavailable; not exposed in polished module |
 | `list_all_narrative_repository_users` | POST | `/api/v2/narratives/users/all` |  |
 | `list_narrative_repository_users` | POST | `/api/v2/narratives/{narrativeRepositoryId}/users` |  |
 | `update_narrative_repository_users` | PUT | `/api/v2/narratives/{narrativeRepositoryId}/users` |  |

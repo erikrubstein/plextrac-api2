@@ -67,6 +67,7 @@ from plextrac_api.types import (
     JiraConnectionInput,
     JiraSyncFrequency,
     NarrativeSectionInput,
+    Pagination,
     ParserActionSearchType,
     QuestionAnswerType,
     QuestionInput,
@@ -185,6 +186,7 @@ def test_explicit_content_library_create_section_serializes_input(monkeypatch):
         NarrativeSectionInput(
             title="Executive Summary",
             repository_id="repo-1",
+            section_id="section-1",
             text="<p>Summary</p>",
         ),
     )
@@ -193,10 +195,128 @@ def test_explicit_content_library_create_section_serializes_input(monkeypatch):
     assert seen["method"] == "POST"
     assert seen["path"] == "/api/v2/narratives/sections"
     assert seen["json"] == {
-        "title": "Executive Summary",
+        "label": "Executive Summary",
+        "id": "section-1",
         "repositoryId": "repo-1",
         "text": "<p>Summary</p>",
     }
+
+
+def test_content_library_create_section_requires_section_id(monkeypatch):
+    def fake_send(session, method, path, **kwargs):
+        raise AssertionError("create_narrative_repository_section should fail before request")
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    with pytest.raises(TypeError, match="section.section_id"):
+        content_library.create_narrative_repository_section(
+            session,
+            NarrativeSectionInput(title="Executive Summary", repository_id="repo-1"),
+        )
+
+
+def test_content_library_narrative_lists_send_required_default_pagination(monkeypatch):
+    seen = []
+
+    def fake_send(session, method, path, **kwargs):
+        seen.append({"method": method, "path": path, "json": kwargs["json"]})
+        return httpx.Response(200, json={"data": []})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    content_library.list_all_sections(session, permission_level="EDITOR")
+    content_library.list_narrative_repository_sections(
+        session,
+        repository_id="repo-1",
+        pagination=Pagination(limit=5, offset=10),
+    )
+    content_library.list_all_narrative_repository_users(session, filter_text="ada")
+    content_library.list_narrative_repository_users(session, narrative_repository_id="repo-1")
+
+    assert seen == [
+        {
+            "method": "POST",
+            "path": "/api/v2/narratives/sections/all",
+            "json": {
+                "pagination": {"offset": 0, "limit": 25},
+                "permissionsLevel": "EDITOR",
+            },
+        },
+        {
+            "method": "POST",
+            "path": "/api/v2/narratives/repo-1/sections",
+            "json": {"pagination": {"offset": 10, "limit": 5}},
+        },
+        {
+            "method": "POST",
+            "path": "/api/v2/narratives/users/all",
+            "json": {
+                "pagination": {"offset": 0, "limit": 25},
+                "filterText": "ada",
+            },
+        },
+        {
+            "method": "POST",
+            "path": "/api/v2/narratives/repo-1/users",
+            "json": {"pagination": {"offset": 0, "limit": 25}},
+        },
+    ]
+
+
+def test_content_library_narrative_lists_parse_nested_paginated_data(monkeypatch):
+    def fake_send(session, method, path, **kwargs):
+        if path.endswith("/repo-1/users"):
+            return httpx.Response(200, json={"data": {"data": [], "meta": {"total": 0}}})
+        if path.endswith("/users/all"):
+            return httpx.Response(
+                200,
+                json={
+                    "data": {
+                        "data": [
+                            {
+                                "user_id": 12,
+                                "email": "ada@example.com",
+                                "first": "Ada",
+                                "last": "Lovelace",
+                            }
+                        ],
+                        "meta": {"total": 1},
+                    }
+                },
+            )
+        return httpx.Response(
+            200,
+            json={
+                "data": {
+                    "data": [
+                        {
+                            "id": "section-1",
+                            "repositoryId": "repo-1",
+                            "title": "Executive Summary",
+                        }
+                    ],
+                    "meta": {"total": 1},
+                }
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    sections = content_library.list_all_sections(session)
+    users = content_library.list_all_narrative_repository_users(session)
+    repository_users = content_library.list_narrative_repository_users(
+        session,
+        narrative_repository_id="repo-1",
+    )
+
+    assert sections[0].section_id == "section-1"
+    assert users[0].user_id == 12
+    assert users[0].first_name == "Ada"
+    assert users[0].last_name == "Lovelace"
+    assert repository_users == []
 
 
 def test_explicit_content_library_create_writeup_serializes_documented_fields(monkeypatch):
@@ -238,11 +358,81 @@ def test_explicit_content_library_create_writeup_serializes_documented_fields(mo
     assert seen["path"] == "/api/v1/template/create"
     assert seen["json"] == {
         "title": "Password returned in URL query string",
-        "repositoryID": "repo-1",
+        "repositoryId": "repo-1",
         "severity": "High",
         "description": "Description",
         "recommendations": "Recommendation",
         "tags": ["web"],
+    }
+
+
+def test_content_library_writeup_v1_endpoints_use_doc_id_path(monkeypatch):
+    seen = []
+
+    def fake_send(session, method, path, **kwargs):
+        seen.append({"method": method, "path": path, "json": kwargs.get("json")})
+        if method == "DELETE":
+            return httpx.Response(200, json={"message": "success", "doc_id": 104560})
+        return httpx.Response(
+            200,
+            json={
+                "id": "template_104560",
+                "doc_id": 104560,
+                "repositoryId": "repo-1",
+                "severity": "High",
+                "title": "Password returned in URL query string",
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    content_library.get_writeup(session, doc_id=104560)
+    content_library.update_writeup(
+        session,
+        doc_id=104560,
+        writeup=WriteupInput(
+            title="Password returned in URL query string",
+            repository_id="repo-1",
+            severity=FindingSeverity.HIGH,
+        ),
+    )
+    content_library.delete_writeup(session, doc_id=104560)
+
+    assert seen == [
+        {"method": "GET", "path": "/api/v1/template/104560", "json": None},
+        {
+            "method": "PUT",
+            "path": "/api/v1/template/104560",
+            "json": {
+                "title": "Password returned in URL query string",
+                "repositoryId": "repo-1",
+                "severity": "High",
+            },
+        },
+        {"method": "DELETE", "path": "/api/v1/template/104560", "json": None},
+    ]
+
+
+def test_content_library_bulk_delete_writeups_uses_live_payload_key(monkeypatch):
+    seen = {}
+
+    def fake_send(session, method, path, **kwargs):
+        seen["method"] = method
+        seen["path"] = path
+        seen["json"] = kwargs["json"]
+        return httpx.Response(200, json={"status": "success"})
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    result = content_library.bulk_delete_writeups(session, writeup_ids=["template_104560"])
+
+    assert result.ok
+    assert seen == {
+        "method": "POST",
+        "path": "/api/v2/writeups/bulk/delete",
+        "json": {"writeups": ["template_104560"]},
     }
 
 
@@ -1018,6 +1208,10 @@ def test_explicit_analytics_assets_with_filter_uses_documented_default_paginatio
 
 def test_live_unavailable_analytics_age_of_open_findings_is_not_exposed():
     assert not hasattr(analytics, "retrieve_analytics_trends_age_of_open_findings")
+
+
+def test_live_unavailable_content_library_copy_section_is_not_exposed():
+    assert not hasattr(content_library, "copy_section_to_narrative_repository")
 
 
 def test_explicit_tenant_settings_uses_named_parameters(monkeypatch):

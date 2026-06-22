@@ -867,9 +867,11 @@ def test_content_library_types_parse_and_serialize_documented_fields():
     assert NarrativeSectionInput(
         title="Executive Summary",
         repository_id="repo-1",
+        section_id="section-1",
         text="<p>Summary</p>",
     ).to_api() == {
-        "title": "Executive Summary",
+        "label": "Executive Summary",
+        "id": "section-1",
         "repositoryId": "repo-1",
         "text": "<p>Summary</p>",
     }
@@ -904,6 +906,25 @@ def test_content_library_types_parse_and_serialize_documented_fields():
     repository = WriteupRepository.from_api(
         {"id": "repo-1", "name": "Default", "writeups": [writeup.raw]}
     )
+    wrapped_repository = WriteupRepository.from_api(
+        {
+            "data": {
+                "repositoryID": "repo-2",
+                "title": "Wrapped Repository",
+                "writeups": [
+                    {
+                        "data": {
+                            "template_id": "template_2",
+                            "docId": 2,
+                            "repository_id": "repo-2",
+                            "severity": "High",
+                            "title": "Wrapped Writeup",
+                        }
+                    }
+                ],
+            }
+        }
+    )
     narrative = NarrativeRepository.from_api(
         {
             "id": "narrative-repo-1",
@@ -911,13 +932,39 @@ def test_content_library_types_parse_and_serialize_documented_fields():
             "sections": [{"id": "section-1", "title": "Executive Summary"}],
         }
     )
-    user = ContentLibraryUser.from_api({"userId": 12, "email": "ada@example.com"})
+    wrapped_narrative = NarrativeRepository.from_api(
+        {
+            "data": {
+                "repositoryID": "narrative-repo-2",
+                "title": "Wrapped Narratives",
+                "permission_level": "EDITOR",
+                "sections": [
+                    {
+                        "data": {
+                            "section_id": "section-2",
+                            "repositoryID": "narrative-repo-2",
+                            "name": "Wrapped Section",
+                        }
+                    }
+                ],
+            }
+        }
+    )
+    user = ContentLibraryUser.from_api({"data": {"id": 12, "email": "ada@example.com"}})
 
     assert writeup.severity is FindingSeverity.CRITICAL
     assert repository.writeups[0].writeup_id == "template_104560"
+    assert wrapped_repository.repository_id == "repo-2"
+    assert wrapped_repository.writeups[0].writeup_id == "template_2"
+    assert wrapped_repository.writeups[0].doc_id == 2
+    assert wrapped_repository.writeups[0].repository_id == "repo-2"
     assert narrative.sections[0].section_id == "section-1"
+    assert wrapped_narrative.repository_id == "narrative-repo-2"
+    assert wrapped_narrative.permission_level == "EDITOR"
+    assert wrapped_narrative.sections[0].section_id == "section-2"
     assert user.email == "ada@example.com"
     assert WriteupDeleteResult.from_api({"message": "success", "doc_id": "template_1"}).ok
+    assert WriteupDeleteResult.from_api({"data": {"docId": 0}}).doc_id == 0
 
 
 def test_runbook_types_parse_and_serialize_graphql_shapes():
