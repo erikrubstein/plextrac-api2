@@ -27,7 +27,7 @@ class UserSortOrder(StrEnum):
 class UserNotificationReadFilter(StrEnum):
     UNREAD = "unread"
     READ = "read"
-    ALL = "all"
+    ALL = "any"
 
 
 @dataclass(slots=True)
@@ -92,21 +92,27 @@ class CurrentUserUpdate:
 @dataclass(slots=True)
 class AuthenticatedUser:
     user_id: int | str | None = None
+    user_cuid: str | None = None
     email: str | None = None
     username: str | None = None
     name: UserName | None = None
     tenant_id: int | str | None = None
+    tenant_cuid: str | None = None
+    tenant_name: str | None = None
     role: str | None = None
     raw: JsonDict | None = None
 
     @classmethod
     def from_api(cls, data: JsonDict) -> AuthenticatedUser:
         return cls(
-            user_id=data.get("user_id") or data.get("userId") or data.get("id"),
+            user_id=_first_present(data, ("user_id", "userId", "id")),
+            user_cuid=_first_present(data, ("cuid", "userCuid")),
             email=data.get("email"),
             username=data.get("username"),
             name=UserName.from_api(data.get("name")),
-            tenant_id=data.get("tenant_id") or data.get("tenantId"),
+            tenant_id=_first_present(data, ("tenant_id", "tenantId")),
+            tenant_cuid=_first_present(data, ("tenantCuid",)),
+            tenant_name=data.get("tenantName"),
             role=data.get("role"),
             raw=dict(data),
         )
@@ -127,7 +133,7 @@ class TenantUser:
     @classmethod
     def from_api(cls, data: JsonDict) -> TenantUser:
         return cls(
-            user_id=data.get("user_id") or data.get("userId") or data.get("id"),
+            user_id=_first_present(data, ("user_id", "userId", "id")),
             email=data.get("email") or data.get("username"),
             username=data.get("username"),
             name=UserName.from_api(data.get("name"))
@@ -148,12 +154,12 @@ class TenantUserPage:
 
     @classmethod
     def from_api(cls, data: JsonDict) -> TenantUserPage:
-        users = data.get("data") or data.get("users") or data.get("items")
+        users = _first_present(data, ("data", "users", "items"))
         return cls(
             users=[TenantUser.from_api(item) for item in users if isinstance(item, dict)]
             if isinstance(users, list)
             else [],
-            total_count=data.get("total") or data.get("totalCount"),
+            total_count=_first_present(data, ("total", "totalCount")),
             raw=dict(data),
         )
 
@@ -169,7 +175,7 @@ class UserNotification:
     @classmethod
     def from_api(cls, data: JsonDict) -> UserNotification:
         return cls(
-            notification_id=data.get("id") or data.get("notificationId"),
+            notification_id=_first_present(data, ("id", "notificationId")),
             message=data.get("message"),
             read=data.get("read"),
             created_at=data.get("createdAt") or data.get("created_at"),
@@ -205,11 +211,18 @@ class UserFindingSearchResult:
 
     @classmethod
     def from_api(cls, data: JsonDict) -> UserFindingSearchResult:
-        findings = data.get("data") or data.get("findings") or data.get("items")
+        findings = _first_present(data, ("data", "findings", "items"))
         return cls(
             findings=[Finding.from_api(item) for item in findings if isinstance(item, dict)]
             if isinstance(findings, list)
             else [],
-            total_count=data.get("total") or data.get("totalCount"),
+            total_count=_first_present(data, ("total", "totalCount")),
             raw=dict(data),
         )
+
+
+def _first_present(data: JsonDict, keys: tuple[str, ...]) -> object:
+    for key in keys:
+        if key in data:
+            return data[key]
+    return None

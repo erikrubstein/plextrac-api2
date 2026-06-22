@@ -29,6 +29,7 @@ from plextrac_api.types import (
     AssetType,
     AuditLogEntry,
     AuditLogEventType,
+    AuthenticatedUser,
     AuthenticationProvider,
     AuthenticationProviderConfiguration,
     AuthenticationProviderName,
@@ -153,7 +154,10 @@ from plextrac_api.types import (
     TenantAssetSortField,
     TenantImageUploadResult,
     TenantUserInput,
+    TenantUserPage,
     UserFindingSearch,
+    UserFindingSearchResult,
+    UserNotificationReadFilter,
     Writeup,
     WriteupDeleteResult,
     WriteupImportSource,
@@ -862,9 +866,11 @@ def test_tenant_type_parses_documented_fields():
     )
 
     assert parsed.tenant_id == 1
+    assert parsed.tenant_cuid == "tenant-cuid"
     assert parsed.point_of_contact.email == "ada@example.com"
     assert parsed.settings.visibility is FindingVisibility.DRAFT
     assert parsed.settings.rapid_templating is False
+    assert Tenant.from_api({"tenant_id": 0, "tenantCuid": "tenant-live"}).tenant_id == 0
 
 
 def test_template_type_parses_and_serializes_documented_fields():
@@ -1177,6 +1183,24 @@ def test_scheduler_type_serializes_search_payload():
 
 
 def test_user_type_serializes_documented_fields():
+    assert UserNotificationReadFilter.ALL.value == "any"
+
+    authenticated_user = AuthenticatedUser.from_api(
+        {
+            "user_id": 0,
+            "cuid": "user-cuid",
+            "tenant_id": 0,
+            "tenantCuid": "tenant-cuid",
+            "tenantName": "Example Tenant",
+        }
+    )
+
+    assert authenticated_user.user_id == 0
+    assert authenticated_user.user_cuid == "user-cuid"
+    assert authenticated_user.tenant_id == 0
+    assert authenticated_user.tenant_cuid == "tenant-cuid"
+    assert authenticated_user.tenant_name == "Example Tenant"
+
     assert TenantUserInput(
         email="ada@example.com",
         role=DefaultUserRole.ANALYST,
@@ -1205,6 +1229,8 @@ def test_user_type_serializes_documented_fields():
         "name": {"first": "Ada"},
         "authenticationProvider": "plextrac",
     }
+    assert TenantUserPage.from_api({"data": [], "total": 0}).total_count == 0
+    assert UserFindingSearchResult.from_api({"data": [], "total": 0}).total_count == 0
 
 
 def test_admin_type_serializes_documented_sla_and_audit_fields():

@@ -34,7 +34,7 @@ def list_tenant_users(
 ) -> list[TenantUser]:
     """List tenant users using the legacy unpaginated endpoint."""
     data = rest_request(session, "GET", f"/api/v1/tenant/{tenant_id}/user/list")
-    return [TenantUser.from_api(item) for item in data if isinstance(item, dict)] if isinstance(data, list) else []
+    return _user_list(data)
 
 
 def list_tenant_users_paginated(
@@ -78,7 +78,7 @@ def bulk_create_users(
         f"/api/v1/tenant/{tenant_id}/user/create/bulk",
         json=[user.to_api() for user in users],
     )
-    return [TenantUser.from_api(item) for item in data if isinstance(item, dict)] if isinstance(data, list) else []
+    return _user_list(data)
 
 
 def update_user(
@@ -213,7 +213,10 @@ def list_user_notifications(
         "/api/v1/user/notifications",
         params={"limit": limit, "skip": skip, "read": read.value},
     )
-    return [UserNotification.from_api(item) for item in data if isinstance(item, dict)] if isinstance(data, list) else []
+    payload = _data_payload(data)
+    return [
+        UserNotification.from_api(item) for item in payload if isinstance(item, dict)
+    ] if isinstance(payload, list) else []
 
 
 def mark_user_notifications_read(
@@ -239,3 +242,14 @@ def search_user_findings(
     if not isinstance(data, dict):
         raise ValueError("PlexTrac user findings response was not a JSON object.")
     return UserFindingSearchResult.from_api(data)
+
+
+def _user_list(data: object) -> list[TenantUser]:
+    payload = _data_payload(data)
+    return [TenantUser.from_api(item) for item in payload if isinstance(item, dict)] if isinstance(payload, list) else []
+
+
+def _data_payload(data: object) -> object:
+    if isinstance(data, dict) and "data" in data:
+        return data["data"]
+    return data

@@ -97,6 +97,7 @@ from plextrac_api.types import (
     SubstatusInput,
     SubstatusStatus,
     TemplateField,
+    UserNotificationReadFilter,
     UserSortField,
     UserSortOrder,
     WriteupImportSource,
@@ -1748,6 +1749,38 @@ def test_explicit_users_paginated_list_uses_search_name(monkeypatch):
         "order": "ASCEND",
         "filter": "ada",
     }
+
+
+def test_explicit_users_list_helpers_tolerate_wrapped_payloads(monkeypatch):
+    calls = []
+
+    def fake_send(session, method, path, **kwargs):
+        calls.append((method, path))
+        if path.endswith("/user/list"):
+            return httpx.Response(200, json={"data": [{"id": 0, "email": "root@example.com"}]})
+        return httpx.Response(
+            200,
+            json={"data": [{"id": 0, "message": "hello", "read": False}]},
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    tenant_users = users.list_tenant_users(session, tenant_id=0)
+    notifications = users.list_user_notifications(
+        session,
+        limit=1,
+        skip=0,
+        read=UserNotificationReadFilter.ALL,
+    )
+
+    assert tenant_users[0].user_id == 0
+    assert notifications[0].notification_id == 0
+    assert notifications[0].read is False
+    assert calls == [
+        ("GET", "/api/v1/tenant/0/user/list"),
+        ("GET", "/api/v1/user/notifications"),
+    ]
 
 
 def test_explicit_admin_updates_provider_configuration(monkeypatch):

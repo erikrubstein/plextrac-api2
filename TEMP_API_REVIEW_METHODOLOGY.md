@@ -289,3 +289,17 @@ A group pass is complete when:
   for this account, so update/delete paths were not exercised. Marker audits for report, finding,
   and export templates found zero `codex-temp-template-*` leftovers. The audit also noted that the
   current users parser drops a live `tenant_id` value of `0`; defer that fix to the users pass.
+- `tenant.py`: Lightweight audit completed locally. Public tenant responses now expose
+  `tenant_cuid` instead of generic `cuid`, and tenant ID parsing preserves valid zero values.
+  Live read-only testing confirmed `get_root_info` and `get_tenant` for tenant `0`; notification
+  settings and tenant analytics returned `Not Found` for this account/tenant. Tenant settings,
+  profile, logo, and icon mutations were intentionally skipped because they affect real tenant-wide
+  configuration with no disposable object boundary.
+- `users.py`: Lightweight audit completed locally. Current-user parsing now preserves zero-valued
+  `user_id`/`tenant_id` values and exposes live `user_cuid`, `tenant_cuid`, and `tenant_name`
+  fields from `/api/v2/whoami`. User list and notification list helpers tolerate nested `data`
+  wrappers. Live testing confirmed `get_authenticated_user`, `list_user_notifications`, and
+  `search_user_findings`; tenant user list endpoints returned `Unauthorized`. Live validation also
+  found notification filter `ALL` must serialize as `any`, not `all`. User creation, deletion,
+  password, MFA, disable, notification-marking, and profile-update mutations were skipped because
+  they affect real users or current-user state.

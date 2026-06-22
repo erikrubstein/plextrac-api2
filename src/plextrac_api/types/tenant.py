@@ -46,7 +46,7 @@ class TenantSettings:
 @dataclass(slots=True)
 class Tenant:
     tenant_id: int | str | None = None
-    cuid: str | None = None
+    tenant_cuid: str | None = None
     name: str | None = None
     address: str | None = None
     point_of_contact: TenantPointOfContact | None = None
@@ -58,8 +58,8 @@ class Tenant:
     @classmethod
     def from_api(cls, data: JsonDict) -> Tenant:
         return cls(
-            tenant_id=data.get("tenant_id") or data.get("tenantId"),
-            cuid=data.get("cuid"),
+            tenant_id=_first_present(data, ("tenant_id", "tenantId")),
+            tenant_cuid=_first_present(data, ("cuid", "tenantCuid")),
             name=data.get("name"),
             address=data.get("address"),
             point_of_contact=TenantPointOfContact.from_api(data.get("poc")),
@@ -145,4 +145,11 @@ def _visibility(value: object) -> FindingVisibility | None:
             return FindingVisibility(value)
         except ValueError:
             return None
+    return None
+
+
+def _first_present(data: JsonDict, keys: tuple[str, ...]) -> object:
+    for key in keys:
+        if key in data:
+            return data[key]
     return None
