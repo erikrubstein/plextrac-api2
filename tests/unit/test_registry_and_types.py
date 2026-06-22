@@ -619,10 +619,11 @@ def test_substatus_type_parses_and_serializes_documented_fields():
         }
     )
 
-    assert parsed.cuid == "substatus-1"
+    assert parsed.substatus_cuid == "substatus-1"
     assert parsed.tenant_cuid == "tenant-1"
     assert parsed.status is SubstatusStatus.IN_PROCESS
     assert parsed.value == "In Development"
+    assert Substatus.from_api({"substatusCuid": "substatus-2"}).substatus_cuid == "substatus-2"
     assert SubstatusInput(status=SubstatusStatus.CLOSED, value="Accepted").to_api() == {
         "status": "Closed",
         "value": "Accepted",

@@ -28,7 +28,7 @@ class SubstatusInput:
 
 @dataclass(slots=True)
 class Substatus:
-    cuid: str | None = None
+    substatus_cuid: str | None = None
     tenant_cuid: str | None = None
     status: SubstatusStatus | None = None
     value: str | None = None
@@ -37,7 +37,7 @@ class Substatus:
     @classmethod
     def from_api(cls, data: JsonDict) -> Substatus:
         return cls(
-            cuid=data.get("cuid"),
+            substatus_cuid=data.get("cuid") or data.get("substatusCuid"),
             tenant_cuid=data.get("tenantCuid"),
             status=_substatus_status(data.get("status")),
             value=data.get("value"),

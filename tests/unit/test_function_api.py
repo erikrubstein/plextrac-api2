@@ -1321,7 +1321,7 @@ def test_explicit_substatus_create_uses_reusable_input(monkeypatch):
         SubstatusInput(status=SubstatusStatus.OPEN, value="Ready"),
     )
 
-    assert result.cuid == "substatus-1"
+    assert result.substatus_cuid == "substatus-1"
     assert result.status is SubstatusStatus.OPEN
     assert seen["method"] == "POST"
     assert seen["path"] == "/api/v3/substatus"

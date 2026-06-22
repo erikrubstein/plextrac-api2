@@ -275,3 +275,9 @@ A group pass is complete when:
   approve mutations were skipped because scheduler events cannot be deleted, only canceled. Artifact
   upload passed validation but returned a backend 500 for the only visible completed event; no
   artifact remained in live audits.
+- `substatus.py`: Quick audit completed locally. Public substatus responses now expose
+  `substatus_cuid` instead of generic `cuid` while still parsing PlexTrac `cuid` and
+  `substatusCuid` response keys. Non-mutating live testing confirmed `list_substatuses` works for
+  this account and returned five configured substatuses. Mutating create/update/delete could not be
+  fully exercised because `create_substatus` returned `Unauthorized`; the attempted create did not
+  return an ID, and a follow-up marker audit found zero `codex-temp-substatus-*` entries.
