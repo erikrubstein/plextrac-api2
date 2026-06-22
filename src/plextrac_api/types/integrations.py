@@ -37,13 +37,17 @@ class IntegrationSettings:
 
 @dataclass(slots=True)
 class TenableTag:
-    id: int | str | None = None
+    tag_id: int | str | None = None
     name: str | None = None
     raw: JsonDict | None = None
 
     @classmethod
     def from_api(cls, data: JsonDict) -> TenableTag:
-        return cls(id=data.get("id") or data.get("uuid"), name=data.get("name"), raw=dict(data))
+        return cls(
+            tag_id=_first_value(data, ("id", "uuid", "tagId")),
+            name=data.get("name"),
+            raw=dict(data),
+        )
 
 
 @dataclass(slots=True)
@@ -195,7 +199,7 @@ class IntegrationConfigurationInput:
 
 @dataclass(slots=True)
 class IntegrationConfiguration:
-    config_id: int | str | None = None
+    configuration_id: int | str | None = None
     integration_type: IntegrationConfigurationType | None = None
     api_username: str | None = None
     org_id: str | None = None
@@ -204,7 +208,7 @@ class IntegrationConfiguration:
     @classmethod
     def from_api(cls, data: JsonDict) -> IntegrationConfiguration:
         return cls(
-            config_id=data.get("configId") or data.get("id"),
+            configuration_id=_first_value(data, ("configId", "configurationId", "id")),
             integration_type=_configuration_type(data.get("integrationType")),
             api_username=data.get("apiUserName"),
             org_id=data.get("orgId"),
@@ -231,4 +235,11 @@ def _configuration_type(value: object) -> IntegrationConfigurationType | None:
             return IntegrationConfigurationType(value)
         except ValueError:
             return None
+    return None
+
+
+def _first_value(data: JsonDict, keys: tuple[str, ...]) -> int | str | None:
+    for key in keys:
+        if key in data and data[key] is not None:
+            return data[key]
     return None

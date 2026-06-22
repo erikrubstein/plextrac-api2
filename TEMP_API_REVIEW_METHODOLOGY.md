@@ -219,3 +219,12 @@ A group pass is complete when:
   remains intentionally unexposed; use `get_scanner_output` for that documented workflow. Careful
   mutating tests created and deleted marked disposable reports, assets, findings, status updates,
   and bulk evidence; marker audits were empty.
+- `integrations.py`: Steps 1-3 completed locally. Public Tenable tag responses now expose
+  `tag_id` instead of generic `id`, and integration configuration functions/types now use
+  `configuration_id` instead of `config_id` while preserving PlexTrac `configId` parsing. The
+  documented `IntegrationConfigurationType.COBALT` wire value remains PlexTrac's misspelled
+  `"Colbalt"`. Live non-mutating tests confirmed the legacy Jira projects endpoint returns an
+  empty list for this tenant. Integration configurations returned `Unauthorized`, Tenable tags and
+  tested tenant product integration lookups returned `Not Found`, and mutating Jira connection /
+  integration configuration creation returned `Unauthorized`; no disposable integration artifacts
+  were created.

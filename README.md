@@ -294,8 +294,20 @@ wrapper. All authenticated API functions take `session` as their first argument.
 - `sync_tenable_io_tags`
 - `list_jira_projects`
 - `create_jira_connection`
+- `update_jira_connection`
+- `delete_jira_connection`
+- `set_jira_projects`
+- `get_jira_projects`
+- `list_jira_issue_mappings`
+- `reset_jira_issue_mappings`
+- `bulk_update_jira_issue_type_mappings`
 - `create_jira_tickets_from_findings`
+- `unlink_jira_ticket_from_findings`
 - `list_configurations`
+- `create_configuration`
+- `get_configuration`
+- `update_configuration`
+- `delete_configuration`
 
 ### Analytics
 

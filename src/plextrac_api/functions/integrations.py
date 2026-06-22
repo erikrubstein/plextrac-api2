@@ -263,10 +263,10 @@ def create_configuration(
 
 def get_configuration(
     session: AuthSession,
-    config_id: int | str,
+    configuration_id: int | str,
 ) -> IntegrationConfiguration:
     """Get one integration configuration."""
-    data = rest_request(session, "GET", f"/api/v2/integrations/configurations/{config_id}")
+    data = rest_request(session, "GET", f"/api/v2/integrations/configurations/{configuration_id}")
     if not isinstance(data, dict):
         raise ValueError("PlexTrac integration configuration response was not a JSON object.")
     return IntegrationConfiguration.from_api(data)
@@ -274,14 +274,14 @@ def get_configuration(
 
 def update_configuration(
     session: AuthSession,
-    config_id: int | str,
+    configuration_id: int | str,
     configuration: IntegrationConfigurationInput,
 ) -> IntegrationConfiguration:
     """Update an integration configuration."""
     data = rest_request(
         session,
         "PUT",
-        f"/api/v2/integrations/configurations/{config_id}",
+        f"/api/v2/integrations/configurations/{configuration_id}",
         json=configuration.to_api(),
     )
     if not isinstance(data, dict):
@@ -291,8 +291,8 @@ def update_configuration(
 
 def delete_configuration(
     session: AuthSession,
-    config_id: int | str,
+    configuration_id: int | str,
 ) -> OperationResult:
     """Delete an integration configuration."""
-    data = rest_request(session, "DELETE", f"/api/v2/integrations/configurations/{config_id}")
+    data = rest_request(session, "DELETE", f"/api/v2/integrations/configurations/{configuration_id}")
     return OperationResult.from_api(data if isinstance(data, dict) else {"data": data})

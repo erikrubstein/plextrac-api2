@@ -78,6 +78,7 @@ from plextrac_api.types import (
     FindingTemplate,
     FindingTemplateInput,
     FindingVisibility,
+    IntegrationConfiguration,
     IntegrationConfigurationInput,
     IntegrationConfigurationType,
     JiraConnectionInput,
@@ -125,6 +126,7 @@ from plextrac_api.types import (
     SubstatusInput,
     SubstatusStatus,
     TemplateField,
+    TenableTag,
     Tenant,
     TenantAssessmentSort,
     TenantAssetFilter,
@@ -1044,6 +1046,13 @@ def test_integration_type_serializes_documented_enums():
         "apiUserName": "api-user",
         "orgId": "org-1",
     }
+    assert TenableTag.from_api({"id": "tag-1", "name": "External"}).tag_id == "tag-1"
+    assert (
+        IntegrationConfiguration.from_api(
+            {"configId": "config-1", "integrationType": "Snyk", "apiUserName": "api-user"}
+        ).configuration_id
+        == "config-1"
+    )
 
 
 def test_parser_action_type_serializes_documented_enums():

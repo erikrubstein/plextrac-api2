@@ -66,6 +66,8 @@ from plextrac_api.types import (
     FindingStatusUpdate,
     FindingTemplateInput,
     FindingVisibility,
+    IntegrationConfigurationInput,
+    IntegrationConfigurationType,
     JiraConnectionInput,
     JiraSyncFrequency,
     NarrativeSectionInput,
@@ -1348,6 +1350,64 @@ def test_explicit_integration_create_jira_connection_uses_enum(monkeypatch):
         "apiToken": "secret",
         "syncFrequency": "Hourly",
     }
+
+
+def test_integration_configuration_functions_use_semantic_configuration_id(monkeypatch):
+    seen = []
+
+    def fake_send(session, method, path, **kwargs):
+        seen.append({"method": method, "path": path, "json": kwargs.get("json")})
+        if method == "DELETE":
+            return httpx.Response(200, json={"status": "success"})
+        return httpx.Response(
+            200,
+            json={"configId": "config-1", "integrationType": "Snyk", "apiUserName": "api-user"},
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "test-token")
+
+    created = integrations.create_configuration(
+        session,
+        IntegrationConfigurationInput(
+            integration_type=IntegrationConfigurationType.SNYK,
+            api_key="secret",
+            api_username="api-user",
+        ),
+    )
+    fetched = integrations.get_configuration(session, configuration_id="config-1")
+    updated = integrations.update_configuration(
+        session,
+        configuration_id="config-1",
+        configuration=IntegrationConfigurationInput(
+            integration_type=IntegrationConfigurationType.SNYK,
+            api_key="updated-secret",
+        ),
+    )
+    deleted = integrations.delete_configuration(session, configuration_id="config-1")
+
+    assert created.configuration_id == "config-1"
+    assert fetched.configuration_id == "config-1"
+    assert updated.configuration_id == "config-1"
+    assert deleted.ok
+    assert seen == [
+        {
+            "method": "POST",
+            "path": "/api/v2/integrations/configurations",
+            "json": {
+                "integrationType": "Snyk",
+                "apiKey": "secret",
+                "apiUserName": "api-user",
+            },
+        },
+        {"method": "GET", "path": "/api/v2/integrations/configurations/config-1", "json": None},
+        {
+            "method": "PUT",
+            "path": "/api/v2/integrations/configurations/config-1",
+            "json": {"integrationType": "Snyk", "apiKey": "updated-secret"},
+        },
+        {"method": "DELETE", "path": "/api/v2/integrations/configurations/config-1", "json": None},
+    ]
 
 
 def test_explicit_parser_action_list_uses_named_action_type(monkeypatch):
