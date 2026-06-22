@@ -26,7 +26,7 @@ from plextrac_api.functions import (
     tenant,
     users,
 )
-from plextrac_api.functions.auth import session_from_token
+from plextrac_api.functions.auth import refresh_session, session_from_token
 from plextrac_api.functions.common import PlexTracAuthError, PlexTracNotFoundError
 from plextrac_api.types import (
     AffectedAsset,
@@ -1930,14 +1930,61 @@ def test_request_maps_http_errors(monkeypatch):
 
 def test_auth_session_preserves_upload_cookie_from_auth_response():
     session = AuthSession.from_auth_response(
-        {"token": "test-token", "cookie": "upload-cookie"},
+        {"token": "test-token", "cookie": "upload-cookie", "tenant_id": 7},
         base_url="https://example.plextrac.com",
         username="person@example.com",
     )
 
     assert session.cookie == "upload-cookie"
+    assert session.tenant_id == 7
     assert session.to_dict()["cookie"] == "upload-cookie"
+    assert session.to_dict()["tenant_id"] == 7
     assert AuthSession.from_dict(session.to_dict()).cookie == "upload-cookie"
+    assert AuthSession.from_dict(session.to_dict()).tenant_id == 7
+
+
+def test_session_from_token_preserves_tenant_context():
+    session = session_from_token(
+        "https://example.plextrac.com",
+        "opaque-token",
+        tenant_id=7,
+    )
+
+    assert session.tenant_id == 7
+    assert session.to_dict()["tenant_id"] == 7
+
+
+def test_explicit_refresh_session_updates_session_and_saves(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_send(session, method, path, **kwargs):
+        calls.append((method, path, kwargs["headers"].get("Authorization")))
+        return httpx.Response(
+            200,
+            json={
+                "data": {
+                    "token": "new-token",
+                    "cookie": "new-cookie",
+                    "tenant_id": 7,
+                }
+            },
+        )
+
+    monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
+    session = session_from_token("https://example.plextrac.com", "old-token")
+    session_path = tmp_path / "session.json"
+
+    refreshed = refresh_session(session, session_path=session_path)
+
+    assert refreshed is session
+    assert session.token == "new-token"
+    assert session.cookie == "new-cookie"
+    assert session.tenant_id == 7
+    assert calls == [("PUT", "/api/v1/token/refresh", "Bearer old-token")]
+    saved = AuthSession.from_dict(json.loads(session_path.read_text()))
+    assert saved.token == "new-token"
+    assert saved.cookie == "new-cookie"
+    assert saved.tenant_id == 7
 
 
 def test_request_refreshes_before_request_when_token_expires_within_five_minutes(monkeypatch):

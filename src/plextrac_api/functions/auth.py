@@ -5,7 +5,14 @@ from pathlib import Path
 
 import httpx
 
-from plextrac_api.functions.common import PlexTracAuthError, _parse_response, build_auth_headers
+from plextrac_api.functions.common import (
+    PlexTracAuthError,
+    _parse_response,
+    build_auth_headers,
+)
+from plextrac_api.functions.common import (
+    refresh_session as _refresh_session,
+)
 from plextrac_api.types.auth import AuthSession
 from plextrac_api.types.common import JsonDict
 
@@ -50,10 +57,30 @@ def session_from_token(
     *,
     cookie: str | None = None,
     refresh_token: str | None = None,
+    tenant_id: int | str | None = None,
 ) -> AuthSession:
     """Create a session from an existing PlexTrac bearer token."""
 
-    return AuthSession.from_token(base_url=base_url, token=token, cookie=cookie, refresh_token=refresh_token)
+    return AuthSession.from_token(
+        base_url=base_url,
+        token=token,
+        cookie=cookie,
+        refresh_token=refresh_token,
+        tenant_id=tenant_id,
+    )
+
+
+def refresh_session(
+    session: AuthSession,
+    *,
+    session_path: str | Path | None = None,
+) -> AuthSession:
+    """Refresh a PlexTrac session token in place."""
+
+    refreshed = _refresh_session(session)
+    if session_path is not None:
+        save_session(refreshed, session_path)
+    return refreshed
 
 
 def save_session(

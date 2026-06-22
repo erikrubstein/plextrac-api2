@@ -18,6 +18,7 @@ class AuthSession:
     token: str
     cookie: str | None = None
     refresh_token: str | None = None
+    tenant_id: int | str | None = None
     expires_at: float | None = None
     username: str | None = None
     password: str | None = None
@@ -34,6 +35,7 @@ class AuthSession:
         token = _first_string(data, ("token", "jwt", "jwtToken", "accessToken", "access_token"))
         cookie = _first_string(data, ("cookie",))
         refresh_token = _first_string(data, ("refreshToken", "refresh_token"))
+        tenant_id = _first_value(data, ("tenant_id", "tenantId"))
 
         nested = data.get("data")
         if not token and isinstance(nested, dict):
@@ -47,6 +49,8 @@ class AuthSession:
             )
         if not cookie and isinstance(nested, dict):
             cookie = _first_string(nested, ("cookie",))
+        if tenant_id is None and isinstance(nested, dict):
+            tenant_id = _first_value(nested, ("tenant_id", "tenantId"))
 
         if not token:
             raise ValueError("PlexTrac auth response did not include a token.")
@@ -56,6 +60,7 @@ class AuthSession:
             token=token,
             cookie=cookie,
             refresh_token=refresh_token,
+            tenant_id=tenant_id if isinstance(tenant_id, (int, str)) else None,
             expires_at=_jwt_expiration(token),
             username=username,
             password=password,
@@ -69,12 +74,14 @@ class AuthSession:
         token: str,
         cookie: str | None = None,
         refresh_token: str | None = None,
+        tenant_id: int | str | None = None,
     ) -> AuthSession:
         return cls(
             base_url=base_url.rstrip("/"),
             token=token,
             cookie=cookie,
             refresh_token=refresh_token,
+            tenant_id=tenant_id,
             expires_at=_jwt_expiration(token),
         )
 
@@ -91,6 +98,7 @@ class AuthSession:
             token=token,
             cookie=data.get("cookie"),
             refresh_token=data.get("refresh_token"),
+            tenant_id=data.get("tenant_id"),
             expires_at=data.get("expires_at"),
             username=data.get("username"),
             password=data.get("password"),
@@ -102,6 +110,7 @@ class AuthSession:
             "token": self.token,
             "cookie": self.cookie,
             "refresh_token": self.refresh_token,
+            "tenant_id": self.tenant_id,
             "expires_at": self.expires_at,
             "username": self.username,
         }
@@ -135,4 +144,11 @@ def _first_string(data: JsonDict, keys: tuple[str, ...]) -> str | None:
         value = data.get(key)
         if isinstance(value, str) and value:
             return value
+    return None
+
+
+def _first_value(data: JsonDict, keys: tuple[str, ...]) -> object:
+    for key in keys:
+        if key in data:
+            return data[key]
     return None

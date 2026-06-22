@@ -147,6 +147,11 @@ A group pass is complete when:
 
 ## Group Progress Notes
 
+- `auth.py`: Steps 1-3 completed locally. Public auth helpers include login, token-backed session
+  creation, refresh, save, and load. `AuthSession` preserves `tenant_id` from auth/refresh
+  responses. Live tests covered stored-session loading, explicit token refresh, save/load, and a
+  fresh credential login when credentials were available. MFA QR generation and activation were not
+  run because they can alter the current user's MFA setup.
 - `admin.py`: Steps 1-3 completed and committed.
 - `affected_assets.py`: Steps 1-3 completed and committed.
 - `analytics.py`: Steps 1-3 completed and committed. Removed the documented but unavailable

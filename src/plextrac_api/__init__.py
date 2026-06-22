@@ -3,6 +3,7 @@
 from plextrac_api.functions.auth import (
     create_session,
     load_session,
+    refresh_session,
     save_session,
     session_from_token,
 )
@@ -65,6 +66,7 @@ __all__ = [
     "execute_graphql",
     "graphql_request",
     "load_session",
+    "refresh_session",
     "rest_request",
     "save_session",
     "session_from_token",

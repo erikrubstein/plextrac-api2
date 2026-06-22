@@ -198,6 +198,7 @@ def refresh_session(session: AuthSession) -> AuthSession:
     token = _first_string(data, ("token", "jwt", "jwtToken", "accessToken", "access_token"))
     cookie = _first_string(data, ("cookie",))
     refresh_token = _first_string(data, ("refreshToken", "refresh_token"))
+    tenant_id = _first_value(data, ("tenant_id", "tenantId"))
     if not token:
         raise PlexTracAuthError("Refresh response did not include a token.")
     session.token = token
@@ -206,6 +207,8 @@ def refresh_session(session: AuthSession) -> AuthSession:
     session.expires_at = _jwt_expiration(token)
     if refresh_token:
         session.refresh_token = refresh_token
+    if isinstance(tenant_id, (int, str)):
+        session.tenant_id = tenant_id
     return session
 
 
@@ -294,4 +297,16 @@ def _first_string(data: JsonDict, keys: tuple[str, ...]) -> str | None:
             value = nested.get(key)
             if isinstance(value, str) and value:
                 return value
+    return None
+
+
+def _first_value(data: JsonDict, keys: tuple[str, ...]) -> object:
+    nested = data.get("data")
+    for key in keys:
+        if key in data:
+            return data[key]
+    if isinstance(nested, dict):
+        for key in keys:
+            if key in nested:
+                return nested[key]
     return None

@@ -125,10 +125,11 @@ finding = findings.create_finding(
 Save and load sessions for local scripts:
 
 ```python
-from plextrac_api import load_session, save_session
+from plextrac_api import load_session, refresh_session, save_session
 
 save_session(session, "session.json")
 session = load_session("session.json")
+refresh_session(session, session_path="session.json")
 ```
 
 ## Function Overview
@@ -140,6 +141,7 @@ wrapper. All authenticated API functions take `session` as their first argument.
 
 - `create_session`
 - `session_from_token`
+- `refresh_session`
 - `save_session`
 - `load_session`
 
