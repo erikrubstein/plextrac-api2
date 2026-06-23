@@ -23,7 +23,6 @@ from plextrac_api.types.runbooks import (
     RunbookProcedure,
     RunbookProcedureLog,
     RunbookProcedureLogInput,
-    RunbookRecord,
     RunbookRecordInput,
     RunbookRepository,
     RunbookTactic,
@@ -35,7 +34,7 @@ from plextrac_api.types.runbooks import (
     RunbookUserInput,
 )
 
-RunbookRecordT = TypeVar("RunbookRecordT", bound=RunbookRecord)
+RunbookRecordT = TypeVar("RunbookRecordT")
 
 
 def list_runbook_engagement_procedure_operators(

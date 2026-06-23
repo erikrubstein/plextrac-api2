@@ -21,11 +21,16 @@ from plextrac_api.types.admin import (
     UserPermissions,
 )
 from plextrac_api.types.analytics import (
+    AnalyticsAssetRecord,
+    AnalyticsClientRecord,
     AnalyticsFilter,
+    AnalyticsFindingRecord,
     AnalyticsRecord,
+    AnalyticsReportRecord,
     AnalyticsResult,
     AnalyticsTags,
     AnalyticsTrendFilter,
+    AnalyticsTrendRecord,
     AssetAnalyticsFilter,
     FindingAnalyticsAssetPagination,
     FindingAnalyticsBootstrapFilter,
@@ -133,6 +138,7 @@ from plextrac_api.types.content_library import (
     WriteupInput,
     WriteupRepository,
     WriteupRepositoryInput,
+    WriteupSummary,
     WriteupTransfer,
 )
 from plextrac_api.types.evidence import Evidence
@@ -313,9 +319,14 @@ __all__ = [
     "AuditLogEntry",
     "AuditLogEventType",
     "AnalyticsFilter",
+    "AnalyticsAssetRecord",
+    "AnalyticsClientRecord",
+    "AnalyticsFindingRecord",
     "AnalyticsRecord",
+    "AnalyticsReportRecord",
     "AnalyticsResult",
     "AnalyticsTags",
+    "AnalyticsTrendRecord",
     "AnalyticsTrendFilter",
     "AnswerOption",
     "AnswerType",
@@ -575,5 +586,6 @@ __all__ = [
     "WriteupInput",
     "WriteupRepository",
     "WriteupRepositoryInput",
+    "WriteupSummary",
     "WriteupTransfer",
 ]

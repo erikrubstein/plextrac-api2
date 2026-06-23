@@ -33,7 +33,9 @@ from plextrac_api.types import (
     AffectedAssetBulkStatusUpdate,
     AffectedAssetStatus,
     AffectedAssetStatusMap,
+    AnalyticsAssetRecord,
     AnalyticsFilter,
+    AnalyticsFindingRecord,
     AnalyticsTags,
     ArtifactRelation,
     ArtifactRelationModel,
@@ -1362,6 +1364,7 @@ def test_explicit_analytics_findings_uses_filter_type(monkeypatch):
     )
 
     assert result.status == "success"
+    assert isinstance(result.records[0], AnalyticsFindingRecord)
     assert result.records[0].finding_id == 99
     assert result.records[0].client_name == "Example"
     assert result.records[0].report_name == "Report"
@@ -1386,7 +1389,7 @@ def test_explicit_analytics_assets_with_filter_uses_documented_default_paginatio
         seen["path"] = path
         seen["params"] = kwargs["params"]
         seen["json"] = kwargs["json"]
-        return httpx.Response(200, json={"data": []})
+        return httpx.Response(200, json={"data": [{"id": "asset-1", "name": "host1"}]})
 
     monkeypatch.setattr("plextrac_api.functions.common._send", fake_send)
     session = session_from_token("https://example.plextrac.com", "test-token")
@@ -1396,7 +1399,9 @@ def test_explicit_analytics_assets_with_filter_uses_documented_default_paginatio
         AssetAnalyticsFilter(client_ids=[1045]),
     )
 
-    assert result.records == []
+    assert isinstance(result.records[0], AnalyticsAssetRecord)
+    assert result.records[0].asset_id == "asset-1"
+    assert result.records[0].asset_name == "host1"
     assert seen["method"] == "POST"
     assert seen["path"] == "/api/v2/clients/analytics/assets"
     assert seen["params"] == {"limit": 10, "offset": 0}

@@ -286,6 +286,9 @@ wrapper. All authenticated API functions take `session` as their first argument.
 - `list_export_templates`
 - `import_export_template`
 
+Writeup list endpoints return `WriteupSummary` records for the fields PlexTrac includes in list
+payloads. Single-writeup create/get/update calls return full `Writeup` records.
+
 ### Integrations
 
 - `get_integration`
@@ -313,9 +316,11 @@ wrapper. All authenticated API functions take `session` as their first argument.
 ### Analytics
 
 Analytics filters use semantic Python field names such as `client_ids`, `report_ids`, and
-`asset_ids`, while response rows are exposed through `AnalyticsResult.records` with fields such as
-`client_name`, `report_name`, `finding_id`, and `asset_id`. The original PlexTrac response remains
-available on `AnalyticsResult.data` and `AnalyticsResult.raw`.
+`asset_ids`, while response rows are exposed through `AnalyticsResult.records`. Endpoint-specific
+records such as `AnalyticsFindingRecord`, `AnalyticsAssetRecord`, `AnalyticsReportRecord`, and
+`AnalyticsClientRecord`, plus trend rows as `AnalyticsTrendRecord`, avoid unrelated nullable fields;
+the original PlexTrac response remains available on each record's `raw` field and on
+`AnalyticsResult.data` / `AnalyticsResult.raw`.
 
 - `retrieve_analytics`
 - `retrieve_analytics_findings`

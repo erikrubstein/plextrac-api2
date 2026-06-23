@@ -20,6 +20,7 @@ from plextrac_api.types.content_library import (
     WriteupInput,
     WriteupRepository,
     WriteupRepositoryInput,
+    WriteupSummary,
     WriteupTransfer,
 )
 
@@ -248,10 +249,10 @@ def delete_narrative_repository(
 
 def list_writeups(
     session: AuthSession,
-) -> list[Writeup]:
+) -> list[WriteupSummary]:
     """List WriteupsDB entries."""
     data = rest_request(session, "GET", "/api/v1/template/list")
-    return [Writeup.from_api(item) for item in _items(data, "templates")]
+    return [WriteupSummary.from_api(item) for item in _items(data, "templates")]
 
 
 def get_writeup(
@@ -304,7 +305,7 @@ def delete_writeup(
 def bulk_add_writeups_to_report(
     session: AuthSession,
     report_id: int | str,
-    writeups: list[Writeup],
+    writeups: list[Writeup | WriteupSummary],
 ) -> OperationResult:
     """Add one or more writeups to a report using the latest bulk endpoint."""
     data = rest_request(
@@ -324,7 +325,7 @@ def list_writeups_from_repository(
     repository_id: int | str,
     *,
     filter_text: str | None = None,
-) -> list[Writeup]:
+) -> list[WriteupSummary]:
     """List writeups from one WriteupsDB repository."""
     data = rest_request(
         session,
@@ -332,7 +333,7 @@ def list_writeups_from_repository(
         f"/api/v2/repositories/{repository_id}/getWriteups",
         json=clean({"filterText": filter_text}),
     )
-    return [Writeup.from_api(item) for item in _items(data, "writeups")]
+    return [WriteupSummary.from_api(item) for item in _items(data, "writeups")]
 
 
 def add_writeups_to_repository(
@@ -634,7 +635,7 @@ def _object(data: object, label: str) -> JsonDict:
     raise ValueError(f"PlexTrac {label} response was not a JSON object.")
 
 
-def _writeup_reference(writeup: Writeup) -> JsonDict:
+def _writeup_reference(writeup: Writeup | WriteupSummary) -> JsonDict:
     return clean(
         {
             "id": writeup.writeup_id,

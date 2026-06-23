@@ -237,6 +237,40 @@ class Writeup:
 
 
 @dataclass(slots=True)
+class WriteupSummary:
+    writeup_id: int | str | None = None
+    doc_id: int | str | None = None
+    doc_type: str | None = None
+    repository_id: int | str | None = None
+    tenant_id: int | str | None = None
+    title: str | None = None
+    severity: FindingSeverity | None = None
+    source: str | None = None
+    tags: list[str] | None = None
+    risk_score: float | None = None
+    calculated_severity: bool | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> WriteupSummary:
+        writeup = Writeup.from_api(data)
+        return cls(
+            writeup_id=writeup.writeup_id,
+            doc_id=writeup.doc_id,
+            doc_type=writeup.doc_type,
+            repository_id=writeup.repository_id,
+            tenant_id=writeup.tenant_id,
+            title=writeup.title,
+            severity=writeup.severity,
+            source=writeup.source,
+            tags=writeup.tags,
+            risk_score=writeup.risk_score,
+            calculated_severity=writeup.calculated_severity,
+            raw=dict(data),
+        )
+
+
+@dataclass(slots=True)
 class WriteupRepositoryInput:
     name: str
     description: str | None = None
@@ -250,7 +284,7 @@ class WriteupRepository:
     repository_id: int | str | None = None
     name: str | None = None
     description: str | None = None
-    writeups: list[Writeup] | None = None
+    writeups: list[WriteupSummary] | None = None
     users: list[ContentLibraryUser] | None = None
     raw: JsonDict | None = None
 
@@ -266,7 +300,9 @@ class WriteupRepository:
             ),
             name=_first_value(source, ("name", "title")),
             description=source.get("description"),
-            writeups=[Writeup.from_api(item) for item in writeups if isinstance(item, dict)]
+            writeups=[
+                WriteupSummary.from_api(item) for item in writeups if isinstance(item, dict)
+            ]
             if isinstance(writeups, list)
             else None,
             users=[ContentLibraryUser.from_api(item) for item in users if isinstance(item, dict)]

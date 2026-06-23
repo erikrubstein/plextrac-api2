@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Literal
+from typing import Generic, Literal, TypeVar, cast
 
 from plextrac_api.types.assets import AssetCriticality
 from plextrac_api.types.common import JsonDict, clean
 from plextrac_api.types.findings import FindingSeverity, FindingStatus
 
 AnalyticsRecordKind = Literal["generic", "client", "report", "finding", "asset"]
+AnalyticsResultRecordT = TypeVar("AnalyticsResultRecordT")
 
 
 class SlaAssetCriticality(StrEnum):
@@ -313,7 +315,7 @@ class AnalyticsRecord:
     percentage: str | float | None = None
     date_from: str | None = None
     date_to: str | None = None
-    last_update_at: str | None = None
+    last_update_at: str | int | None = None
     raw: JsonDict | None = None
 
     @classmethod
@@ -361,7 +363,7 @@ class AnalyticsRecord:
             percentage=_first(data, "percentage"),
             date_from=_string(data, "date_from", "dateFrom"),
             date_to=_string(data, "date_to", "dateTo"),
-            last_update_at=_string(
+            last_update_at=_string_or_integer(
                 data,
                 "last_update_at",
                 "lastUpdateAt",
@@ -373,11 +375,147 @@ class AnalyticsRecord:
 
 
 @dataclass(slots=True)
-class AnalyticsResult:
+class AnalyticsFindingRecord:
+    finding_id: int | str | None = None
+    client_id: int | str | None = None
+    report_id: int | str | None = None
+    client_name: str | None = None
+    report_name: str | None = None
+    finding_title: str | None = None
+    severity: FindingSeverity | None = None
+    status: FindingStatus | None = None
+    severity_counts: dict[str, int] | None = None
+    last_update_at: str | int | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> AnalyticsFindingRecord:
+        record = AnalyticsRecord.from_api(data, record_kind="finding")
+        return cls(
+            finding_id=record.finding_id,
+            client_id=record.client_id,
+            report_id=record.report_id,
+            client_name=record.client_name,
+            report_name=record.report_name,
+            finding_title=record.finding_title,
+            severity=record.severity,
+            status=record.status,
+            severity_counts=record.severity_counts,
+            last_update_at=record.last_update_at,
+            raw=dict(data),
+        )
+
+
+@dataclass(slots=True)
+class AnalyticsAssetRecord:
+    asset_id: int | str | None = None
+    client_id: int | str | None = None
+    client_name: str | None = None
+    asset_name: str | None = None
+    asset_type: str | None = None
+    severity_counts: dict[str, int] | None = None
+    finding_count: int | None = None
+    percentage: str | float | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> AnalyticsAssetRecord:
+        record = AnalyticsRecord.from_api(data, record_kind="asset")
+        return cls(
+            asset_id=record.asset_id,
+            client_id=record.client_id,
+            client_name=record.client_name,
+            asset_name=record.asset_name,
+            asset_type=record.asset_type,
+            severity_counts=record.severity_counts,
+            finding_count=record.finding_count,
+            percentage=record.percentage,
+            raw=dict(data),
+        )
+
+
+@dataclass(slots=True)
+class AnalyticsReportRecord:
+    report_id: int | str | None = None
+    client_id: int | str | None = None
+    client_name: str | None = None
+    report_name: str | None = None
+    severity_counts: dict[str, int] | None = None
+    finding_count: int | None = None
+    asset_count: int | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> AnalyticsReportRecord:
+        record = AnalyticsRecord.from_api(data, record_kind="report")
+        return cls(
+            report_id=record.report_id,
+            client_id=record.client_id,
+            client_name=record.client_name,
+            report_name=record.report_name,
+            severity_counts=record.severity_counts,
+            finding_count=record.finding_count,
+            asset_count=record.asset_count,
+            raw=dict(data),
+        )
+
+
+@dataclass(slots=True)
+class AnalyticsClientRecord:
+    client_id: int | str | None = None
+    client_name: str | None = None
+    severity_counts: dict[str, int] | None = None
+    report_count: int | None = None
+    finding_count: int | None = None
+    asset_count: int | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> AnalyticsClientRecord:
+        record = AnalyticsRecord.from_api(data, record_kind="client")
+        return cls(
+            client_id=record.client_id,
+            client_name=record.client_name or _string(data, "name"),
+            severity_counts=record.severity_counts,
+            report_count=record.report_count,
+            finding_count=record.finding_count,
+            asset_count=record.asset_count,
+            raw=dict(data),
+        )
+
+
+@dataclass(slots=True)
+class AnalyticsTrendRecord:
+    date_from: str | None = None
+    date_to: str | None = None
+    count: int | None = None
+    total_count: int | None = None
+    percentage: str | float | None = None
+    severity: FindingSeverity | None = None
+    status: FindingStatus | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> AnalyticsTrendRecord:
+        record = AnalyticsRecord.from_api(data)
+        return cls(
+            date_from=record.date_from,
+            date_to=record.date_to,
+            count=record.count,
+            total_count=record.total_count,
+            percentage=record.percentage,
+            severity=record.severity,
+            status=record.status,
+            raw=dict(data),
+        )
+
+
+@dataclass(slots=True)
+class AnalyticsResult(Generic[AnalyticsResultRecordT]):
     status: str | None = None
     message: str | None = None
     data: JsonDict | list[JsonDict] | None = None
-    records: list[AnalyticsRecord] = field(default_factory=list)
+    records: list[AnalyticsResultRecordT] = field(default_factory=list)
     total_count: int | None = None
     raw: JsonDict | None = None
 
@@ -387,21 +525,30 @@ class AnalyticsResult:
         data: JsonDict | list[JsonDict],
         *,
         record_kind: AnalyticsRecordKind = "generic",
-    ) -> AnalyticsResult:
+        record_parser: Callable[[JsonDict], AnalyticsResultRecordT] | None = None,
+    ) -> AnalyticsResult[AnalyticsResultRecordT]:
         if isinstance(data, dict):
             payload = data.get("data")
             return cls(
                 status=data.get("status"),
                 message=data.get("message"),
                 data=payload if isinstance(payload, (dict, list)) else None,
-                records=_records_from_payload(payload, record_kind=record_kind),
+                records=_records_from_payload(
+                    payload,
+                    record_kind=record_kind,
+                    record_parser=record_parser,
+                ),
                 total_count=_first_int(data, ("total", "totalCount", "count"))
                 or _first_int(payload, ("total", "totalCount", "count")),
                 raw=dict(data),
             )
         return cls(
             data=data,
-            records=_records_from_payload(data, record_kind=record_kind),
+            records=_records_from_payload(
+                data,
+                record_kind=record_kind,
+                record_parser=record_parser,
+            ),
             raw={"data": data},
         )
 
@@ -410,23 +557,22 @@ def _records_from_payload(
     payload: object,
     *,
     record_kind: AnalyticsRecordKind,
-) -> list[AnalyticsRecord]:
+    record_parser: Callable[[JsonDict], AnalyticsResultRecordT] | None,
+) -> list[AnalyticsResultRecordT]:
+    parser = record_parser or (
+        lambda item: cast(
+            AnalyticsResultRecordT,
+            AnalyticsRecord.from_api(item, record_kind=record_kind),
+        )
+    )
     if isinstance(payload, list):
-        return [
-            AnalyticsRecord.from_api(item, record_kind=record_kind)
-            for item in payload
-            if isinstance(item, dict)
-        ]
+        return [parser(item) for item in payload if isinstance(item, dict)]
     if isinstance(payload, dict):
         items = _first_list(
             payload,
             ("data", "items", "results", "rows", "findings", "assets", "reports", "clients"),
         )
-        return [
-            AnalyticsRecord.from_api(item, record_kind=record_kind)
-            for item in items
-            if isinstance(item, dict)
-        ]
+        return [parser(item) for item in items if isinstance(item, dict)]
     return []
 
 
@@ -445,6 +591,11 @@ def _string(data: JsonDict, *keys: str) -> str | None:
 def _integer(data: JsonDict, *keys: str) -> int | None:
     value = _first(data, *keys)
     return value if isinstance(value, int) else None
+
+
+def _string_or_integer(data: JsonDict, *keys: str) -> str | int | None:
+    value = _first(data, *keys)
+    return value if isinstance(value, str | int) else None
 
 
 def _first_list(data: JsonDict, keys: tuple[str, ...]) -> list[JsonDict]:

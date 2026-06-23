@@ -120,36 +120,274 @@ class RunbookRecord:
         )
 
 
-class RunbookRepository(RunbookRecord):
-    pass
+@dataclass(slots=True)
+class RunbookRepository:
+    record_id: int | str | None = None
+    name: str | None = None
+    short_name: str | None = None
+    description: str | None = None
+    record_type: str | None = None
+    is_editable: bool | None = None
+    updated_at: str | None = None
+    user_count: int | None = None
+    procedure_ids: list[int | str] | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> RunbookRepository:
+        base = RunbookRecord.from_api(data)
+        return cls(
+            record_id=base.record_id,
+            name=base.name,
+            short_name=base.short_name,
+            description=base.description,
+            record_type=base.record_type,
+            is_editable=base.is_editable,
+            updated_at=base.updated_at,
+            user_count=_int_from(data.get("userCount") or data.get("user_count")),
+            procedure_ids=_ids_from(data.get("procedures")),
+            raw=dict(data),
+        )
 
 
-class RunbookMethodology(RunbookRecord):
-    pass
+@dataclass(slots=True)
+class RunbookMethodology:
+    record_id: int | str | None = None
+    name: str | None = None
+    short_name: str | None = None
+    description: str | None = None
+    is_editable: bool | None = None
+    tactic_ids: list[int | str] | None = None
+    tags: list[RunbookTag] | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> RunbookMethodology:
+        base = RunbookRecord.from_api(data)
+        return cls(
+            record_id=base.record_id,
+            name=base.name,
+            short_name=base.short_name,
+            description=base.description,
+            is_editable=base.is_editable,
+            tactic_ids=_ids_from(data.get("tactics")),
+            tags=base.tags,
+            raw=dict(data),
+        )
 
 
-class RunbookTactic(RunbookRecord):
-    pass
+@dataclass(slots=True)
+class RunbookTactic:
+    record_id: int | str | None = None
+    name: str | None = None
+    short_name: str | None = None
+    description: str | None = None
+    is_editable: bool | None = None
+    methodology_ids: list[int | str] | None = None
+    technique_ids: list[int | str] | None = None
+    tags: list[RunbookTag] | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> RunbookTactic:
+        base = RunbookRecord.from_api(data)
+        return cls(
+            record_id=base.record_id,
+            name=base.name,
+            short_name=base.short_name,
+            description=base.description,
+            is_editable=base.is_editable,
+            methodology_ids=_ids_from(data.get("methodologies")),
+            technique_ids=_ids_from(data.get("techniques")),
+            tags=base.tags,
+            raw=dict(data),
+        )
 
 
-class RunbookTechnique(RunbookRecord):
-    pass
+@dataclass(slots=True)
+class RunbookTechnique:
+    record_id: int | str | None = None
+    name: str | None = None
+    short_name: str | None = None
+    description: str | None = None
+    is_editable: bool | None = None
+    updated_at: str | None = None
+    deleted_at: str | None = None
+    tactic_ids: list[int | str] | None = None
+    procedure_ids: list[int | str] | None = None
+    tags: list[RunbookTag] | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> RunbookTechnique:
+        base = RunbookRecord.from_api(data)
+        return cls(
+            record_id=base.record_id,
+            name=base.name,
+            short_name=base.short_name,
+            description=base.description,
+            is_editable=base.is_editable,
+            updated_at=base.updated_at,
+            deleted_at=base.deleted_at,
+            tactic_ids=_ids_from(data.get("tactics")),
+            procedure_ids=_ids_from(data.get("procedures")),
+            tags=base.tags,
+            raw=dict(data),
+        )
 
 
-class RunbookProcedure(RunbookRecord):
-    pass
+@dataclass(slots=True)
+class RunbookProcedure:
+    record_id: int | str | None = None
+    name: str | None = None
+    short_name: str | None = None
+    description: str | None = None
+    repository_id: int | str | None = None
+    is_editable: bool | None = None
+    updated_at: str | None = None
+    deleted_at: str | None = None
+    technique_ids: list[int | str] | None = None
+    execution_steps: list[JsonDict] | None = None
+    tags: list[RunbookTag] | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> RunbookProcedure:
+        base = RunbookRecord.from_api(data)
+        steps = data.get("executionSteps") or data.get("execution_steps")
+        return cls(
+            record_id=base.record_id,
+            name=base.name,
+            short_name=base.short_name,
+            description=base.description,
+            repository_id=_id_from(data.get("repository")) or base.repository_id,
+            is_editable=base.is_editable,
+            updated_at=base.updated_at,
+            deleted_at=base.deleted_at,
+            technique_ids=_ids_from(data.get("techniques")),
+            execution_steps=[dict(item) for item in steps if isinstance(item, dict)]
+            if isinstance(steps, list)
+            else None,
+            tags=base.tags,
+            raw=dict(data),
+        )
 
 
-class RunbookEngagement(RunbookRecord):
-    pass
+@dataclass(slots=True)
+class RunbookEngagement:
+    record_id: int | str | None = None
+    title: str | None = None
+    description: str | None = None
+    status: str | None = None
+    client_id: int | str | None = None
+    report_id: int | str | None = None
+    test_plan_id: int | str | None = None
+    is_completed: bool | None = None
+    percent_complete: int | None = None
+    updated_at: str | None = None
+    tags: list[RunbookTag] | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> RunbookEngagement:
+        base = RunbookRecord.from_api(data)
+        return cls(
+            record_id=base.record_id,
+            title=base.title,
+            description=base.description,
+            status=base.status,
+            client_id=base.client_id,
+            report_id=data.get("reportId") or data.get("report_id"),
+            test_plan_id=_id_from(data.get("testPlan")) or data.get("testPlanId"),
+            is_completed=_first_present(data, ("isCompleted", "is_completed")),
+            percent_complete=_int_from(data.get("percentComplete") or data.get("percent_complete")),
+            updated_at=base.updated_at,
+            tags=base.tags,
+            raw=dict(data),
+        )
 
 
-class RunbookEngagementProcedure(RunbookRecord):
-    pass
+@dataclass(slots=True)
+class RunbookEngagementProcedure:
+    record_id: int | str | None = None
+    name: str | None = None
+    short_name: str | None = None
+    description: str | None = None
+    status: str | None = None
+    tenant_id: int | str | None = None
+    client_id: int | str | None = None
+    engagement_id: int | str | None = None
+    procedure_id: int | str | None = None
+    outcome_red: str | None = None
+    outcome_blue: str | None = None
+    notes_red: str | None = None
+    notes_blue: str | None = None
+    attack_source: str | None = None
+    finding_severity: str | None = None
+    execution_steps: list[JsonDict] | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> RunbookEngagementProcedure:
+        base = RunbookRecord.from_api(data)
+        steps = data.get("executionSteps") or data.get("execution_steps")
+        return cls(
+            record_id=base.record_id,
+            name=base.name,
+            short_name=base.short_name,
+            description=base.description,
+            status=base.status,
+            tenant_id=data.get("tenantId") or data.get("tenant_id"),
+            client_id=base.client_id,
+            engagement_id=data.get("engagementId") or data.get("engagement_id"),
+            procedure_id=data.get("procedureId")
+            or data.get("procedure_id")
+            or _id_from(data.get("runbookProcedure")),
+            outcome_red=data.get("outcomeRed") or data.get("outcome_red"),
+            outcome_blue=data.get("outcomeBlue") or data.get("outcome_blue"),
+            notes_red=data.get("notesRed") or data.get("notes_red"),
+            notes_blue=data.get("notesBlue") or data.get("notes_blue"),
+            attack_source=data.get("attackSource") or data.get("attack_source"),
+            finding_severity=data.get("findingSeverity") or data.get("finding_severity"),
+            execution_steps=[dict(item) for item in steps if isinstance(item, dict)]
+            if isinstance(steps, list)
+            else None,
+            raw=dict(data),
+        )
 
 
-class RunbookTestPlan(RunbookRecord):
-    pass
+@dataclass(slots=True)
+class RunbookTestPlan:
+    record_id: int | str | None = None
+    title: str | None = None
+    description: str | None = None
+    record_type: str | None = None
+    is_editable: bool | None = None
+    updated_at: str | None = None
+    deleted_at: str | None = None
+    procedure_count: int | None = None
+    tactic_ids: list[int | str] | None = None
+    procedure_ids: list[int | str] | None = None
+    tags: list[RunbookTag] | None = None
+    raw: JsonDict | None = None
+
+    @classmethod
+    def from_api(cls, data: JsonDict) -> RunbookTestPlan:
+        base = RunbookRecord.from_api(data)
+        return cls(
+            record_id=base.record_id,
+            title=base.title,
+            description=base.description,
+            record_type=base.record_type,
+            is_editable=base.is_editable,
+            updated_at=base.updated_at,
+            deleted_at=base.deleted_at,
+            procedure_count=_int_from(data.get("procedureCount") or data.get("procedure_count")),
+            tactic_ids=_ids_from(data.get("tactics")),
+            procedure_ids=_ids_from(data.get("procedures")),
+            tags=base.tags,
+            raw=dict(data),
+        )
 
 
 @dataclass(slots=True)
@@ -380,6 +618,50 @@ class RunbookMutationResult:
 
 def _id_from(value: object) -> int | str | None:
     return value.get("id") if isinstance(value, dict) else None
+
+
+def _ids_from(value: object) -> list[int | str] | None:
+    items = _relationship_items(value)
+    result: list[int | str] = []
+    for item in items:
+        item_id = _id_from(item) if isinstance(item, dict) else item
+        if isinstance(item_id, (int, str)):
+            result.append(item_id)
+    return result or None
+
+
+def _relationship_items(value: object) -> list[object]:
+    if isinstance(value, list):
+        return value
+    if isinstance(value, dict):
+        nodes = value.get("nodes")
+        if isinstance(nodes, list):
+            return nodes
+        data = value.get("data")
+        if isinstance(data, list):
+            return data
+        items = value.get("items")
+        if isinstance(items, list):
+            return items
+        edges = value.get("edges")
+        if isinstance(edges, list):
+            return [
+                edge.get("node")
+                for edge in edges
+                if isinstance(edge, dict) and edge.get("node") is not None
+            ]
+    return []
+
+
+def _int_from(value: object) -> int | None:
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except ValueError:
+            return None
+    return None
 
 
 def _first_present(data: JsonDict, keys: tuple[str, ...]) -> object:

@@ -6,11 +6,16 @@ from plextrac_api.types import (
     AffectedAssetStatus,
     AffectedAssetStatusMap,
     AffectedAssetStatusUpdate,
+    AnalyticsAssetRecord,
+    AnalyticsClientRecord,
     AnalyticsFilter,
+    AnalyticsFindingRecord,
     AnalyticsRecord,
+    AnalyticsReportRecord,
     AnalyticsResult,
     AnalyticsTags,
     AnalyticsTrendFilter,
+    AnalyticsTrendRecord,
     AnswerOption,
     Artifact,
     ArtifactRelation,
@@ -121,17 +126,24 @@ from plextrac_api.types import (
     ReportStatus,
     ReportSummary,
     RoleNameAvailability,
+    RunbookEngagement,
     RunbookEngagementInput,
+    RunbookEngagementProcedure,
     RunbookListArgs,
+    RunbookMethodology,
     RunbookMutationResult,
     RunbookOperatorInput,
+    RunbookProcedure,
     RunbookProcedureLog,
     RunbookProcedureLogInput,
     RunbookRecordInput,
     RunbookRepository,
     RunbookRepositoryType,
+    RunbookTactic,
     RunbookTag,
     RunbookTeam,
+    RunbookTechnique,
+    RunbookTestPlan,
     RunbookUploadResult,
     SamlConfiguration,
     SlaAnalyticsFilter,
@@ -163,6 +175,7 @@ from plextrac_api.types import (
     WriteupImportSource,
     WriteupRepository,
     WriteupRepositoryInput,
+    WriteupSummary,
     WriteupTransfer,
 )
 
@@ -824,6 +837,49 @@ def test_analytics_records_parse_raw_keys_to_semantic_fields():
     assert finding_result.records[0].last_update_at == "2026-06-20T12:00:00Z"
     assert finding_result.records[0].severity_counts == {"High": 1}
 
+    finding_result_with_epoch = AnalyticsResult.from_api(
+        {
+            "status": "success",
+            "data": {
+                "findings": [
+                    {
+                        "id": 100,
+                        "title": "Default Password",
+                        "last_update_at": 1782136093,
+                    }
+                ],
+            },
+        },
+        record_kind="finding",
+    )
+
+    assert finding_result_with_epoch.records[0].last_update_at == 1782136093
+
+    specific_finding_result = AnalyticsResult.from_api(
+        {
+            "status": "success",
+            "data": {
+                "findings": [
+                    {
+                        "id": 101,
+                        "clientId": 1,
+                        "reportId": 2,
+                        "title": "Missing MFA",
+                        "severity": "High",
+                        "status": "Open",
+                    }
+                ],
+            },
+        },
+        record_kind="finding",
+        record_parser=AnalyticsFindingRecord.from_api,
+    )
+
+    assert isinstance(specific_finding_result.records[0], AnalyticsFindingRecord)
+    assert specific_finding_result.records[0].finding_id == 101
+    assert specific_finding_result.records[0].client_id == 1
+    assert not hasattr(specific_finding_result.records[0], "asset_name")
+
     asset_record = AnalyticsRecord.from_api(
         {
             "id": "asset-1",
@@ -844,6 +900,20 @@ def test_analytics_records_parse_raw_keys_to_semantic_fields():
     assert asset_record.finding_count == 4
     assert asset_record.percentage == "25%"
 
+    specific_asset_record = AnalyticsAssetRecord.from_api(
+        {
+            "id": "asset-1",
+            "name": "host1",
+            "clientName": "Example Client",
+            "type": "Server",
+            "findings": 4,
+        }
+    )
+
+    assert specific_asset_record.asset_id == "asset-1"
+    assert specific_asset_record.asset_name == "host1"
+    assert not hasattr(specific_asset_record, "finding_title")
+
     report_record = AnalyticsRecord.from_api(
         {"id": 22, "name": "External Pentest", "clientName": "Example Client"},
         record_kind="report",
@@ -852,6 +922,23 @@ def test_analytics_records_parse_raw_keys_to_semantic_fields():
     assert report_record.report_id == 22
     assert report_record.report_name == "External Pentest"
     assert report_record.finding_title is None
+
+    specific_report_record = AnalyticsReportRecord.from_api(
+        {"id": 22, "name": "External Pentest", "clientName": "Example Client"}
+    )
+    client_record = AnalyticsClientRecord.from_api(
+        {"id": 1, "name": "Example Client", "reports": 2, "findings": 3}
+    )
+    trend_record = AnalyticsTrendRecord.from_api(
+        {"dateFrom": "2026-01-01", "dateTo": "2026-01-31", "count": 5}
+    )
+
+    assert specific_report_record.report_id == 22
+    assert specific_report_record.report_name == "External Pentest"
+    assert client_record.client_id == 1
+    assert client_record.client_name == "Example Client"
+    assert trend_record.date_from == "2026-01-01"
+    assert trend_record.count == 5
 
 
 def test_tenant_type_parses_documented_fields():
@@ -1003,8 +1090,13 @@ def test_content_library_types_parse_and_serialize_documented_fields():
     user = ContentLibraryUser.from_api({"data": {"id": 12, "email": "ada@example.com"}})
 
     assert writeup.severity is FindingSeverity.CRITICAL
+    assert repository.writeups is not None
+    assert isinstance(repository.writeups[0], WriteupSummary)
     assert repository.writeups[0].writeup_id == "template_104560"
+    assert not hasattr(repository.writeups[0], "description")
     assert wrapped_repository.repository_id == "repo-2"
+    assert wrapped_repository.writeups is not None
+    assert isinstance(wrapped_repository.writeups[0], WriteupSummary)
     assert wrapped_repository.writeups[0].writeup_id == "template_2"
     assert wrapped_repository.writeups[0].doc_id == 2
     assert wrapped_repository.writeups[0].repository_id == "repo-2"
@@ -1060,7 +1152,75 @@ def test_runbook_types_parse_and_serialize_graphql_shapes():
             "shortName": "PT",
             "type": "repository",
             "isEditable": False,
+            "userCount": 2,
+            "procedures": [{"id": "procedure-1"}],
+        }
+    )
+    methodology = RunbookMethodology.from_api(
+        {
+            "id": "methodology-1",
+            "name": "Atomic",
+            "shortName": "AT",
+            "tactics": [{"id": "tactic-1"}],
             "tags": [{"id": "tag-1", "tag": "attack"}],
+        }
+    )
+    tactic = RunbookTactic.from_api(
+        {
+            "id": "tactic-1",
+            "name": "Initial Access",
+            "methodologies": [{"id": "methodology-1"}],
+            "techniques": [{"id": "technique-1"}],
+        }
+    )
+    technique = RunbookTechnique.from_api(
+        {
+            "id": "technique-1",
+            "name": "Phishing",
+            "procedures": [{"id": "procedure-1"}],
+            "tactics": [{"id": "tactic-1"}],
+            "deletedAt": None,
+        }
+    )
+    procedure = RunbookProcedure.from_api(
+        {
+            "id": "procedure-1",
+            "name": "Send Email",
+            "repository": {"id": "repo-1"},
+            "techniques": [{"id": "technique-1"}],
+            "executionSteps": [{"id": "step-1", "description": "Prepare"}],
+        }
+    )
+    engagement_procedure = RunbookEngagementProcedure.from_api(
+        {
+            "id": "eng-procedure-1",
+            "name": "Execute",
+            "clientId": "client-1",
+            "engagementId": "engagement-1",
+            "runbookProcedure": {"id": "procedure-1"},
+            "outcomeRed": "Success",
+            "findingSeverity": "High",
+        }
+    )
+    engagement = RunbookEngagement.from_api(
+        {
+            "id": "engagement-1",
+            "title": "Q3 Exercise",
+            "client": {"id": "client-1"},
+            "reportId": "report-1",
+            "testPlan": {"id": "plan-1"},
+            "isCompleted": False,
+            "percentComplete": "50",
+        }
+    )
+    test_plan = RunbookTestPlan.from_api(
+        {
+            "id": "plan-1",
+            "title": "Baseline",
+            "type": "open",
+            "procedureCount": 3,
+            "tactics": [{"id": "tactic-1"}],
+            "procedures": [{"id": "procedure-1"}],
         }
     )
     log = RunbookProcedureLog.from_api(
@@ -1070,8 +1230,29 @@ def test_runbook_types_parse_and_serialize_graphql_shapes():
     assert repository.record_id == "repo-1"
     assert repository.record_type == "repository"
     assert repository.is_editable is False
-    assert isinstance(repository.tags[0], RunbookTag)
-    assert repository.tags[0].tag == "attack"
+    assert repository.user_count == 2
+    assert repository.procedure_ids == ["procedure-1"]
+    assert not hasattr(repository, "tags")
+    assert methodology.tactic_ids == ["tactic-1"]
+    assert methodology.tags is not None
+    assert isinstance(methodology.tags[0], RunbookTag)
+    assert methodology.tags[0].tag == "attack"
+    assert tactic.methodology_ids == ["methodology-1"]
+    assert tactic.technique_ids == ["technique-1"]
+    assert technique.procedure_ids == ["procedure-1"]
+    assert procedure.repository_id == "repo-1"
+    assert procedure.technique_ids == ["technique-1"]
+    assert procedure.execution_steps == [{"id": "step-1", "description": "Prepare"}]
+    assert engagement_procedure.procedure_id == "procedure-1"
+    assert engagement_procedure.outcome_red == "Success"
+    assert engagement_procedure.finding_severity == "High"
+    assert engagement.client_id == "client-1"
+    assert engagement.report_id == "report-1"
+    assert engagement.test_plan_id == "plan-1"
+    assert engagement.percent_complete == 50
+    assert test_plan.procedure_count == 3
+    assert test_plan.tactic_ids == ["tactic-1"]
+    assert test_plan.procedure_ids == ["procedure-1"]
     assert log.engagement_procedure_id == "procedure-1"
     assert RunbookMutationResult.from_api({"id": "repo-1"}).ok
     assert RunbookMutationResult.from_api({"recordId": "repo-1"}).ok
